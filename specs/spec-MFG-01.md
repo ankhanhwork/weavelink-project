@@ -10,7 +10,7 @@
 | Date | 2026-09-16 |
 | Status | Draft |
 | Approved by (Client role) | [NEEDS CLARIFICATION: Client approver role and approval are not supplied.] |
-| DBIZ2 source | Function List `MFG-01`, No. 1-11, `F-USER-001` .. `F-USER-011`; Use Cases: Register account; Log in; Forgot password; Reset password; Log out; [NEEDS CLARIFICATION: Use Case IDs are not visible in the supplied table.]; Screens: `S01`, `S02`, `S03`, `S04`, `S05`, `S06`, `S08` |
+| DBIZ2 source | Function List `MFG-01`, No. 1-11, `F-USER-001` .. `F-USER-011`; Use Cases: Register account; Log in; Forgot password; Reset password; Log out; Use Case IDs: UC-G03, UC-M01, UC-M02, UC-M03, UC-M04; Screens: `S01`, `S02`, `S03`, `S04`, `S05`, `S06`, `S08` |
 
 
 ---
@@ -315,7 +315,7 @@ The source states feature priorities and project goals, not agreed outcome thres
 | --- | --- | --- | --- | --- |
 | 1 | [NEEDS CLARIFICATION: Specify the responsible team member; Group B is named only as the team on the Session 1 scope sheet.] | Unassessed; see final question | Unassigned; see final question | Open |
 | 2 | [NEEDS CLARIFICATION: Client approver role and approval are not supplied.] | Unassessed; see final question | Unassigned; see final question | Open |
-| 3 | [NEEDS CLARIFICATION: Use Case IDs are not visible in the supplied table.] | Unassessed; see final question | Unassigned; see final question | Open |
+| 3 | Use Case IDs: UC-G03, UC-M01, UC-M02, UC-M03, UC-M04 | Unassessed; see final question | Unassigned; see final question | Open |
 | 4 | [NEEDS CLARIFICATION: Original DBIZ2 Schematic 1.1/1.2 cells are unavailable; the PDF reproduces the project objective but is not Session 3 MVP Scope v3.] | Unassessed; see final question | Unassigned; see final question | Open |
 | 5 | [NEEDS CLARIFICATION: Supply MVP Scope v3 and Session 3 decisions to confirm current module scope.] | Unassessed; see final question | Unassigned; see final question | Open |
 | 6 | [NEEDS CLARIFICATION: P1/P2 scenario ordering is not agreed in the supplied materials; no scenario priority is inferred from Function List High/Medium/Low.] | Unassessed; see final question | Unassigned; see final question | Open |
@@ -594,11 +594,11 @@ The source states feature priorities and project goals, not agreed outcome thres
 | 2. Actors | Function List Actor column | `docs/function-list.md`, lines 4-14 |
 | 4.1 Usage flow | Supplied customer usage flow | `docs/architecture/usage-flow.md`, original node IDs: Start, EnterWebsite, Registered, SignUp, SignIn, Catalogue |
 | 8. Success criteria / 9. Assumptions | Available scope document | `MVP_Score-WeaveLink.docx.pdf`, page 1 sections 1-3 and page 2 section 4; no measurable acceptance target or Session 3 document supplied |
-| 3. US-1 | Use Case “Register account” (original ID unavailable) | `docs/architecture/use-case.md`, line 5 |
-| 3. US-2 | Use Case “Log in” (original ID unavailable) | `docs/architecture/use-case.md`, line 6 |
-| 3. US-3 | Use Case “Forgot password” (original ID unavailable) | `docs/architecture/use-case.md`, line 7 |
-| 3. US-4 | Use Case “Reset password” (original ID unavailable) | `docs/architecture/use-case.md`, line 8 |
-| 3. US-5 | Use Case “Log out” (original ID unavailable) | `docs/architecture/use-case.md`, line 9 |
+| 3. US-1 | Use Case “Register account” (UC-G03) | `docs/architecture/use-case.md`, line 5 |
+| 3. US-2 | Use Case “Log in” (UC-M01) | `docs/architecture/use-case.md`, line 6 |
+| 3. US-3 | Use Case “Forgot password” (UC-M02) | `docs/architecture/use-case.md`, line 7 |
+| 3. US-4 | Use Case “Reset password” (UC-M03) | `docs/architecture/use-case.md`, line 8 |
+| 3. US-5 | Use Case “Log out” (UC-M04) | `docs/architecture/use-case.md`, line 9 |
 | 4.2 Sequence | SD-02: Sign Up | `docs/architecture/sequence.md`, line 21 |
 | 4.2 Sequence | SD-03: Log In | `docs/architecture/sequence.md`, line 48 |
 | 5 / 5.1 / 6: FR-001 | `MFG-01` / `F-USER-001` / Register Account; US-1: Register account | `docs/function-list.md`, line 4, No. 1; Screens: S02; sequence: SD-02; Usage Flow: SignUp. Diagrams support only the steps actually shown; the full contract remains sourced to the Function List. |

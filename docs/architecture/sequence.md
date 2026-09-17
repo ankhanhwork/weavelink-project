@@ -1,4 +1,4 @@
-# SD-01: Browse Product Catalog (Guest)
+# UC-G01: View product catalog — SD-01: Browse Product Catalog (Guest)
 
 ```mermaid
 sequenceDiagram
@@ -18,7 +18,7 @@ sequenceDiagram
     ProductUI-->>Guest: display product catalog
 ```
 
-# SD-02: Sign Up
+# UC-G03: Register account — SD-02: Sign Up
 
 ```mermaid
 sequenceDiagram
@@ -45,7 +45,7 @@ sequenceDiagram
     end
 ```
 
-# SD-03: Log In
+# UC-M01: Log in — SD-03: Log In
 
 ```mermaid
 sequenceDiagram
@@ -78,7 +78,7 @@ sequenceDiagram
     end
 ```
 
-# SD-04 – Search and View Product Detail
+# UC-G02: Search products — SD-04 – Search and View Product Detail
 
 ```mermaid
 sequenceDiagram
@@ -112,7 +112,7 @@ sequenceDiagram
     end
 ```
 
-# SD-05A: Self Design Product
+# UC-C02: Design product — SD-05A: Self Design Product
 
 ```mermaid
 sequenceDiagram
@@ -136,7 +136,7 @@ sequenceDiagram
     DesignUI-->>Customer: display save confirmation
 ```
 
-# SD-05B: Request Design Service
+# UC-C04: Request design service — SD-05B: Request Design Service
 
 ```mermaid
 sequenceDiagram
@@ -176,7 +176,7 @@ sequenceDiagram
     end
 ```
 
-# SD-06: View Saved Design
+# UC-C03: View saved design — SD-06: View Saved Design
 
 ```mermaid
 sequenceDiagram
@@ -196,7 +196,7 @@ sequenceDiagram
     SavedDesignUI-->>Customer: display design
 ```
 
-# SD-07: Create Order
+# UC-C05: Finalize order — SD-07: Create Order
 
 ```mermaid
 sequenceDiagram
@@ -225,7 +225,7 @@ sequenceDiagram
     OrderUI-->>Customer: display order summary
 ```
 
-# SD-08: View and Sign Digital Contract
+# UC-C09: View/Sign contract — SD-08: View and Sign Digital Contract
 
 ```mermaid
 sequenceDiagram
@@ -259,7 +259,7 @@ sequenceDiagram
     end
 ```
 
-# SD-09: Make Order Payment
+# UC-C12: Make payment — SD-09: Make Order Payment
 
 ```mermaid
 sequenceDiagram

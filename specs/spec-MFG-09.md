@@ -10,7 +10,7 @@
 | Date | 2026-09-16 |
 | Status | Draft |
 | Approved by (Client role) | [NEEDS CLARIFICATION: Client approver role and approval are not supplied.] |
-| DBIZ2 source | Function List `MFG-09`, No. 68-76, `F-CONTR-001` .. `F-CONTR-009`; Use Cases: View contract; View/Sign contract; Sign contract; Generate contracts; Update contract templates; Manage company contracts; [NEEDS CLARIFICATION: Use Case IDs are not visible in the supplied table.]; Screens: `S25`, `S26`, `S29`, `S30`, `S31`, `S32`, `S33`, `S34`, `S35`, `S38` |
+| DBIZ2 source | Function List `MFG-09`, No. 68-76, `F-CONTR-001` .. `F-CONTR-009`; Use Cases: View contract; View/Sign contract; Sign contract; Generate contracts; Update contract templates; Manage company contracts; Use Case IDs: UC-C10, UC-C09, UC-C11, UC-C14, UC-C15, UC-C13; Screens: `S25`, `S26`, `S29`, `S30`, `S31`, `S32`, `S33`, `S34`, `S35`, `S38` |
 
 
 ---
@@ -278,7 +278,7 @@ The source states feature priorities and project goals, not agreed outcome thres
 | --- | --- | --- | --- | --- |
 | 1 | [NEEDS CLARIFICATION: Specify the responsible team member; Group B is named only as the team on the Session 1 scope sheet.] | Unassessed; see final question | Unassigned; see final question | Open |
 | 2 | [NEEDS CLARIFICATION: Client approver role and approval are not supplied.] | Unassessed; see final question | Unassigned; see final question | Open |
-| 3 | [NEEDS CLARIFICATION: Use Case IDs are not visible in the supplied table.] | Unassessed; see final question | Unassigned; see final question | Open |
+| 3 | Use Case IDs: UC-C10, UC-C09, UC-C11, UC-C14, UC-C15, UC-C13 | Unassessed; see final question | Unassigned; see final question | Open |
 | 4 | [NEEDS CLARIFICATION: Original DBIZ2 Schematic 1.1/1.2 cells are unavailable; the PDF reproduces the project objective but is not Session 3 MVP Scope v3.] | Unassessed; see final question | Unassigned; see final question | Open |
 | 5 | [NEEDS CLARIFICATION: Supply MVP Scope v3 and Session 3 decisions to confirm current module scope.] | Unassessed; see final question | Unassigned; see final question | Open |
 | 6 | [NEEDS CLARIFICATION: P1/P2 scenario ordering is not agreed in the supplied materials; no scenario priority is inferred from Function List High/Medium/Low.] | Unassessed; see final question | Unassigned; see final question | Open |
@@ -510,12 +510,12 @@ The source states feature priorities and project goals, not agreed outcome thres
 | 2. Actors | Function List Actor column | `docs/function-list.md`, lines 79-87 |
 | 4.1 Usage flow | Supplied customer usage flow | `docs/architecture/usage-flow.md`, original node IDs: ReviewOrder, SignContract, OrderPayment |
 | 8. Success criteria / 9. Assumptions | Available scope document | `MVP_Score-WeaveLink.docx.pdf`, page 1 sections 1-3 and page 2 section 4; no measurable acceptance target or Session 3 document supplied |
-| 3. US-1 | Use Case “View contract” (original ID unavailable) | `docs/architecture/use-case.md`, line 22 |
-| 3. US-2 | Use Case “View/Sign contract” (original ID unavailable) | `docs/architecture/use-case.md`, line 23 |
-| 3. US-3 | Use Case “Sign contract” (original ID unavailable) | `docs/architecture/use-case.md`, line 24 |
-| 3. US-4 | Use Case “Generate contracts” (original ID unavailable) | `docs/architecture/use-case.md`, line 30 |
-| 3. US-5 | Use Case “Update contract templates” (original ID unavailable) | `docs/architecture/use-case.md`, line 31 |
-| 3. US-6 | Use Case “Manage company contracts” (original ID unavailable) | `docs/architecture/use-case.md`, line 32 |
+| 3. US-1 | Use Case “View contract” (UC-C10) | `docs/architecture/use-case.md`, line 22 |
+| 3. US-2 | Use Case “View/Sign contract” (UC-C09) | `docs/architecture/use-case.md`, line 23 |
+| 3. US-3 | Use Case “Sign contract” (UC-C11) | `docs/architecture/use-case.md`, line 24 |
+| 3. US-4 | Use Case “Generate contracts” (UC-C14) | `docs/architecture/use-case.md`, line 30 |
+| 3. US-5 | Use Case “Update contract templates” (UC-C15) | `docs/architecture/use-case.md`, line 31 |
+| 3. US-6 | Use Case “Manage company contracts” (UC-C13) | `docs/architecture/use-case.md`, line 32 |
 | 4.2 Sequence | SD-08: View and Sign Digital Contract | `docs/architecture/sequence.md`, line 228 |
 | 5 / 5.1 / 6: FR-001 | `MFG-09` / `F-CONTR-001` / Generate Contract; US-4: Generate contracts; US-6: Manage company contracts | `docs/function-list.md`, line 79, No. 68; Screens: S30; sequence: this behavior is not separately shown in a supplied sequence; Usage Flow: this behavior is not separately shown in the supplied usage flow. Diagrams support only the steps actually shown; the full contract remains sourced to the Function List. |
 | 5 / 5.1 / 6: FR-002 | `MFG-09` / `F-CONTR-002` / Generate Contract; US-4: Generate contracts; US-6: Manage company contracts | `docs/function-list.md`, line 80, No. 69; Screens: S30; sequence: this behavior is not separately shown in a supplied sequence; Usage Flow: this behavior is not separately shown in the supplied usage flow. Diagrams support only the steps actually shown; the full contract remains sourced to the Function List. |

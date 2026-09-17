@@ -10,7 +10,7 @@
 | Date | 2026-09-16 |
 | Status | Draft |
 | Approved by (Client role) | [NEEDS CLARIFICATION: Client approver role and approval are not supplied.] |
-| DBIZ2 source | Function List `MFG-11`, No. 84-86, `F-DA-001` .. `F-DA-003`; Use Cases: View dashboard; Export data; Data Analytics; [NEEDS CLARIFICATION: Use Case IDs are not visible in the supplied table.]; Screens: [NEEDS CLARIFICATION: No matching Screen IDs are supplied.] |
+| DBIZ2 source | Function List `MFG-11`, No. 84-86, `F-DA-001` .. `F-DA-003`; Use Cases: View dashboard; Export data; Data Analytics; Use Case IDs: UC-C21, UC-C22, UC-C20; Screens: [NEEDS CLARIFICATION: No matching Screen IDs are supplied.] |
 
 
 ---
@@ -166,7 +166,7 @@ The source states feature priorities and project goals, not agreed outcome thres
 | --- | --- | --- | --- | --- |
 | 1 | [NEEDS CLARIFICATION: Specify the responsible team member; Group B is named only as the team on the Session 1 scope sheet.] | Unassessed; see final question | Unassigned; see final question | Open |
 | 2 | [NEEDS CLARIFICATION: Client approver role and approval are not supplied.] | Unassessed; see final question | Unassigned; see final question | Open |
-| 3 | [NEEDS CLARIFICATION: Use Case IDs are not visible in the supplied table.] | Unassessed; see final question | Unassigned; see final question | Open |
+| 3 | Use Case IDs: UC-C21, UC-C22, UC-C20 | Unassessed; see final question | Unassigned; see final question | Open |
 | 4 | [NEEDS CLARIFICATION: No matching Screen IDs are supplied.] | Unassessed; see final question | Unassigned; see final question | Open |
 | 5 | [NEEDS CLARIFICATION: Original DBIZ2 Schematic 1.1/1.2 cells are unavailable; the PDF reproduces the project objective but is not Session 3 MVP Scope v3.] | Unassessed; see final question | Unassigned; see final question | Open |
 | 6 | [NEEDS CLARIFICATION: Supply MVP Scope v3 and Session 3 decisions to confirm current module scope.] | Unassessed; see final question | Unassigned; see final question | Open |
@@ -208,9 +208,9 @@ The source states feature priorities and project goals, not agreed outcome thres
 | 2. Actors | Function List Actor column | `docs/function-list.md`, lines 97-99 |
 | 4.1 Usage flow | Supplied customer usage flow | No module path exists in the supplied customer flow; see section 4.1 |
 | 8. Success criteria / 9. Assumptions | Available scope document | `MVP_Score-WeaveLink.docx.pdf`, page 1 sections 1-3 and page 2 section 4; no measurable acceptance target or Session 3 document supplied |
-| 3. US-1 | Use Case “View dashboard” (original ID unavailable) | `docs/architecture/use-case.md`, line 37 |
-| 3. US-2 | Use Case “Export data” (original ID unavailable) | `docs/architecture/use-case.md`, line 38 |
-| 3. US-3 | Use Case “Data Analytics” (original ID unavailable) | `docs/architecture/use-case.md`, line 39 |
+| 3. US-1 | Use Case “View dashboard” (UC-C21) | `docs/architecture/use-case.md`, line 37 |
+| 3. US-2 | Use Case “Export data” (UC-C22) | `docs/architecture/use-case.md`, line 38 |
+| 3. US-3 | Use Case “Data Analytics” (UC-C20) | `docs/architecture/use-case.md`, line 39 |
 | 4.2 Sequence | No module sequence supplied | `docs/architecture/sequence.md` contains SD-01 through SD-09 only; none documents this module |
 | 5 / 5.1 / 6: FR-001 | `MFG-11` / `F-DA-001` / View Dashboard; US-1: View dashboard; US-3: Data Analytics | `docs/function-list.md`, line 97, No. 84; Screens: not mapped in supplied Screen List; sequence: this behavior is not separately shown in a supplied sequence; Usage Flow: this behavior is not separately shown in the supplied usage flow. Diagrams support only the steps actually shown; the full contract remains sourced to the Function List. |
 | 5 / 5.1 / 6: FR-002 | `MFG-11` / `F-DA-002` / View Dashboard; US-1: View dashboard; US-3: Data Analytics | `docs/function-list.md`, line 98, No. 85; Screens: not mapped in supplied Screen List; sequence: this behavior is not separately shown in a supplied sequence; Usage Flow: this behavior is not separately shown in the supplied usage flow. Diagrams support only the steps actually shown; the full contract remains sourced to the Function List. |

@@ -1,3 +1,6 @@
+Warning: truncated output (original token count: 31572)
+Total output lines: 782
+
 # Spec Document: Product Catalog
 
 
@@ -10,7 +13,7 @@
 | Date | 2026-09-16 |
 | Status | Draft |
 | Approved by (Client role) | [NEEDS CLARIFICATION: Client approver role and approval are not supplied.] |
-| DBIZ2 source | Function List `MFG-04`, No. 25-35, `F-PROD-001` .. `F-PROD-011`; Use Cases: View product catalog; Search products; Add product; Update product info; Delete product; Publish/ Unpublish product; Manage product catalog; [NEEDS CLARIFICATION: Use Case IDs are not visible in the supplied table.]; Screens: `S01`, `S08`, `S09`, `S10`, `S11`, `S12`, `S13`, `S14`, `S15`, `S22`, `S38` |
+| DBIZ2 source | Function List `MFG-04`, No. 25-35, `F-PROD-001` .. `F-PROD-011`; Use Cases: View product catalog; Search products; Add product; Update product info; Delete product; Publish/ Unpublish product; Manage product catalog; Use Case IDs: UC-G01, UC-G02, UC-C24, UC-C25, UC-C26, UC-C27, UC-C23; Screens: `S01`, `S08`, `S09`, `S10`, `S11`, `S12`, `S13`, `S14`, `S15`, `S22`, `S38` |
 
 
 ---
@@ -334,7 +337,7 @@ The source states feature priorities and project goals, not agreed outcome thres
 | --- | --- | --- | --- | --- |
 | 1 | [NEEDS CLARIFICATION: Specify the responsible team member; Group B is named only as the team on the Session 1 scope sheet.] | Unassessed; see final question | Unassigned; see final question | Open |
 | 2 | [NEEDS CLARIFICATION: Client approver role and approval are not supplied.] | Unassessed; see final question | Unassigned; see final question | Open |
-| 3 | [NEEDS CLARIFICATION: Use Case IDs are not visible in the supplied table.] | Unassessed; see final question | Unassigned; see final question | Open |
+| 3 | Use Case IDs: UC-G01, UC-G02, UC-C24, UC-C25, UC-C26, UC-C27, UC-C23 | Unassessed; see final question | Unassigned; see final question | Open |
 | 4 | [NEEDS CLARIFICATION: Original DBIZ2 Schematic 1.1/1.2 cells are unavailable; the PDF reproduces the project objective but is not Session 3 MVP Scope v3.] | Unassessed; see final question | Unassigned; see final question | Open |
 | 5 | [NEEDS CLARIFICATION: Supply MVP Scope v3 and Session 3 decisions to confirm current module scope.] | Unassessed; see final question | Unassigned; see final question | Open |
 | 6 | [NEEDS CLARIFICATION: P1/P2 scenario ordering is not agreed in the supplied materials; no scenario priority is inferred from Function List High/Medium/Low.] | Unassessed; see final question | Unassigned; see final question | Open |
@@ -479,33 +482,7 @@ The source states feature priorities and project goals, not agreed outcome thres
 | 145 | [NEEDS CLARIFICATION: S08, Product 16 name: field schema] Source: `screens/S08-product_catalog_screen.md`, line 107. | Unassessed; see final question | Unassigned; see final question | Open |
 | 146 | [NEEDS CLARIFICATION: S08, Product 16 price: field schema] Source: `screens/S08-product_catalog_screen.md`, line 108. | Unassessed; see final question | Unassigned; see final question | Open |
 | 147 | [NEEDS CLARIFICATION: S08, [NEEDS CLARIFICATION: empty search or catalog message]: empty search or catalog message] Source: `screens/S08-product_catalog_screen.md`, line 145. | Unassessed; see final question | Unassigned; see final question | Open |
-| 148 | [NEEDS CLARIFICATION: S08, [NEEDS CLARIFICATION: catalog loading treatment]: catalog loading treatment] Source: `screens/S08-product_catalog_screen.md`, line 146. | Unassessed; see final question | Unassigned; see final question | Open |
-| 149 | [NEEDS CLARIFICATION: S08, [NEEDS CLARIFICATION: catalog fetch error treatment]: catalog fetch error treatment] Source: `screens/S08-product_catalog_screen.md`, line 147. | Unassessed; see final question | Unassigned; see final question | Open |
-| 150 | [NEEDS CLARIFICATION: S08, About Dony navigation: destination not in Screen List] Source: `screens/S08-product_catalog_screen.md`, line 156. | Unassessed; see final question | Unassigned; see final question | Open |
-| 151 | [NEEDS CLARIFICATION: S08, Contact Us navigation: destination not in Screen List] Source: `screens/S08-product_catalog_screen.md`, line 159. | Unassessed; see final question | Unassigned; see final question | Open |
-| 152 | [NEEDS CLARIFICATION: S08, Price filter: available filter values and response] Source: `screens/S08-product_catalog_screen.md`, line 167. | Unassessed; see final question | Unassigned; see final question | Open |
-| 153 | [NEEDS CLARIFICATION: S08, Size filter: available filter values and response] Source: `screens/S08-product_catalog_screen.md`, line 168. | Unassessed; see final question | Unassigned; see final question | Open |
-| 154 | [NEEDS CLARIFICATION: S08, Color filter: available filter values and response] Source: `screens/S08-product_catalog_screen.md`, line 169. | Unassessed; see final question | Unassigned; see final question | Open |
-| 155 | [NEEDS CLARIFICATION: S08, Type filter: available filter values and response] Source: `screens/S08-product_catalog_screen.md`, line 170. | Unassessed; see final question | Unassigned; see final question | Open |
-| 156 | [NEEDS CLARIFICATION: S08, Zalo contact button: contact destination] Source: `screens/S08-product_catalog_screen.md`, line 208. | Unassessed; see final question | Unassigned; see final question | Open |
-| 157 | [NEEDS CLARIFICATION: S08, Telephone contact button: dial behavior] Source: `screens/S08-product_catalog_screen.md`, line 209. | Unassessed; see final question | Unassigned; see final question | Open |
-| 158 | [NEEDS CLARIFICATION: S08, Footer Facebook icon: external or in-system destination] Source: `screens/S08-product_catalog_screen.md`, line 210. | Unassessed; see final question | Unassigned; see final question | Open |
-| 159 | [NEEDS CLARIFICATION: S08, Footer X icon: external or in-system destination] Source: `screens/S08-product_catalog_screen.md`, line 211. | Unassessed; see final question | Unassigned; see final question | Open |
-| 160 | [NEEDS CLARIFICATION: S08, Footer LinkedIn icon: external or in-system destination] Source: `screens/S08-product_catalog_screen.md`, line 212. | Unassessed; see final question | Unassigned; see final question | Open |
-| 161 | [NEEDS CLARIFICATION: S08, Footer YouTube icon: external or in-system destination] Source: `screens/S08-product_catalog_screen.md`, line 213. | Unassessed; see final question | Unassigned; see final question | Open |
-| 162 | [NEEDS CLARIFICATION: S08, Footer TikTok icon: external or in-system destination] Source: `screens/S08-product_catalog_screen.md`, line 214. | Unassessed; see final question | Unassigned; see final question | Open |
-| 163 | [NEEDS CLARIFICATION: S08, Company profile link: external or in-system destination] Source: `screens/S08-product_catalog_screen.md`, line 215. | Unassessed; see final question | Unassigned; see final question | Open |
-| 164 | [NEEDS CLARIFICATION: S08, Quality policy link: external or in-system destination] Source: `screens/S08-product_catalog_screen.md`, line 216. | Unassessed; see final question | Unassigned; see final question | Open |
-| 165 | [NEEDS CLARIFICATION: S08, Warranty policy link: external or in-system destination] Source: `screens/S08-product_catalog_screen.md`, line 217. | Unassessed; see final question | Unassigned; see final question | Open |
-| 166 | [NEEDS CLARIFICATION: S08, Delivery and return policy link: external or in-system destination] Source: `screens/S08-product_catalog_screen.md`, line 218. | Unassessed; see final question | Unassigned; see final question | Open |
-| 167 | [NEEDS CLARIFICATION: S08, Second warranty policy link: external or in-system destination] Source: `screens/S08-product_catalog_screen.md`, line 219. | Unassessed; see final question | Unassigned; see final question | Open |
-| 168 | [NEEDS CLARIFICATION: S08, Shipping policy link: external or in-system destination] Source: `screens/S08-product_catalog_screen.md`, line 220. | Unassessed; see final question | Unassigned; see final question | Open |
-| 169 | [NEEDS CLARIFICATION: S08, Payment methods link: external or in-system destination] Source: `screens/S08-product_catalog_screen.md`, line 221. | Unassessed; see final question | Unassigned; see final question | Open |
-| 170 | [NEEDS CLARIFICATION: S08, Business areas link: external or in-system destination] Source: `screens/S08-product_catalog_screen.md`, line 222. | Unassessed; see final question | Unassigned; see final question | Open |
-| 171 | [NEEDS CLARIFICATION: S08, FAQ link: external or in-system destination] Source: `screens/S08-product_catalog_screen.md`, line 223. | Unassessed; see final question | Unassigned; see final question | Open |
-| 172 | [NEEDS CLARIFICATION: S08, - Smallest supported width: [NEEDS CLARIFICATION: not specified in sources.]: not specified in sources.] Source: `screens/S08-product_catalog_screen.md`, line 240. | Unassessed; see final question | Unassigned; see final question | Open |
-| 173 | [NEEDS CLARIFICATION: S08, - What collapses or stacks on a narrow screen: [NEEDS CLARIFICATION: no narrow-screen mock: no narrow-screen mockup or rule provided.] Source: `screens/S08-product_catalog_screen.md`, line 242. | Unassessed; see final question | Unassigned; see final question | Open |
-| 174 | [NEEDS CLARIFICATION: S08, - Text that must remain readable (contrast, minimum size): [NEEDS CLARIFICATION: no numeri: no numeric accessibility criteria provided.] Source: `screens/S08-product_catalog_screen.md`, line 244. | Unassessed; see final question | Unassigned; see final question | Open |
+| 14…1572 tokens truncated…ee final question | Open |
 | 175 | [NEEDS CLARIFICATION: S08, [NEEDS CLARIFICATION: Screen List does not provide Must / Should / Could priority.]: Screen List does not provide Must / Should / Could priority.] Source: `screens/S08-product_catalog_screen.md`, line 250. | Unassessed; see final question | Unassigned; see final question | Open |
 | 176 | [NEEDS CLARIFICATION: S08, [NEEDS CLARIFICATION: smallest supported width, narrow layout, and accessibility minimums are not specified.]: smallest supported width, narrow layout, and accessibility minimums are not specified.] Source: `screens/S08-product_catalog_screen.md`, line 252. | Unassessed; see final question | Unassigned; see final question | Open |
 | 177 | [NEEDS CLARIFICATION: S08, [NEEDS CLARIFICATION: Function list requires pagination_controls, but none are visible in this mockup. How is pagination shown?]: Function list requires pagination_controls, but none are visible in this mockup. How is pagination shown?] Source: `screens/S08-product_catalog_screen.md`, line 253. | Unassessed; see final question | Unassigned; see final question | Open |
@@ -719,13 +696,13 @@ The source states feature priorities and project goals, not agreed outcome thres
 | 2. Actors | Function List Actor column | `docs/function-list.md`, lines 31-41 |
 | 4.1 Usage flow | Supplied customer usage flow | `docs/architecture/usage-flow.md`, original node IDs: SignIn, Catalogue, PreferredProduct, DesignService, SendDescription, SelfDesign |
 | 8. Success criteria / 9. Assumptions | Available scope document | `MVP_Score-WeaveLink.docx.pdf`, page 1 sections 1-3 and page 2 section 4; no measurable acceptance target or Session 3 document supplied |
-| 3. US-1 | Use Case “View product catalog” (original ID unavailable) | `docs/architecture/use-case.md`, line 3 |
-| 3. US-2 | Use Case “Search products” (original ID unavailable) | `docs/architecture/use-case.md`, line 4 |
-| 3. US-3 | Use Case “Add product” (original ID unavailable) | `docs/architecture/use-case.md`, line 40 |
-| 3. US-4 | Use Case “Update product info” (original ID unavailable) | `docs/architecture/use-case.md`, line 41 |
-| 3. US-5 | Use Case “Delete product” (original ID unavailable) | `docs/architecture/use-case.md`, line 42 |
-| 3. US-6 | Use Case “Publish/ Unpublish product” (original ID unavailable) | `docs/architecture/use-case.md`, line 43 |
-| 3. US-7 | Use Case “Manage product catalog” (original ID unavailable) | `docs/architecture/use-case.md`, line 44 |
+| 3. US-1 | Use Case “View product catalog” (UC-G01) | `docs/architecture/use-case.md`, line 3 |
+| 3. US-2 | Use Case “Search products” (UC-G02) | `docs/architecture/use-case.md`, line 4 |
+| 3. US-3 | Use Case “Add product” (UC-C24) | `docs/architecture/use-case.md`, line 40 |
+| 3. US-4 | Use Case “Update product info” (UC-C25) | `docs/architecture/use-case.md`, line 41 |
+| 3. US-5 | Use Case “Delete product” (UC-C26) | `docs/architecture/use-case.md`, line 42 |
+| 3. US-6 | Use Case “Publish/ Unpublish product” (UC-C27) | `docs/architecture/use-case.md`, line 43 |
+| 3. US-7 | Use Case “Manage product catalog” (UC-C23) | `docs/architecture/use-case.md`, line 44 |
 | 4.2 Sequence | SD-01: Browse Product Catalog (Guest) | `docs/architecture/sequence.md`, line 1 |
 | 4.2 Sequence | SD-04 – Search and View Product Detail | `docs/architecture/sequence.md`, line 81 |
 | 5 / 5.1 / 6: FR-001 | `MFG-04` / `F-PROD-001` / View Catalog; US-1: View product catalog | `docs/function-list.md`, line 31, No. 25; Screens: S01, S08; sequence: SD-01; Usage Flow: Catalogue. Diagrams support only the steps actually shown; the full contract remains sourced to the Function List. |

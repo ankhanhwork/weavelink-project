@@ -1,3 +1,6 @@
+Warning: truncated output (original token count: 30116)
+Total output lines: 727
+
 # Spec Document: Order & Payment
 
 
@@ -10,7 +13,7 @@
 | Date | 2026-09-16 |
 | Status | Draft |
 | Approved by (Client role) | [NEEDS CLARIFICATION: Client approver role and approval are not supplied.] |
-| DBIZ2 source | Function List `MFG-06`, No. 47-52, `F-PAY-001` .. `F-PAY-006`; Use Cases: Finalize order; Make payment; [NEEDS CLARIFICATION: Use Case IDs are not visible in the supplied table.]; Screens: `S17`, `S22`, `S23`, `S25`, `S26`, `S34`, `S35`, `S36`, `S37`, `S38` |
+| DBIZ2 source | Function List `MFG-06`, No. 47-52, `F-PAY-001` .. `F-PAY-006`; Use Cases: Finalize order; Make payment; Use Case IDs: UC-C05, UC-C12; Screens: `S17`, `S22`, `S23`, `S25`, `S26`, `S34`, `S35`, `S36`, `S37`, `S38` |
 
 
 ---
@@ -268,7 +271,7 @@ The source states feature priorities and project goals, not agreed outcome thres
 | --- | --- | --- | --- | --- |
 | 1 | [NEEDS CLARIFICATION: Specify the responsible team member; Group B is named only as the team on the Session 1 scope sheet.] | Unassessed; see final question | Unassigned; see final question | Open |
 | 2 | [NEEDS CLARIFICATION: Client approver role and approval are not supplied.] | Unassessed; see final question | Unassigned; see final question | Open |
-| 3 | [NEEDS CLARIFICATION: Use Case IDs are not visible in the supplied table.] | Unassessed; see final question | Unassigned; see final question | Open |
+| 3 | Use Case IDs: UC-C05, UC-C12 | Unassessed; see final question | Unassigned; see final question | Open |
 | 4 | [NEEDS CLARIFICATION: Original DBIZ2 Schematic 1.1/1.2 cells are unavailable; the PDF reproduces the project objective but is not Session 3 MVP Scope v3.] | Unassessed; see final question | Unassigned; see final question | Open |
 | 5 | [NEEDS CLARIFICATION: Supply MVP Scope v3 and Session 3 decisions to confirm current module scope.] | Unassessed; see final question | Unassigned; see final question | Open |
 | 6 | [NEEDS CLARIFICATION: P1/P2 scenario ordering is not agreed in the supplied materials; no scenario priority is inferred from Function List High/Medium/Low.] | Unassessed; see final question | Unassigned; see final question | Open |
@@ -450,8 +453,7 @@ The source states feature priorities and project goals, not agreed outcome thres
 | 182 | [NEEDS CLARIFICATION: S22, Payment methods link: external or in-system destination] Source: `screens/S22-create_order_screen.md`, line 183. | Unassessed; see final question | Unassigned; see final question | Open |
 | 183 | [NEEDS CLARIFICATION: S22, Business areas link: external or in-system destination] Source: `screens/S22-create_order_screen.md`, line 184. | Unassessed; see final question | Unassigned; see final question | Open |
 | 184 | [NEEDS CLARIFICATION: S22, FAQ link: external or in-system destination] Source: `screens/S22-create_order_screen.md`, line 185. | Unassessed; see final question | Unassigned; see final question | Open |
-| 185 | [NEEDS CLARIFICATION: S22, - Smallest supported width: [NEEDS CLARIFICATION: not specified in sources.]: not specified in sources.] Source: `screens/S22-create_order_screen.md`, line 202. | Unassessed; see final question | Unassigned; see final question | Open |
-| 186 | [NEEDS CLARIFICATION: S22, - What collapses or stacks on a narrow screen: [NEEDS CLARIFICATION: no narrow-screen mock: no narrow-screen mockup or rule provided.] Source: `screens/S22-create_order_screen.md`, line 204. | Unassessed; see final question | Unassigned; see final question | Open |
+| 185 | [NEEDS CLARIFICATION: S22, - Smallest supported width: [NEEDS CLARIFICATION: not spec…116 tokens truncated…uestion | Open |
 | 187 | [NEEDS CLARIFICATION: S22, - Text that must remain readable (contrast, minimum size): [NEEDS CLARIFICATION: no numeri: no numeric accessibility criteria provided.] Source: `screens/S22-create_order_screen.md`, line 206. | Unassessed; see final question | Unassigned; see final question | Open |
 | 188 | [NEEDS CLARIFICATION: S22, [NEEDS CLARIFICATION: Screen List does not provide Must / Should / Could priority.]: Screen List does not provide Must / Should / Could priority.] Source: `screens/S22-create_order_screen.md`, line 212. | Unassessed; see final question | Unassigned; see final question | Open |
 | 189 | [NEEDS CLARIFICATION: S22, [NEEDS CLARIFICATION: smallest supported width, narrow layout, and accessibility minimums are not specified.]: smallest supported width, narrow layout, and accessibility minimums are not specified.] Source: `screens/S22-create_order_screen.md`, line 214. | Unassessed; see final question | Unassigned; see final question | Open |
@@ -675,8 +677,8 @@ The source states feature priorities and project goals, not agreed outcome thres
 | 2. Actors | Function List Actor column | `docs/function-list.md`, lines 55-60 |
 | 4.1 Usage flow | Supplied customer usage flow | `docs/architecture/usage-flow.md`, original node IDs: ViewFinalDesign, SelfDesign, SelectOrder, MergeOrder, AcceptMerge, ReviewOrder, SignContract, OrderPayment, End |
 | 8. Success criteria / 9. Assumptions | Available scope document | `MVP_Score-WeaveLink.docx.pdf`, page 1 sections 1-3 and page 2 section 4; no measurable acceptance target or Session 3 document supplied |
-| 3. US-1 | Use Case “Finalize order” (original ID unavailable) | `docs/architecture/use-case.md`, line 18 |
-| 3. US-2 | Use Case “Make payment” (original ID unavailable) | `docs/architecture/use-case.md`, line 25 |
+| 3. US-1 | Use Case “Finalize order” (UC-C05) | `docs/architecture/use-case.md`, line 18 |
+| 3. US-2 | Use Case “Make payment” (UC-C12) | `docs/architecture/use-case.md`, line 25 |
 | 4.2 Sequence | SD-07: Create Order | `docs/architecture/sequence.md`, line 199 |
 | 4.2 Sequence | SD-09: Make Order Payment | `docs/architecture/sequence.md`, line 262 |
 | 5 / 5.1 / 6: FR-001 | `MFG-06` / `F-PAY-001` / Finalize Order; US-1: Finalize order | `docs/function-list.md`, line 55, No. 47; Screens: S22; sequence: SD-07; Usage Flow: SelectOrder. Diagrams support only the steps actually shown; the full contract remains sourced to the Function List. |

@@ -10,7 +10,7 @@
 | Date | 2026-09-16 |
 | Status | Draft |
 | Approved by (Client role) | [NEEDS CLARIFICATION: Client approver role and approval are not supplied.] |
-| DBIZ2 source | Function List `MFG-10`, No. 77-83, `F-MER-001` .. `F-MER-007`; Use Cases: Choose merge option; View merge-eligible orders; Confirm merge batch; Optimize order; [NEEDS CLARIFICATION: Use Case IDs are not visible in the supplied table.]; Screens: `S22`, `S23`, `S24`, `S25`, `S29`, `S38` |
+| DBIZ2 source | Function List `MFG-10`, No. 77-83, `F-MER-001` .. `F-MER-007`; Use Cases: Choose merge option; View merge-eligible orders; Confirm merge batch; Optimize order; Use Case IDs: UC-C06, UC-C17, UC-C18, UC-C16; Screens: `S22`, `S23`, `S24`, `S25`, `S29`, `S38` |
 
 
 ---
@@ -241,7 +241,7 @@ The source states feature priorities and project goals, not agreed outcome thres
 | --- | --- | --- | --- | --- |
 | 1 | [NEEDS CLARIFICATION: Specify the responsible team member; Group B is named only as the team on the Session 1 scope sheet.] | Unassessed; see final question | Unassigned; see final question | Open |
 | 2 | [NEEDS CLARIFICATION: Client approver role and approval are not supplied.] | Unassessed; see final question | Unassigned; see final question | Open |
-| 3 | [NEEDS CLARIFICATION: Use Case IDs are not visible in the supplied table.] | Unassessed; see final question | Unassigned; see final question | Open |
+| 3 | Use Case IDs: UC-C06, UC-C17, UC-C18, UC-C16 | Unassessed; see final question | Unassigned; see final question | Open |
 | 4 | [NEEDS CLARIFICATION: Original DBIZ2 Schematic 1.1/1.2 cells are unavailable; the PDF reproduces the project objective but is not Session 3 MVP Scope v3.] | Unassessed; see final question | Unassigned; see final question | Open |
 | 5 | [NEEDS CLARIFICATION: Supply MVP Scope v3 and Session 3 decisions to confirm current module scope.] | Unassessed; see final question | Unassigned; see final question | Open |
 | 6 | [NEEDS CLARIFICATION: P1/P2 scenario ordering is not agreed in the supplied materials; no scenario priority is inferred from Function List High/Medium/Low.] | Unassessed; see final question | Unassigned; see final question | Open |
@@ -445,10 +445,10 @@ The source states feature priorities and project goals, not agreed outcome thres
 | 2. Actors | Function List Actor column | `docs/function-list.md`, lines 89-95 |
 | 4.1 Usage flow | Supplied customer usage flow | `docs/architecture/usage-flow.md`, original node IDs: SelectOrder, MergeOrder, AcceptMerge, ReviewOrder |
 | 8. Success criteria / 9. Assumptions | Available scope document | `MVP_Score-WeaveLink.docx.pdf`, page 1 sections 1-3 and page 2 section 4; no measurable acceptance target or Session 3 document supplied |
-| 3. US-1 | Use Case “Choose merge option” (original ID unavailable) | `docs/architecture/use-case.md`, line 19 |
-| 3. US-2 | Use Case “View merge-eligible orders” (original ID unavailable) | `docs/architecture/use-case.md`, line 33 |
-| 3. US-3 | Use Case “Confirm merge batch” (original ID unavailable) | `docs/architecture/use-case.md`, line 34 |
-| 3. US-4 | Use Case “Optimize order” (original ID unavailable) | `docs/architecture/use-case.md`, line 35 |
+| 3. US-1 | Use Case “Choose merge option” (UC-C06) | `docs/architecture/use-case.md`, line 19 |
+| 3. US-2 | Use Case “View merge-eligible orders” (UC-C17) | `docs/architecture/use-case.md`, line 33 |
+| 3. US-3 | Use Case “Confirm merge batch” (UC-C18) | `docs/architecture/use-case.md`, line 34 |
+| 3. US-4 | Use Case “Optimize order” (UC-C16) | `docs/architecture/use-case.md`, line 35 |
 | 4.2 Sequence | SD-07: Create Order | `docs/architecture/sequence.md`, line 199 |
 | 5 / 5.1 / 6: FR-001 | `MFG-10` / `F-MER-001` / Select Merge; US-1: Choose merge option | `docs/function-list.md`, line 89, No. 77; Screens: S23; sequence: SD-07; Usage Flow: MergeOrder. Diagrams support only the steps actually shown; the full contract remains sourced to the Function List. |
 | 5 / 5.1 / 6: FR-002 | `MFG-10` / `F-MER-002` / Select Merge; US-1: Choose merge option | `docs/function-list.md`, line 90, No. 78; Screens: S23, S24; sequence: SD-07; Usage Flow: AcceptMerge. Diagrams support only the steps actually shown; the full contract remains sourced to the Function List. |

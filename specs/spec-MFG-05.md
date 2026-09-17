@@ -1,3 +1,6 @@
+Warning: truncated output (original token count: 30745)
+Total output lines: 772
+
 # Spec Document: Product Design
 
 
@@ -10,7 +13,7 @@
 | Date | 2026-09-16 |
 | Status | Draft |
 | Approved by (Client role) | [NEEDS CLARIFICATION: Client approver role and approval are not supplied.] |
-| DBIZ2 source | Function List `MFG-05`, No. 36-46, `F-DES-001` .. `F-DES-011`; Use Cases: Design product; Product Customization; View saved design; Request design service; Send design to customer; [NEEDS CLARIFICATION: Use Case IDs are not visible in the supplied table.]; Screens: `S09`, `S13`, `S15`, `S16`, `S17`, `S18`, `S20`, `S21`, `S22`, `S38` |
+| DBIZ2 source | Function List `MFG-05`, No. 36-46, `F-DES-001` .. `F-DES-011`; Use Cases: Design product; Product Customization; View saved design; Request design service; Send design to customer; Use Case IDs: UC-C02, UC-C01, UC-C03, UC-C04, UC-S03; Screens: `S09`, `S13`, `S15`, `S16`, `S17`, `S18`, `S20`, `S21`, `S22`, `S38` |
 
 
 ---
@@ -340,7 +343,7 @@ The source states feature priorities and project goals, not agreed outcome thres
 | --- | --- | --- | --- | --- |
 | 1 | [NEEDS CLARIFICATION: Specify the responsible team member; Group B is named only as the team on the Session 1 scope sheet.] | Unassessed; see final question | Unassigned; see final question | Open |
 | 2 | [NEEDS CLARIFICATION: Client approver role and approval are not supplied.] | Unassessed; see final question | Unassigned; see final question | Open |
-| 3 | [NEEDS CLARIFICATION: Use Case IDs are not visible in the supplied table.] | Unassessed; see final question | Unassigned; see final question | Open |
+| 3 | Use Case IDs: UC-C02, UC-C01, UC-C03, UC-C04, UC-S03 | Unassessed; see final question | Unassigned; see final question | Open |
 | 4 | [NEEDS CLARIFICATION: Original DBIZ2 Schematic 1.1/1.2 cells are unavailable; the PDF reproduces the project objective but is not Session 3 MVP Scope v3.] | Unassessed; see final question | Unassigned; see final question | Open |
 | 5 | [NEEDS CLARIFICATION: Supply MVP Scope v3 and Session 3 decisions to confirm current module scope.] | Unassessed; see final question | Unassigned; see final question | Open |
 | 6 | [NEEDS CLARIFICATION: Confirm whether design-service payment is owned by MFG-06; F-PAY contracts explicitly describe order payments.] | Unassessed; see final question | Unassigned; see final question | Open |
@@ -474,19 +477,7 @@ The source states feature priorities and project goals, not agreed outcome thres
 | 134 | [NEEDS CLARIFICATION: S15, Description input: validation rule not specified] Source: `screens/S15-design_service_request_screen.md`, line 53. | Unassessed; see final question | Unassigned; see final question | Open |
 | 135 | [NEEDS CLARIFICATION: S15, Desired delivery date input: date constraints not specified] Source: `screens/S15-design_service_request_screen.md`, line 56. | Unassessed; see final question | Unassigned; see final question | Open |
 | 136 | [NEEDS CLARIFICATION: S15, Additional notes input: field absent from F-DES-006] Source: `screens/S15-design_service_request_screen.md`, line 58. | Unassessed; see final question | Unassigned; see final question | Open |
-| 137 | [NEEDS CLARIFICATION: S15, Additional notes input: Unspecified requirement; inspect the cited source row.] Source: `screens/S15-design_service_request_screen.md`, line 58. | Unassessed; see final question | Unassigned; see final question | Open |
-| 138 | [NEEDS CLARIFICATION: S15, Additional notes input: validation rule not specified] Source: `screens/S15-design_service_request_screen.md`, line 58. | Unassessed; see final question | Unassigned; see final question | Open |
-| 139 | [NEEDS CLARIFICATION: S15, Agreement checkbox: mandatory status] Source: `screens/S15-design_service_request_screen.md`, line 61. | Unassessed; see final question | Unassigned; see final question | Open |
-| 140 | [NEEDS CLARIFICATION: S15, Agreement checkbox: validation rule not specified] Source: `screens/S15-design_service_request_screen.md`, line 61. | Unassessed; see final question | Unassigned; see final question | Open |
-| 141 | [NEEDS CLARIFICATION: S15, [NEEDS CLARIFICATION: empty form and absent product image handling]: empty form and absent product image handling] Source: `screens/S15-design_service_request_screen.md`, line 95. | Unassessed; see final question | Unassigned; see final question | Open |
-| 142 | [NEEDS CLARIFICATION: S15, [NEEDS CLARIFICATION: request submission loading treatment]: request submission loading treatment] Source: `screens/S15-design_service_request_screen.md`, line 96. | Unassessed; see final question | Unassigned; see final question | Open |
-| 143 | [NEEDS CLARIFICATION: S15, [NEEDS CLARIFICATION: request error treatment]: request error treatment] Source: `screens/S15-design_service_request_screen.md`, line 97. | Unassessed; see final question | Unassigned; see final question | Open |
-| 144 | [NEEDS CLARIFICATION: S15, About Dony navigation: destination not in Screen List] Source: `screens/S15-design_service_request_screen.md`, line 106. | Unassessed; see final question | Unassigned; see final question | Open |
-| 145 | [NEEDS CLARIFICATION: S15, Contact Us navigation: destination not in Screen List] Source: `screens/S15-design_service_request_screen.md`, line 109. | Unassessed; see final question | Unassigned; see final question | Open |
-| 146 | [NEEDS CLARIFICATION: S15, Attachments control: Unspecified requirement; inspect the cited source row.] Source: `screens/S15-design_service_request_screen.md`, line 116. | Unassessed; see final question | Unassigned; see final question | Open |
-| 147 | [NEEDS CLARIFICATION: S15, Zalo contact button: contact destination] Source: `screens/S15-design_service_request_screen.md`, line 119. | Unassessed; see final question | Unassigned; see final question | Open |
-| 148 | [NEEDS CLARIFICATION: S15, Telephone contact button: dial behavior] Source: `screens/S15-design_service_request_screen.md`, line 120. | Unassessed; see final question | Unassigned; see final question | Open |
-| 149 | [NEEDS CLARIFICATION: S15, Footer Facebook icon: external or in-system destination] Source: `screens/S15-design_service_request_screen.md`, line 121. | Unassessed; see final question | Unassigned; see final question | Open |
+| 137 | [NEEDS CLARIFICATION: S15, Additional notes input: Unspecified requirement; inspect the cited source row.] Source:…745 tokens truncated…; see final question | Open |
 | 150 | [NEEDS CLARIFICATION: S15, Footer X icon: external or in-system destination] Source: `screens/S15-design_service_request_screen.md`, line 122. | Unassessed; see final question | Unassigned; see final question | Open |
 | 151 | [NEEDS CLARIFICATION: S15, Footer LinkedIn icon: external or in-system destination] Source: `screens/S15-design_service_request_screen.md`, line 123. | Unassessed; see final question | Unassigned; see final question | Open |
 | 152 | [NEEDS CLARIFICATION: S15, Footer YouTube icon: external or in-system destination] Source: `screens/S15-design_service_request_screen.md`, line 124. | Unassessed; see final question | Unassigned; see final question | Open |
@@ -710,11 +701,11 @@ The source states feature priorities and project goals, not agreed outcome thres
 | 2. Actors | Function List Actor column | `docs/function-list.md`, lines 43-53 |
 | 4.1 Usage flow | Supplied customer usage flow | `docs/architecture/usage-flow.md`, original node IDs: PreferredProduct, DesignService, SendDescription, DesignPayment, ViewFinalDesign, SelfDesign, SelectOrder |
 | 8. Success criteria / 9. Assumptions | Available scope document | `MVP_Score-WeaveLink.docx.pdf`, page 1 sections 1-3 and page 2 section 4; no measurable acceptance target or Session 3 document supplied |
-| 3. US-1 | Use Case “Design product” (original ID unavailable) | `docs/architecture/use-case.md`, line 14 |
-| 3. US-2 | Use Case “Product Customization” (original ID unavailable) | `docs/architecture/use-case.md`, line 15 |
-| 3. US-3 | Use Case “View saved design” (original ID unavailable) | `docs/architecture/use-case.md`, line 16 |
-| 3. US-4 | Use Case “Request design service” (original ID unavailable) | `docs/architecture/use-case.md`, line 17 |
-| 3. US-5 | Use Case “Send design to customer” (original ID unavailable) | `docs/architecture/use-case.md`, line 28 |
+| 3. US-1 | Use Case “Design product” (UC-C02) | `docs/architecture/use-case.md`, line 14 |
+| 3. US-2 | Use Case “Product Customization” (UC-C01) | `docs/architecture/use-case.md`, line 15 |
+| 3. US-3 | Use Case “View saved design” (UC-C03) | `docs/architecture/use-case.md`, line 16 |
+| 3. US-4 | Use Case “Request design service” (UC-C04) | `docs/architecture/use-case.md`, line 17 |
+| 3. US-5 | Use Case “Send design to customer” (UC-S03) | `docs/architecture/use-case.md`, line 28 |
 | 4.2 Sequence | SD-05A: Self Design Product | `docs/architecture/sequence.md`, line 115 |
 | 4.2 Sequence | SD-05B: Request Design Service | `docs/architecture/sequence.md`, line 139 |
 | 4.2 Sequence | SD-06: View Saved Design | `docs/architecture/sequence.md`, line 179 |
