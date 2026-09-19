@@ -1,54 +1,105 @@
-# WeaveLink — implementation specifications
+# WeaveLink Platform
 
-WeaveLink is a made-to-order garment platform covering catalog, design services, checkout, payment, contracts, fulfillment, production batches, analytics and administration.
+WeaveLink is a web based client server platform for product browsing, product customization, design services, ordering, payment, contract management, sales consultation, order optimization, analytics, and system administration.
 
-This repository contains **documentation, not application source code**. The complete-system baseline covers **12 MFG modules, 94 module-qualified function entries, 49 use cases and 43 detailed screens**, with 17 inherited PNG mockups. All modules are included; historical MVP exclusions do not limit this target.
+This repository contains the software design documentation for the DBIZ 3 Group B classroom project. It contains specifications, traceability tables, screen descriptions, mockups, and architecture diagrams; no application source code or runtime setup is included. The documents define the complete target system while the MVP scope below determines implementation priority.
 
-## Start here
+## Documentation overview
 
-1. Read [system decisions](docs/system-decisions.md): shared data, role/tenant rules, lifecycles, pricing, side effects and implementation defaults.
-2. Read [system configuration](docs/architecture/system-configuration.md) and [usage flow](docs/architecture/usage-flow.md).
-3. Locate the relevant module using the table below and its [function catalogue](docs/function-list.md).
-4. Use the [screen catalogue](docs/screen-list.md), [use cases](docs/architecture/use-case.md), [sequences](docs/architecture/sequence.md) and [acceptance checklist](docs/acceptance-checklist.md).
-5. Consult the [VNPay adapter contract](docs/integrations/vnpay.md) before implementing payment.
+| Area | Contents | Location |
+|---|---|---|
+| Function list | 12 MFG modules and 94 module-qualified function entries | [`docs/function-list.md`](docs/function-list.md) |
+| Use cases | 49 use cases with resolved actors, relationships, and functions | [`docs/architecture/use-case.md`](docs/architecture/use-case.md) |
+| Architecture | Context diagram, system configuration, and end-to-end usage flow | [`docs/architecture/`](docs/architecture/) |
+| Sequence diagrams | 10 sequences covering SD-01 through SD-09, including SD-05A and SD-05B | [`docs/architecture/sequence.md`](docs/architecture/sequence.md) |
+| Screen catalogue | 43 documented screen entries | [`docs/screen-list.md`](docs/screen-list.md) |
+| Screen specifications | 43 detailed screen specs; 17 have supplied PNG mockups and 26 explicitly record that no mockup is available | [`screens/`](screens/) |
+| Module specifications | Scope, actors, scenarios, flows, requirements, entities, business rules, success criteria, decisions, and traceability | [`specs/`](specs/) |
 
-The only pending factual-information register is [user-input-needed.md](docs/user-input-needed.md). It contains human/course/company/source-provenance facts; implementation behavior is decided in the specifications.
+## Main actors
 
-## Modules
+- `Guest`: browses and searches products, registers, signs in, and requests account recovery.
+- `Member`: umbrella term for an authenticated user; manages profile, password, notifications, and logout.
+- `Customer`: owns designs and service requests, creates and tracks orders, acknowledges contracts, and pays.
+- `Sales Consultant`: works only on assigned consultations and permitted fulfillment records.
+- `Company Admin`: manages data belonging to one company, including products, assignments, orders, contracts, payments, batches, and analytics.
+- `System Admin`: provisions companies and staff and operates configuration, logs, backup, and restore.
+- `Payment Gateway (VNPay)`: external gateway; verified server IPN and reconciliation results are authoritative.
 
-| Module | Scope | Functions | Specification |
-|---|---|---:|---|
-| MFG-01 | Identity and access | 11 | [Spec](specs/spec-MFG-01.md) |
-| MFG-02 | Profile and settings | 5 | [Spec](specs/spec-MFG-02.md) |
-| MFG-03 | Company and staff accounts | 8 | [Spec](specs/spec-MFG-03.md) |
-| MFG-04 | Product catalog and design rules | 11 | [Spec](specs/spec-MFG-04.md) |
-| MFG-05 | Designs and paid design requests | 11 | [Spec](specs/spec-MFG-05.md) |
-| MFG-06 | Checkout, order creation and payment | 6 | [Spec](specs/spec-MFG-06.md) |
-| MFG-07 | Order tracking, cancellation and fulfillment | 7 | [Spec](specs/spec-MFG-07.md) |
-| MFG-08 | Consultant assignment and customer care | 8 | [Spec](specs/spec-MFG-08.md) |
-| MFG-09 | Templates, contracts and signing | 9 | [Spec](specs/spec-MFG-09.md) |
-| MFG-10 | Merge preference and production batches | 7 | [Spec](specs/spec-MFG-10.md) |
-| MFG-11 | Analytics and exports | 3 | [Spec](specs/spec-MFG-11.md) |
-| MFG-12 | Configuration, logs, backup and recovery | 8 | [Spec](specs/spec-MFG-12.md) |
-| **Total** | | **94** | |
+## MFG modules
 
-## Canonical conventions and scope
+| Module | Name | Functions | Use cases | Specification |
+|---|---|---:|---:|---|
+| MFG-01 | Identity & Access | 11 | 5 | [`spec-MFG-01.md`](specs/spec-MFG-01.md) |
+| MFG-02 | Profile & Settings | 5 | 4 | [`spec-MFG-02.md`](specs/spec-MFG-02.md) |
+| MFG-03 | Company Accounts | 8 | 4 | [`spec-MFG-03.md`](specs/spec-MFG-03.md) |
+| MFG-04 | Product Catalog | 11 | 7 | [`spec-MFG-04.md`](specs/spec-MFG-04.md) |
+| MFG-05 | Product Design | 11 | 5 | [`spec-MFG-05.md`](specs/spec-MFG-05.md) |
+| MFG-06 | Order & Payment | 6 | 2 | [`spec-MFG-06.md`](specs/spec-MFG-06.md) |
+| MFG-07 | Order Management | 7 | 3 | [`spec-MFG-07.md`](specs/spec-MFG-07.md) |
+| MFG-08 | Sales Consultant | 8 | 3 | [`spec-MFG-08.md`](specs/spec-MFG-08.md) |
+| MFG-09 | Contract Management | 9 | 6 | [`spec-MFG-09.md`](specs/spec-MFG-09.md) |
+| MFG-10 | Order Optimization (Merge) | 7 | 4 | [`spec-MFG-10.md`](specs/spec-MFG-10.md) |
+| MFG-11 | Data Analytics | 3 | 3 | [`spec-MFG-11.md`](specs/spec-MFG-11.md) |
+| MFG-12 | System Operations | 8 | 3 | [`spec-MFG-12.md`](specs/spec-MFG-12.md) |
+| **Total** | | **94** | **49** | |
 
-- Preserve legacy MFG/F/FR/UC/S/SD/ILF IDs. **F-ORD identifiers overlap in MFG-07 and MFG-08**: always qualify cross-module references, for example MFG-07/F-ORD-003 (cancel order) versus MFG-08/F-ORD-003 (assign consultant). FR and scenario IDs are also module-local.
-- S01–S40 remain; S14 is clarified as product design-rule editing. S41 company/staff accounts, S42 merge console and S43 analytics close uncovered UI needs. Missing historical images are documented, not fabricated.
-- Member is the authenticated-user umbrella. System Admin, Company Admin, Sales Consultant and Customer have explicit server-side access boundaries.
-- Shared rules are authoritative. Money is integer VND; order, contract, payment, request and batch states are distinct. A browser payment return never authorizes settlement.
-- New prices, deadlines, retention and signature behavior are **documented implementation decisions** for this classroom system, not claimed facts from unavailable DBIZ2/session PDFs or actual client approval.
-- PNGs remain original visual references. Written specs override obsolete sample prices, ambiguous buttons and missing failure behavior. Git history retains the previous transcriptions; the current docs form one consistent target.
+## MVP Scope
 
-## Validation
+The MVP scope is defined by feature priority. It does not remove lower-priority modules from the complete-system documentation.
 
-Requires Node.js with support for ES modules; no external package install is required.
+| Priority | Feature / Item | MFG | Notes |
+|---|---|---|---|
+| **Must** | Role-based Authentication & Access (Customer, Sales Consultant, Company Admin) | MFG-01 | Foundation for secure role-aware access |
+| **Must** | Product Catalog (browse, search, view product detail) | MFG-04 | Entry point for choosing a base product |
+| **Must** | Product Design Workspace (self-design, upload artwork, preview, save design) | MFG-05 | Core customization workflow |
+| **Must** | Order & Payment (checkout, VNPay integration, order creation) | MFG-06 | Core revenue workflow |
+| **Should** | Order Tracking & Status Updates | MFG-07 | Manual tracking is an acceptable temporary launch fallback |
+| **Should** | Digital Contract Generation & E-signature acknowledgement | MFG-09 | Email or paper contract is an acceptable temporary launch fallback |
+| **Could** | Order Optimization / Merge | MFG-10 | Valuable after order volume increases |
+| **Could** | Paid Design Service Request | MFG-05 | Alternative path for customers needing consultant assistance |
+| **Could** | Sales Consultant Assignment & Task Dashboard | MFG-08 | Needed when consultation volume requires a dedicated queue |
+| **Won't** | Data Analytics Dashboard & Data Export | MFG-11 | Deferred until sufficient order history exists |
+| **Won't** | Company Accounts & System Operations | MFG-03, MFG-12 | One configured admin is sufficient for the MVP |
 
-```powershell
-node scripts/validate-docs.mjs
-node scripts/validate-docs.mjs --build
-git diff --check
-```
+### MVP Priority Summary
 
-The build option emits a documentation index at `tmp/documentation-index.json`; this is not an application build. The checker validates function/use-case/screen coverage, local links, placeholders, qualified IDs, Markdown fence/table structure and worked pricing examples. It does not execute future business code or prove runtime behavior. See the [validation report](docs/validation-report.md) for actual results and limits.
+- **Must:** MFG-01, MFG-04, self-design in MFG-05, and MFG-06.
+- **Should:** MFG-07 and MFG-09.
+- **Could:** paid design service in MFG-05, MFG-08, and MFG-10.
+- **Won't:** MFG-03, MFG-11, and MFG-12 for the MVP release.
+
+## Use Case ID convention
+
+Use Case IDs use the format `UC-<actor initial><number>`:
+
+- `UC-G01` to `UC-G03`: Guest.
+- `UC-M01` to `UC-M08`: Member or unauthenticated account-access flow.
+- `UC-C01` to `UC-C27`: Customer or Company Admin; consult the actor column rather than inferring from the initial.
+- `UC-S01` to `UC-S11`: Sales Consultant or System Admin; consult the actor column rather than inferring from the initial.
+
+The authoritative actor association is recorded in [`docs/architecture/use-case.md`](docs/architecture/use-case.md). Because MFG-07 and MFG-08 both inherit `F-ORD-*` IDs, cross-module references always include the module, for example `MFG-07/F-ORD-003` and `MFG-08/F-ORD-003`.
+
+## Architecture and flows
+
+1. [`context.md`](docs/architecture/context.md) shows actors and external services around WeaveLink.
+2. [`system-configuration.md`](docs/architecture/system-configuration.md) shows logical frontend, backend, storage, worker, and integration boundaries.
+3. [`usage-flow.md`](docs/architecture/usage-flow.md) follows both design routes through contract, payment, production, and delivery.
+4. [`sequence.md`](docs/architecture/sequence.md) records the detailed message flows.
+
+## Traceability
+
+The documents retain the original identifier layers: `MFG-*`, `UC-*`, `F-*`, module-local `FR-*`, `S01` through `S43`, `SD-*`, and `ILF-*`. Each module spec maps its scenarios, requirements, screens, entities, business rules, and success criteria back to these identifiers.
+
+## Open clarification areas
+
+All inherited clarification markers and open questions have been resolved as implementation decisions in the relevant specification. The project is a classroom demo, uses clearly labelled fictional organization/contact data, has no external approver, and requires no further DBIZ2 source comparison. No unresolved item currently blocks implementation.
+
+## Suggested reading order
+
+1. [`docs/architecture/context.md`](docs/architecture/context.md)
+2. [`docs/architecture/system-configuration.md`](docs/architecture/system-configuration.md)
+3. [`docs/architecture/use-case.md`](docs/architecture/use-case.md)
+4. [`docs/function-list.md`](docs/function-list.md)
+5. The relevant module file in [`specs/`](specs/)
+6. The linked screen and sequence documents

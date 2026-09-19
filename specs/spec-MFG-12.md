@@ -1,45 +1,177 @@
-# MFG-12 — System Operations
+# Spec Document: System Operations
 
-Implementation specification · Complete-system scope. Traceability: [function list](../docs/function-list.md), rows 87–94; shared contracts D01–D03, D10–D12 in [system decisions](../docs/system-decisions.md); factual provenance: [user input register](../docs/user-input-needed.md).
+| Field | Value |
+| --- | --- |
+| Module ID | `MFG-12` |
+| Module name | System Operations |
+| Spec version | v1.0 |
+| Author (team member) | Group B |
+| Date | 2026-09-19 |
+| Status | Draft |
+| Approved by (Client role) | No approver identified |
+| DBIZ2 source | Function List MFG-12, No. 87–94, `F-SYS-001`–`F-SYS-008`; UC-S09, UC-S10, UC-S11; screens S39–S40 |
 
-## Purpose, permissions, and entities
+---
 
-System Admin inspects redacted audit events, creates/inspects backups, performs controlled restore and changes typed system configuration. System Admin access does not grant customer-design/order mutation or company financial export. Audit search is on S40; backup, restore and configuration controls are on S39. Recent reauthentication is required for restore and configuration changes.
+## 1. Purpose and scope (mandatory)
 
-`AuditEvent(id,actor_id,company_id?,target_type,target_id?,action,outcome,severity:INFO|WARN|ERROR,request_id,timestamp,redacted_details)` is append-only, retains 365 days and never stores passwords, tokens or full card data. Severity is derived/stored as INFO for committed success, WARN for denied/invalid actions, ERROR for dependency/job failures; DEBUG is not persisted. Query by severity/action/outcome/actor/company/target and UTC date.
+System Admins inspect redacted audit events, create/inspect backups, perform controlled restoration and change typed system configuration. System Admin access does not grant customer-design/order mutation or company financial export. Restore and configuration changes require recent reauthentication.
 
-`Backup(id,created_at,creator_id?,state:Queued|Running|Succeeded|Failed,manifest,checksum,schema_version,asset_count,transaction_log_start,transaction_log_end,error_code?)`. Nightly encrypted base snapshot runs 02:00 Asia/Ho_Chi_Minh; retain 7 daily and 4 weekly bases. Include database, referenced private assets, manifest/checksums/schema version. Maintain a continuous transaction-log archive with verifiable sequence/checksums and watermarks so restoration from a selected base can replay through the pre-maintenance committed watermark. Reject restore if any segment/base is missing or invalid. Keep payment event/restore audit journal outside the restored snapshot to prevent duplicate fulfillment/refunds.
+MVP priority: **Won't**; these functions remain specified for the complete system and are excluded from MVP release. S40 is the audit log viewer; S39 provides backup, restore and configuration controls.
 
-`SystemConfig(version,typed_values,activated_at,actor_id)`. Allowlisted settings: public company contacts, SMTP connection reference, VNPay environment/merchant secret references, `design_service_fee_vnd`, `shipping_vnd`, and backup schedule/retention. Merge discount 5%, standard production 7 days, and merge allowance 3 days are read-only policy-v1 constants; changing them requires a new reviewed policy version and updated specifications. Store secret references only, never secret values in responses/logs. Validate the whole proposed config before atomic activation; rollback failed validation and notify after commit.
+Audit events are append-only and retained 365 days. Severity is INFO for committed success, WARN for denied/invalid actions and ERROR for dependency/job failures; DEBUG is not persisted. Nightly encrypted base snapshot runs at 02:00 Asia/Ho_Chi_Minh, with seven daily and four weekly bases retained. A continuous verified transaction-log archive permits restore through the pre-maintenance committed watermark. Payment event/restore journal remains outside the restored snapshot to avoid duplicate fulfillment/refunds.
 
-## Function contracts
+Configuration stores secret references, never secret values. Allowlisted settings are public company contacts, SMTP reference, VNPay environment/merchant secret references, design_service_fee_vnd, shipping_vnd and backup schedule/retention. Merge discount 5%, standard production seven days and merge allowance three days are read-only policy-v1 values; changing them requires a new reviewed policy version and updated specifications.
 
-| Function | Inputs | Result, validation, and failure |
-|---|---|---|
-| F-SYS-001 Log List View (FR-001) | Session-derived System Admin privilege; optional severity `{INFO,WARN,ERROR}`, action/outcome/actor/company/target filters; UTC date range (default last 30 days); page/page_size. | S40 paginated redacted audit rows with actor/company/target/action/outcome/severity/request ID/timestamp. page >=1, page_size 1..100; malformed range 422, invalid paging 400. |
-| F-SYS-002 Search Log View (FR-002) | Optional search text <=100 chars, allowlisted fields action/outcome/actor/target/request_id, severity, date range and pagination. | S40 filtered audit results with same redaction. System Admin only. No results return empty page; invalid range 422. |
-| F-SYS-003 Backup Option View (FR-003) | Session-derived System Admin privilege; no client privilege flag. | S39 backup controls show schedule/retention, base snapshot and transaction-log archive watermarks, recent backups, operation lock and create/restore availability. |
-| F-SYS-004 Backup Exec Logic (FR-004) | Manual trigger enum `{manual}` plus Idempotency-Key; scheduled trigger from trusted scheduler. | Queue encrypted snapshot job and return backup_id/manifest reference/status Queued. Worker states Queued→Running→Succeeded/Failed. Succeeded only after database/assets, checksums, schema and transaction-log archive watermark verify. Failure records error code and no success artifact. |
-| F-SYS-005 Restore Exec Logic (FR-005) | Selected backup UUID, exact backup ID confirmation, recent reauthentication, expected system version, Idempotency-Key. | Return restore job ID/status. Lock single restore, enter maintenance, create successful pre-restore base, verify selected base manifest/checksum/schema and continuous transaction-log chain through last committed pre-maintenance watermark. Restore base then replay transaction logs to watermark, preserving later orders/payment attempts; reject missing/gapped/corrupt chain before activation. Reconcile queued provider events idempotently after recovery; revoke sessions on success. Failure rolls back to pre-restore base, leaves maintenance enabled until integrity confirmed and exposes diagnostics. |
-| F-SYS-006 Settings Form (FR-006) | No body; authenticated System Admin. | S39 view model of current typed allowlisted values, write-only masked secret references, active version and validation guidance. Read only policy-v1 merge percent/deadlines. |
-| F-SYS-007 Save Config Logic (FR-007) | Allowlisted typed patch and expected version; secret values must be connection/secret references; no arbitrary key/script/SQL. | Recent reauthentication. Validate complete proposed configuration, atomically activate new version and audit; return typed version/status. Merge discount 5%, standard production 7 days and merge allowance 3 days are fixed read-only policy-v1 values; attempts to submit their former config keys are rejected 422. Invalid key/range/dependency 422; stale version 409; failed validation leaves previous config active. |
-| F-SYS-008 Config Notify Logic (FR-008) | Server-generated change log from committed version diff; recipient group resolved to active admins. | Enqueue in-app/email notice after commit with changed key names, actor, version and time; exclude secret values. Delivery failure does not rollback config; retry per D03. |
+## 2. Actors (mandatory)
 
-Use cases: UC-S09 System Logs (F-SYS-001..002); UC-S10 Backup/Restore Data (F-SYS-003..005); UC-S11 Config System (F-SYS-006..008).
+| Actor | Role in this module | Where it comes from |
+| --- | --- | --- |
+| System Admin | Searches redacted logs, triggers backup/restore and edits allowlisted configuration | MFG-12 resolved permissions; UC-S09/UC-S10/UC-S11 |
+| Trusted scheduler | Runs nightly backups and scheduled operations | MFG-12 operations contract |
+| System | Executes asynchronous jobs, maintains audit journal and sends notices | MFG-12 function contract |
 
-## Flows and acceptance
+## 3. User scenarios and acceptance criteria (mandatory)
 
-Logs: Admin searches S40 using severity/action/outcome/actor/target/date → server returns paginated redacted audit. Backup: manual/scheduled trigger → Queued/Running → encrypted base and verified manifest/checksum/schema plus archived transaction-log watermark → Succeeded/Failed. Restore: select base → reauthenticate/confirm → successful pre-restore snapshot → single maintenance lock → verify continuous log chain through committed watermark → restore base + replay logs → reconcile queued IPNs idempotently → revoke sessions and exit maintenance only after validation. Config: open S39 → edit writable typed fields → validate whole version → atomically activate/audit → enqueue notice.
+### US-1: Monitor system logs (Won't for MVP)
 
-- **Given** an audit event includes authentication activity, **when** queried on S40, **then** actor/action/outcome/severity appear while passwords, raw tokens and card details are absent.
-- **Given** date filters are valid but no events match, **when** logs are searched, **then** an empty page with pagination metadata is returned; malformed ranges return 422.
-- **Given** a manual backup is requested twice with one key/payload, **when** jobs are queued, **then** one backup ID is returned; changed payload with that key is 409.
-- **Given** a base asset/checksum/schema or transaction-log segment is missing/corrupt, **when** restore is attempted, **then** recovery is rejected before activation and no partial success is reported.
-- **Given** two restore requests begin concurrently, **when** they contend for the operation lock, **then** exactly one proceeds and the other receives 409.
-- **Given** a restore target watermark is valid, **when** recovery completes, **then** changes through that watermark, including later orders/payment attempts, survive; queued payment events reconcile idempotently and sessions are revoked before success.
-- **Given** restore fails after maintenance starts, **when** rollback runs, **then** pre-restore backup is used and maintenance remains enabled until integrity is confirmed; diagnostics are visible to System Admin.
-- **Given** a config patch includes unknown key, out-of-range value, raw secret or attempted edit to fixed merge policy, **when** submitted, **then** 422 is returned, prior version stays active and no notice is sent.
-- **Given** valid config changes race at one expected version, **when** both are submitted, **then** one version activates, one returns 409, and only committed diff is notified without secret values.
-- **Given** email delivery fails after config commit, **when** retries exhaust, **then** config remains active and delivery is marked failed for operations retry.
+System Admin searches S40 by severity, action, outcome, actor, company, target and UTC date with pagination. Results redact passwords, tokens and card details.
 
-All mutation audit records are redacted and append-only. Scheduled jobs use the same state machines and audit journal as manual operations. Payment callbacks arriving in maintenance are durably queued; external payment/restore journal remains outside snapshot. All eight F-SYS IDs map to FR-001..008. Use D02 error envelope, version conflicts and idempotency. Historical MVP omissions do not remove these complete-system functions.
+1. **Given** no events match valid filters, **when** searched, **then** an empty page with pagination metadata is returned.
+2. **Given** malformed date range or invalid paging, **when** submitted, **then** 422 or 400 is returned as appropriate.
+3. **Given** authentication activity is logged, **when** queried, **then** actor/action/outcome/severity are visible and secrets are absent.
+
+### US-2: Backup and restore data (Won't for MVP)
+
+Admin triggers or inspects encrypted base backups and initiates a controlled restore after exact backup ID confirmation and recent reauthentication.
+
+1. **Given** a backup is requested twice with the same key/payload, **when** jobs are queued, **then** one backup ID is returned; changed payload with that key is 409.
+2. **Given** base/asset/checksum/schema or transaction-log segment is missing, corrupt or discontinuous, **when** restore is attempted, **then** it is rejected before activation.
+3. **Given** two restores contend for the single restore lock, **when** requests begin, **then** one proceeds and the other returns 409.
+4. **Given** restore succeeds through the pre-maintenance watermark, **when** recovery completes, **then** committed orders/payment attempts through that watermark survive, queued provider events reconcile idempotently and sessions are revoked.
+5. **Given** restore fails after maintenance begins, **when** rollback runs, **then** the pre-restore backup is used and maintenance remains enabled until integrity is confirmed.
+
+### US-3: Configure system (Won't for MVP)
+
+Admin edits only allowlisted typed settings. The whole proposed configuration is validated before atomic activation.
+
+1. **Given** a patch includes an unknown key, invalid range, raw secret or attempted edit of fixed merge policy, **when** submitted, **then** it returns 422 and prior version remains active.
+2. **Given** two valid changes race at one expected version, **when** submitted, **then** one activates and one returns 409; only committed keys are notified.
+3. **Given** email fails after config commit, **when** retries exhaust, **then** active configuration remains and delivery is marked retryable.
+
+### Edge cases
+
+- Jobs use explicit Queued/Running/Succeeded/Failed states and expose error codes, not secrets.
+- Payment callbacks during maintenance are durably queued and reconciled idempotently.
+- Failed validation never partially activates configuration or restore state.
+
+## 4. Flows (mandatory)
+
+### 4.1 Usage flow
+
+Logs: Admin filters S40 → server returns redacted page. Backup: manual/scheduled trigger → encrypted base/assets and verified manifest/checksums/schema/log watermark → Succeeded or Failed. Restore: confirm selected base and reauthenticate → create pre-restore base → lock maintenance → verify continuous log chain → restore and replay through watermark → reconcile queued provider events → revoke sessions and exit maintenance after validation. Configuration: edit typed fields → validate whole version → activate atomically and audit → enqueue notice.
+
+### 4.2 Sequence for the main flow
+
+1. Derive System Admin privilege from authenticated session; never accept client role flags.
+2. For restore/configuration, verify recent reauthentication and expected system version.
+3. Queue operation, record audit event and execute with serialized locks and idempotency.
+4. Activate only after integrity/validation succeeds; publish notification after commit.
+
+## 5. Functional requirements (mandatory)
+
+| FR ID | DBIZ2 Subfunction ID | Requirement (system MUST ...) | Actor | Priority |
+| --- | --- | --- | --- | --- |
+| FR-001 | F-SYS-001 | Display paginated redacted audit events with allowlisted filters and default last-30-day UTC range. | System Admin | Won't (MVP) |
+| FR-002 | F-SYS-002 | Search redacted audit events by text, allowlisted fields, severity, date and pagination. | System Admin | Won't (MVP) |
+| FR-003 | F-SYS-003 | Show backup schedule/retention, base/log watermarks, recent jobs, operation lock and available controls. | System Admin | Won't (MVP) |
+| FR-004 | F-SYS-004 | Queue verified encrypted snapshot and return backup job state/manifest reference. | System Admin / scheduler | Won't (MVP) |
+| FR-005 | F-SYS-005 | Restore selected verified base plus continuous transaction logs through pre-maintenance watermark under one restore lock. | System Admin | Won't (MVP) |
+| FR-006 | F-SYS-006 | Show typed allowlisted settings, masked write-only secret references, active version and validation guidance; fixed policy-v1 merge values are read-only. | System Admin | Won't (MVP) |
+| FR-007 | F-SYS-007 | Validate entire typed config patch, atomically activate new version and audit; reject fixed policy edits. | System Admin | Won't (MVP) |
+| FR-008 | F-SYS-008 | Notify active admins of committed configuration key names/version/time, excluding secret values. | System | Won't (MVP) |
+
+### 5.1 Input / Output contract
+
+| FR ID | Input field | Type | Required | Output field | Type | Notes / validation |
+| --- | --- | --- | --- | --- | --- | --- |
+| FR-001 | severity, action/outcome/actor/company/target filters, UTC date, page/page_size | Enums/IDs/date/integers | Optional | redacted audit rows and pagination | Paginated object | page_size 1–100; malformed range 422 |
+| FR-002 | search text ≤100 chars, allowlisted field, severity/date/pagination | Text/enums/filters | Optional | filtered redacted results | Paginated object | System Admin only |
+| FR-003 | session-derived Admin privilege | Session | Yes | schedule, retention, watermarks, recent jobs, lock/control state | View model | No client privilege flag |
+| FR-004 | manual trigger or trusted scheduler, Idempotency-Key | Enum/internal trigger/key | Yes | backup_id, manifest reference, status | Job object | Verify database/assets/checksums/schema/log watermark before success |
+| FR-005 | backup UUID, exact ID confirmation, reauthentication, expected system version, key | UUID/text/session/version/key | Yes | restore job ID/status | Job object | Single lock; replay logs; rollback and maintenance rules apply |
+| FR-006 | session-derived Admin privilege | Session | Yes | typed values, masked references, active version | View model | Fixed policy values read-only |
+| FR-007 | allowlisted typed patch, expected version, reauthentication | Object/version/session | Yes | activated version/status | Object | Invalid 422; stale 409; prior config preserved |
+| FR-008 | server-generated committed change log | Internal event | Yes | in-app/email outbox IDs | UUIDs | Active admin recipients; no secret values |
+
+### 5.2 Business rules
+
+| Rule ID | Rule | Why it exists |
+| --- | --- | --- |
+| BR-001 | Audit events are append-only, retained 365 days and exclude passwords, tokens and full card data. Severity derives from outcome; DEBUG is not persisted. | Protect sensitive data and retain operations evidence. |
+| BR-002 | Nightly encrypted base runs at 02:00 Asia/Ho_Chi_Minh; retain seven daily and four weekly bases with database/assets, manifest, checksums and schema version. | Provide verified recovery points. |
+| BR-003 | Continuous transaction-log archive must verify sequence/checksums and restore to committed pre-maintenance watermark; missing/gapped/corrupt chain prevents activation. | Prevent incomplete restoration. |
+| BR-004 | Keep payment event/restore journal outside restored snapshot; reconcile queued provider events idempotently. | Prevent duplicate fulfillment/refunds. |
+| BR-005 | Config patch is allowlisted, fully validated, and atomically activated; secrets are references only. | Prevent partial, unsafe configuration changes. |
+| BR-006 | Policy-v1 merge discount 5%, standard production 7 days and merge allowance 3 days are read-only. | Preserve customer commitments. |
+
+Configuration notices list changed key names, actor, version and time only; secret values are excluded. In-app inbox is authoritative and email delivery is retried; notification failure never rolls back configuration. Restore success revokes sessions. During maintenance, provider callbacks are durably queued and reconciled idempotently after recovery.
+
+## 6. Key entities (mandatory)
+
+| Entity | Attributes (from Input/Output fields) | Relationships |
+| --- | --- | --- |
+| AuditEvent | id, actor_id, company_id?, target_type/id?, action, outcome, severity, request_id, timestamp, redacted_details | Append-only event; retained 365 days. |
+| Backup | id, created_at, creator_id?, state, manifest, checksum, schema_version, asset_count, transaction_log_start/end, error_code? | Base snapshot plus assets and continuous log archive. |
+| SystemConfig | version, typed_values, activated_at, actor_id | New version atomically replaces active version; prior remains auditable. |
+| Restore journal | committed watermark, payment/provider events, restore operation state | Stored outside restored snapshot and reconciled idempotently. |
+
+## 7. Screens involved
+
+| Screen ID | Screen name | Priority | Screen Spec file |
+| --- | --- | --- | --- |
+| S39 | System Configuration / backup and restore controls | Won't (MVP) | Module screen |
+| S40 | System Log Viewer | Won't (MVP) | Module screen |
+
+## 8. Success criteria (mandatory)
+
+| SC ID | Criterion | How it is measured |
+| --- | --- | --- |
+| SC-001 | Audit results remain useful while secrets and sensitive payment data are redacted. | Query representative events and confirm fields and retention. |
+| SC-002 | Backup and restore verify all assets and log continuity before activation and preserve committed events. | Test missing/corrupt/gapped segments, successful replay, rollback and concurrent restore. |
+| SC-003 | Invalid/stale config never activates; valid config activates atomically and notification excludes secret values. | Verify patches, version conflicts, audit diff and outbox. |
+
+## 9. Assumptions
+
+- System Admin identity and recent reauthentication are available from the shared identity service.
+- Scheduler, private asset storage and durable job queue are available in complete-system deployment.
+- MVP priority is Won't; a single admin login is sufficient at MVP launch.
+
+## 10. Open questions
+
+| # | Question | Blocking? | Owner | Status |
+| --- | --- | --- | --- | --- |
+| 1 | Resolved decisions: Group B; course DBIZ 3; no approver identified; course/demo use only; MVP priority Won't. | No | Group B | Resolved |
+| 2 | No remaining open questions. | No | Group B | Resolved |
+
+## 11. Traceability to DBIZ2
+
+| Spec section | DBIZ2 source | Location |
+| --- | --- | --- |
+| 1–2 Scope and actors | MFG-12 Function List No. 87–94 | `F-SYS-001`–`F-SYS-008` |
+| 3 Scenarios | UC-S09, UC-S10, UC-S11 | Use-case labels and resolved operations |
+| 4 Flows | Logs, backup, restore, configuration | Current MFG-12 contract |
+| 5–6 FRs and entities | `F-SYS-001`–`F-SYS-008` | Function List MFG-12 |
+| 7 Screens | S39–S40 | Screen List and module contract |
+
+## Completion checklist
+
+- [x] All eight MFG-12 functions have FR rows and typed contracts.
+- [x] Audit, backup, restore, payment reconciliation and config security rules are recorded.
+- [x] MVP exclusion is reflected without removing complete-system requirements.
+- [x] Resolved inputs are recorded and no unresolved placeholders remain.
+- [x] Traceability identifies use cases, functions and screens.
+
+Template source: DBIZ3 Product Design Package specification template.
+
+DBIZ3, FTU.

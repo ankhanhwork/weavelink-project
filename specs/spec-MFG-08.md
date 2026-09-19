@@ -1,27 +1,72 @@
-# MFG-08 — Consultant Assignment and CRM Consultation
+# Spec Document: Sales Consultant
 
-**Canonical function identity:** `MFG-08/F-ORD-001` through `MFG-08/F-ORD-008`. MFG-07 independently reuses its first seven local IDs; always qualify references by module. Complete-system scope applies. Decisions D01–D05, D11–D12 in [system-decisions.md](../docs/system-decisions.md) govern; factual human inputs belong only in [user-input-needed.md](../docs/user-input-needed.md).
+| Field | Value |
+| --- | --- |
+| Module ID | `MFG-08` |
+| Module name | Sales Consultant |
+| Spec version | v1.0 |
+| Author (team member) | Group B |
+| Date | 2026-09-19 |
+| Status | Draft |
+| Approved by (Client role) | No approver identified |
+| DBIZ2 source | Function List MFG-08, No. 60–67, `F-ORD-001`–`F-ORD-008`; UC-S01, UC-S02, UC-C19; screens S18–S21 and S38 |
 
-## Actors and module boundary
+---
 
-Company Admin reviews company customers/consultations and assigns an active same-company Sales Consultant. Consultants see only assigned customer context and update consultation progress. Customers can see their own design request status/deliveries through MFG-05 but never internal CRM notes. This module manages customer-to-consultant assignment and CRM records. Design requests remain separate MFG-05 entities; if assigning a consultant to a customer with a paid design request, the assignment and request assignment must be updated atomically or both remain unchanged. Contract/order/payment mutations belong to their modules.
+## 1. Purpose and scope (mandatory)
 
-`CustomerAssignment`: company_id, customer_id, consultant_user_id, assigned_by, assigned_at, version; unique active assignment per company/customer. `Consultation`: UUID id, company_id, customer_id, consultant_id, notes, related_request_ids/order_ids, status New|Contacted|InProgress|ClosedWon|ClosedLost, version, timestamps. Notes are private to assigned consultant and Company Admin. Assignment history is retained. Role/access checks occur server-side; inaccessible object identifiers return 404, prohibited actions 403.
+Company Admins assign company customers to Sales Consultants. Consultants see assigned customer context and record consultation progress. Customers may see their own design request status and deliveries through MFG-05, but never internal CRM notes. Paid design requests remain MFG-05 records; when customer assignment changes, all active Assigned/InProgress requests transfer atomically with the assignment. Contract, order and payment state belongs to their owning modules.
 
-## Function contracts and requirements
+MVP priority: **Could**. Complete-system target includes all eight functions. `F-ORD-001`–`F-ORD-007` are reused by MFG-07 for different functions; all references here mean `MFG-08/F-ORD-nnn`.
 
-| FR / function | Inputs and output | Validation, effect, and failure |
-|---|---|---|
-| FR-001 / F-ORD-001 Unassigned Customer View | Admin session, page/page_size and allowlisted filters; output company-scoped customers without active assignment, with summary of own-company request/order activity. | Same-company Admin only. Include a customer when there is relevant company activity; no cross-company aggregation. Empty list is valid. Pagination 1..100; bad filters 400. |
-| FR-002 / F-ORD-002 Customer Detail View | customer_id, Admin session; output company-specific profile/contact, request/order history summaries and current assignment. | Same-company customer relationship required; expose no internal notes from another company. 404 for inaccessible ID. Read-only. |
-| FR-003 / F-ORD-003 Assign Sales Logic | customer_id, consultant_user_id, expected customer/assignment version, optional paired paid request IDs with expected request versions and `committed_due_at`, Idempotency-Key; output assignment and affected request assignments/due dates. | Admin must belong to company; consultant must be active Sales Consultant in same company. Transaction locks customer/current assignments and each request; one active consultant per company/customer. A request can first be assigned only when Paid and owned by this customer/company. Reassigning a customer must atomically transfer all their Assigned/InProgress requests to the new consultant, retaining current states and committed due dates; delivered historical ownership is unchanged. Assigned consultant must match the active customer assignment or customer and request must be atomically reassigned together. `committed_due_at` is required for each assigned request and must be after now; it is an explicit company commitment, not the customer's requested deadline. First assignment transitions Paid→Assigned; reassignment leaves Assigned/InProgress unchanged and notifies affected staff/customer. Duplicate request with same key is replayed; conflicting active assignment 409; inactive/cross-company consultant 422; stale request 409. |
-| FR-004 / F-ORD-004 Assign Notify Logic | Internal assignment event; output durable notification/outbox event ID. | Notify newly assigned consultant with authorized customer context link after commit; do not include sensitive history in email. Deduplicate; in-app inbox authoritative, email retry per D03. |
-| FR-005 / F-ORD-005 Assigned Customer View | Consultant session, pagination and allowlisted filters; output only that consultant's active same-company assignments and summaries. | Consultant assignment must be active; Admin may inspect company list. Unassigned/cross-company customers excluded. |
-| FR-006 / F-ORD-006 Context View | customer_id, consultant session; output company/customer context, related product interest, customer-visible request/order summaries and relevant interactions. | Must have active assignment in same company. Filter all related records to that company and authorized customer. CRM internal notes are available only through authorized consultation detail, not exposed to customer. |
-| FR-007 / F-ORD-007 Consultation Detail | consultation_id, assigned consultant or same-company Admin; output status, notes and linked record summaries. | Inaccessible IDs return 404. Optimistic version included for later edits. Read-only view. |
-| FR-008 / F-ORD-008 Update Status Logic | consultation_id, new_status, trimmed notes (1..5000 chars), expected_version, Idempotency-Key; output updated consultation/timeline. | Allowed: New→Contacted/ClosedLost; Contacted→InProgress/ClosedLost; InProgress→ClosedLost/ClosedWon. Reopen closed to InProgress only by Company Admin. Consultant must be assigned and same-company. Duplicate/stale transition 409; invalid notes/status 422. Does not alter order or design request state. |
+## 2. Actors (mandatory)
 
-## Flow and acceptance
+| Actor | Role in this module | Where it comes from |
+| --- | --- | --- |
+| Company Admin | Reviews same-company customer activity and assigns/reassigns consultants | MFG-08 resolved permissions; UC-C19 |
+| Sales Consultant | Reads only assigned same-company customers and records consultation updates | MFG-08 resolved permissions; UC-S01/UC-S02 |
+| Customer | Owns customer profile and may view own customer-facing design request status; cannot read CRM notes | MFG-05 boundary |
+| System | Persists assignment/status events and sends notifications | MFG-08 function contract |
+
+## 3. User scenarios and acceptance criteria (mandatory)
+
+### US-1: Assign consultant (Could)
+
+As a Company Admin, assign an active Sales Consultant in the same company to a customer. The assignment is unique per company/customer. Paid design requests transfer with the active assignment in one transaction and retain state and committed due date.
+
+1. **Given** a same-company active consultant and eligible customer, **when** the Admin assigns them, **then** one active assignment is committed and affected paid requests are transferred atomically.
+2. **Given** the consultant is inactive or belongs to another company, **when** assignment is submitted, **then** it is rejected; no partial changes occur.
+3. **Given** concurrent assignment or request changes, **when** versions conflict, **then** one valid transaction wins and stale writes return 409.
+4. **Given** assignment commits, **when** notification is sent, **then** the consultant receives one authorized context link; email failure leaves the in-app notice.
+
+### US-2: View assignment and customer context (Could)
+
+Consultants view only active same-company assignments, relevant customer context, requests/orders and chronological interaction history. Company Admins may inspect company records. Internal notes are visible only to assigned consultants and same-company Admins.
+
+1. **Given** a consultant has no active assignment, **when** customer context is requested, **then** access is denied without exposing another customer's data.
+2. **Given** interaction history is requested, **when** returned, **then** it is paginated and chronological with source channel, kind, timestamp and related record IDs.
+
+### US-3: Update consultation (Could)
+
+An assigned consultant records notes and advances consultation status. A Company Admin may reopen a closed consultation to InProgress.
+
+1. **Given** a valid current status, **when** an authorized update follows the allowed transition, **then** the new status, notes and timeline are persisted.
+2. **Given** a closed consultation is reopened, **when** the requester is not a same-company Admin, **then** the transition is rejected.
+3. **Given** a duplicate or stale update, **when** submitted, **then** it is idempotent or returns 409 without overwriting newer notes.
+
+### Edge cases
+
+- Notes are trimmed and limited to 1–5000 characters; invalid notes/status return 422.
+- Inaccessible object IDs return 404; prohibited actions return 403.
+- External conversations are recorded as summaries; this module does not provide real-time chat or an external inbox.
+
+## 4. Flows (mandatory)
+
+### 4.1 Usage flow
+
+Company Admin reviews unassigned same-company customers → assigns an active consultant → transaction updates customer assignment and any affected paid design requests → notification is persisted → consultant opens authorized context → consultant records interaction summaries and advances consultation status.
+
+### 4.2 Sequence for the main flow
 
 ```mermaid
 sequenceDiagram
@@ -34,10 +79,101 @@ sequenceDiagram
   S->>S: Update consultation status and notes
 ```
 
-Acceptance: Admin assigns an active consultant and consultant receives one notice; cross-company/inactive membership is rejected; concurrent assignment attempts yield one assignment and one 409; paid design request assignment stays consistent with the customer assignment; consultant sees only assigned customer and company context; another consultant cannot read notes; valid status progression succeeds while reopening a closed consultation requires Admin; duplicate/stale updates do not overwrite newer notes; notifications remain visible in inbox if email fails.
+## 5. Functional requirements (mandatory)
 
-Screens: S18 company assignment/customer list, S19 assignment editor, S20 consultant customers/context, S21 consultation detail, S38 notifications. Traceability: MFG-08/F-ORD-001..008 and FR-001..008; UC-C19, UC-S01, UC-S02. Prefix IDs with MFG-08 in all cross-module references due to duplicate local F-ORD identifiers in MFG-07.
+| FR ID | DBIZ2 Subfunction ID | Requirement (system MUST ...) | Actor | Priority |
+| --- | --- | --- | --- | --- |
+| FR-001 | F-ORD-001 | List same-company customers without active assignment, with relevant company request/order summaries and pagination. | Company Admin | Could |
+| FR-002 | F-ORD-002 | Show company-specific customer/contact data, request/order summaries and current assignment. | Company Admin | Could |
+| FR-003 | F-ORD-003 | Assign/reassign an active same-company consultant with version checks, idempotency and atomic paired assignment of affected paid design requests; `committed_due_at` is the company's commitment, not the customer's requested deadline. | Company Admin | Could |
+| FR-004 | F-ORD-004 | Notify the newly assigned consultant with authorized customer context after commit; reassignment also notifies affected staff and customer; deduplicate and retry delivery. | System | Could |
+| FR-005 | F-ORD-005 | List only the consultant's active same-company assignments with pagination and allowlisted filters. | Sales Consultant / Company Admin | Could |
+| FR-006 | F-ORD-006 | Return authorized customer context and chronological interaction history without exposing another company's records or CRM notes to customers. | Assigned Sales Consultant | Could |
+| FR-007 | F-ORD-007 | Show consultation status, notes and linked record summaries to assigned consultant or same-company Admin. | Assigned Sales Consultant / Company Admin | Could |
+| FR-008 | F-ORD-008 | Advance valid consultation status with trimmed 1–5000 character notes, version checks and idempotency; only Admin may reopen a closed consultation. | Assigned Sales Consultant / Company Admin | Could |
 
-## Interaction-history contract
+### 5.1 Input / Output contract
 
-MFG-08/F-ORD-006 returns interaction_history_logs as a paginated chronological array of `{id,company_id,customer_id,consultant_id,source_channel,kind,occurred_at,summary,related_request_id?,related_order_id?}`. source_channel is InApp, Email, Phone or Chat; kind is Note, StatusChange, Assignment or DesignDelivery. Staff manually record external conversation/chat summaries through F-ORD-007/008 notes (1..5000 characters) with source_channel and occurred_at; there is no implied real-time chat or external inbox integration. Committed request/assignment/delivery events append their own immutable timeline entries. Assigned consultants and company admins can view it; customers cannot read internal notes. No external messages are sent by recording a summary. Edits append a correction entry referencing the old event; they never erase the audit history.
+| FR ID | Input field | Type | Required | Output field | Type | Notes / validation |
+| --- | --- | --- | --- | --- | --- | --- |
+| FR-001 | page, page_size, filters | Integers / allowlisted values | Optional | unassigned company customers and activity summaries | Paginated object | Relevant company activity only; page_size 1–100; invalid filters 400; empty list valid |
+| FR-002 | customer_id | UUID | Yes | company customer profile, history summaries, assignment | Object | Same-company relationship required |
+| FR-003 | customer_id, consultant_user_id, expected versions, request IDs, committed_due_at, Idempotency-Key | UUIDs, versions, timestamps, key | Yes | assignment and affected request assignments/due dates | Object | Due date after now and is the company's promise; first assignment only for Paid request; delivered history unchanged |
+| FR-004 | committed assignment event | Internal event | Yes | durable notification/outbox ID | UUID | In-app inbox authoritative |
+| FR-005 | page, page_size, filters | Integers / allowlisted values | Optional | consultant assignment summaries | Paginated object | Active assigned customers only; Admin may inspect company list |
+| FR-006 | customer_id | UUID | Yes | company/customer context, product interest, customer-visible request/order summaries and interaction_history_logs | Object/chronological array | Same-company active assignment required; internal notes only through authorized consultation detail |
+| FR-007 | consultation_id | UUID | Yes | status, notes, linked summaries, version | Object | Assigned consultant or same-company Admin |
+| FR-008 | consultation_id, new_status, notes, expected_version, Idempotency-Key | UUID, enum, string, version, key | Yes | consultation and timeline | Object | Notes 1–5000 chars; valid transition required |
+
+### 5.2 Business rules
+
+| Rule ID | Rule | Why it exists |
+| --- | --- | --- |
+| BR-001 | One active assignment exists per company/customer; assignment history is retained. | Preserve accountable ownership. |
+| BR-002 | First request assignment requires Paid status; reassignment transfers all active Assigned/InProgress requests atomically while retaining their state and committed due date. | Keep CRM and design-service ownership consistent. |
+| BR-003 | Notes are private to assigned consultant and same-company Admin; customer cannot read internal notes. | Protect internal CRM records. |
+| BR-004 | Interaction logs are append-only; corrections reference prior events and never erase audit history. | Preserve interaction history. |
+| BR-005 | Status transitions: New→Contacted/ClosedLost; Contacted→InProgress/ClosedLost; InProgress→ClosedLost/ClosedWon; Admin alone may reopen a closed consultation to InProgress. | Keep consultation lifecycle controlled. |
+
+Interaction history uses source_channel InApp, Email, Phone or Chat and kind Note, StatusChange, Assignment or DesignDelivery. Staff manually record external conversation/chat summaries as notes with source channel and occurred_at; no real-time chat or external inbox integration is implied. Committed assignment, request and delivery events append immutable entries. A correction appends a new entry referencing the prior event; it never erases history and does not send an external message.
+
+## 6. Key entities (mandatory)
+
+| Entity | Attributes (from Input/Output fields) | Relationships |
+| --- | --- | --- |
+| CustomerAssignment | company_id, customer_id, consultant_user_id, assigned_by, assigned_at, version | Unique active company/customer assignment; assignment history retained. |
+| Consultation | UUID, company_id, customer_id, consultant_id, notes, related_request_ids/order_ids, status, version, timestamps | Belongs to company/customer and assigned consultant; links relevant requests/orders. |
+| Interaction history event | id, company_id, customer_id, consultant_id, source_channel, kind, occurred_at, summary, related_request_id?, related_order_id? | Chronological immutable customer/company interaction. |
+
+## 7. Screens involved
+
+| Screen ID | Screen name | Priority | Screen Spec file |
+| --- | --- | --- | --- |
+| S18 | Company assignment/customer list | Could | Module screen |
+| S19 | Assignment editor | Could | Module screen |
+| S20 | Consultant customers/context | Could | Module screen |
+| S21 | Consultation detail | Could | Module screen |
+| S38 | Notifications | Could | Shared notification screen |
+
+## 8. Success criteria (mandatory)
+
+| SC ID | Criterion | How it is measured |
+| --- | --- | --- |
+| SC-001 | Assignment and paid-request ownership change atomically and remain same-company. | Verify reassignments, versions and rollback on conflicting request. |
+| SC-002 | Consultants see only assigned customer records and authorized interaction history. | Verify assigned, unassigned, cross-company and customer access. |
+| SC-003 | Consultation status and notes are auditable and duplicate/stale writes do not lose data. | Verify transition matrix, version conflict and append-only corrections. |
+
+## 9. Assumptions
+
+- Company membership and role are resolved server-side.
+- Manual interaction summaries do not send messages or imply live chat integration.
+- MVP priority is Could; the full module remains in the complete-system specification.
+
+## 10. Open questions
+
+| # | Question | Blocking? | Owner | Status |
+| --- | --- | --- | --- | --- |
+| 1 | Resolved decisions: Group B; course DBIZ 3; no approver identified; course/demo use only; MVP priority Could. | No | Group B | Resolved |
+| 2 | No remaining open questions. | No | Group B | Resolved |
+
+## 11. Traceability to DBIZ2
+
+| Spec section | DBIZ2 source | Location |
+| --- | --- | --- |
+| 1–2 Scope and actors | MFG-08 Function List No. 60–67 | `F-ORD-001`–`F-ORD-008`; module-qualified namespace |
+| 3 Scenarios | UC-S01, UC-S02, UC-C19 | Use-case names and resolved contract in this specification |
+| 4 Flow | Assignment and consultation lifecycle | Current MFG-08 resolved requirements |
+| 5–6 FRs and entities | `F-ORD-001`–`F-ORD-008` | Function List MFG-08; MFG-07 reuses local IDs |
+| 7 Screens | S18–S21, S38 | Screen List and current module contract |
+
+## Completion checklist
+
+- [x] All eight MFG-08 functions have FR rows and contracts.
+- [x] Assignment, request transfer, privacy, interaction history and status rules are included.
+- [x] MFG-qualified function identity is used for cross-module references.
+- [x] Resolved inputs are recorded and no unresolved placeholders remain.
+- [x] Traceability identifies the source module and screen IDs.
+
+Template source: DBIZ3 Product Design Package specification template.
+
+DBIZ3, FTU.

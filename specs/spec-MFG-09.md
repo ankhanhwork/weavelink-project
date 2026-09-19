@@ -1,28 +1,71 @@
-# MFG-09 — Contract Templates, Order Contracts, and Signing
+# Spec Document: Contract Management
 
-**Contract:** Complete-system target. Decisions D01–D03, D06–D08, D11–D12 in [system-decisions.md](../docs/system-decisions.md) govern. Human facts belong only in [user-input-needed.md](../docs/user-input-needed.md).
+| Field | Value |
+| --- | --- |
+| Module ID | `MFG-09` |
+| Module name | Contract Management |
+| Spec version | v1.0 |
+| Author (team member) | Group B |
+| Date | 2026-09-19 |
+| Status | Draft |
+| Approved by (Client role) | No approver identified |
+| DBIZ2 source | Function List MFG-09, No. 68–76, `F-CONTR-001`–`F-CONTR-009`; UC-C10, UC-C09, UC-C11, UC-C14, UC-C15, UC-C13; screens S30–S34 and S38 |
 
-## Actors and boundaries
+---
 
-Company Admin manages versioned contract templates and generates/regenerates an order contract before signing. Customer reviews and signs only their own current contract. This module generates server-side PDFs and records an application acknowledgement with audit evidence; it does not claim certified digital signature. MFG-06 owns order creation/snapshots; MFG-07 owns fulfillment/cancellation. This module atomically changes PendingContract to AwaitingPayment only after successful signing. MFG-06 owns payment. Contract states are Draft→Ready→Signed; Draft/Ready may become Superseded, and Draft/Ready/Signed may become Voided when an eligible order cancellation occurs. A Signed contract is immutable; voiding is auditable and retains the signed artifact/evidence.
+## 1. Purpose and scope (mandatory)
 
-`ContractTemplate`: UUID id, company_id, name, version, structured body, active flag, created/updated_at, version. Publish creates immutable version; only allowlisted placeholders from authoritative order/customer/address snapshots. `Contract`: UUID id, order_id, company_id, version, template_version, content_hash, PDF asset UUID, status Draft|Ready|Superseded|Signed|Voided, ready_at, signed_at/voided_at nullable, signature_evidence nullable, version. `SignatureEvidence`: signer_id from session, typed_name, consent_text_version, contract_hash, server_timestamp, server-observed IP/user_agent, challenge digest. Never accept client-reported signer identity/IP.
+Company Admins manage versioned templates and generate or regenerate order contracts before signing. Customers review and sign only their own current contract. The system generates PDFs and records an auditable application acknowledgement; it does not claim a certified digital signature. Successful signing atomically advances the order from PendingContract to AwaitingPayment. MFG-06 owns order creation and payment; MFG-07 owns fulfillment/cancellation.
 
-## Function contracts and requirements
+MVP priority: **Should**. The complete-system contract lifecycle, template management and signature evidence are specified here.
 
-| FR / function | Inputs and output | Validation, effect, and failure |
-|---|---|---|
-| FR-001 / F-CONTR-001 Template Select View | Admin session, order_id/order_type; output compatible active template list (id/version/name). | Same-company Admin; order must be PendingContract. No cross-company templates. Empty templates return actionable empty state, generation blocked until a valid template exists. |
-| FR-002 / F-CONTR-002 Template Detail View | template_id/version; output rendered preview model with placeholder map. | Same-company Admin; resolve only allowlisted placeholders, escape text, never execute template code. Missing required source snapshot is validation failure. |
-| FR-003 / F-CONTR-003 Fill Contract Logic | order_id, template_id/version, expected order version; output immutable draft data and content hash. | Lock order; derive customer, address, item, amounts, policy and company from stored snapshots. Same total as quote/payment screens per D06. Template must be active/current and same-company. Stale order/template 409; unavailable placeholder 422. |
-| FR-004 / F-CONTR-004 Render PDF Logic | draft contract data, template version, Idempotency-Key; output contract_id/version, PDF asset UUID and authorized expiring download URL. | Server-side PDF generation; persist content hash and Ready state transactionally. PendingContract order only. Retry returns same result; same key/different payload 409. Failed render leaves no Ready contract and is retryable. Private asset access checked on download. |
-| FR-005 / F-CONTR-005 Ready Notify Logic | Internal Ready contract event; output outbox notification ID. | Notify order owner with review route and authorized PDF link after commit. Inbox authoritative; email retries per D03 and cannot roll back contract. Deduplicate event/recipient. |
-| FR-006 / F-CONTR-006 Contract List View and Template Management | Admin session, paginated filters for contract status/order/customer; output contract table/detail links. Template create/update/publish/archive inputs: name, structured content, expected_version; output template detail/version. | UC-C15 requires template CRUD/versioning within this existing function scope in addition to the contract list. Validate required fields and allowlisted placeholders; archive prevents new use but preserves past contracts. Publishing creates immutable template version. Admin same-company only. Duplicate/stale version 409; invalid fields 422. Existing Ready contract PDF/hash is never mutated by template edits. |
-| FR-007 / F-CONTR-007 Contract Update Notify Logic | order_id, current contract_id/version, revised template/version, expected order version, Idempotency-Key; output superseded and new Ready contract references plus notification/outbox ID. | Before signature and while order PendingContract, regenerate from immutable order snapshot; require successful PDF storage before Ready, supersede old unsigned version and require customer review/signature again. Notify after commit. Signed version cannot be updated; when the order is cancelled in an eligible state D07 transitions contract to Voided and retains artifact/evidence. |
-| FR-008 / F-CONTR-008 E-Sign Logic | Customer session, contract_id/version/hash, consent=true, typed_full_name, current_password reauthentication, one-time challenge, Idempotency-Key; output Signed contract metadata and evidence receipt. | Customer owns order; contract is current Ready version and order PendingContract. Reauth within 5 minutes; challenge bound to contract ID/version/hash, single use, expires in 10 minutes. Typed name must match account full name after trim/case-normalization; explicit consent required. Transaction locks contract/order; stale/superseded 409. Signing is auditable application acknowledgement, not qualified signature. Same key/payload returns signed version. |
-| FR-009 / F-CONTR-009 Signed Notify Logic | Internal signing event; output outbox delivery IDs for both parties. | Generate signed copy after commit and notify customer plus same-company management with authorized download links. Deduplicate; email failure does not rollback. Only successful signature changes order PendingContract→AwaitingPayment. |
+## 2. Actors (mandatory)
 
-## Signing flow and acceptance
+| Actor | Role in this module | Where it comes from |
+| --- | --- | --- |
+| Company Admin | Manages same-company templates/contracts and generates or updates unsigned contracts | MFG-09 contract |
+| Customer | Reviews and signs own current Ready contract; receives signed copy | MFG-09 contract; UC-C09/UC-C11 |
+| System | Renders PDF, validates evidence, transitions order after signing and sends notifications | MFG-09 function contract |
+| MFG-06 / MFG-07 | Supplies immutable order snapshots and cancellation events | Module boundaries |
+
+## 3. User scenarios and acceptance criteria (mandatory)
+
+### US-1: Manage templates and generate contract (Should)
+
+Admin selects a compatible active template for a same-company PendingContract order, previews allowlisted placeholders, and generates a server-rendered PDF from immutable customer/order/address/policy snapshots.
+
+1. **Given** no compatible template exists, **when** generation is requested, **then** an actionable empty state appears and generation is blocked.
+2. **Given** a template is published or edited, **when** a new version is created, **then** prior contract PDFs and hashes remain unchanged.
+3. **Given** required snapshot data is unavailable or the order/template version is stale, **when** generation runs, **then** it fails without creating a Ready contract.
+
+### US-2: Review and sign contract (Should)
+
+Customer signs only the current Ready version for their own PendingContract order. Signing requires explicit consent, matching typed name, current-password reauthentication, and a single-use challenge tied to contract ID/version/hash.
+
+1. **Given** all signature evidence is valid, **when** signing commits, **then** evidence is stored and the order advances to AwaitingPayment.
+2. **Given** consent is missing, name mismatches, reauthentication fails, challenge expires/is reused, or version is stale, **when** signing is attempted, **then** no signature or order transition commits.
+3. **Given** a contract is signed, **when** it is later cancelled through an eligible order cancellation, **then** it is audibly Voided and its signed artifact/evidence is retained.
+
+### US-3: Update and notify contract (Should)
+
+Before signing, Admin may regenerate from the immutable order snapshot. The prior unsigned version becomes Superseded, and the customer must review/sign the new Ready version.
+
+1. **Given** a Ready contract is regenerated, **when** the new PDF is successfully stored, **then** only then is the prior unsigned version superseded and the customer notified.
+2. **Given** a notification email fails, **when** delivery is retried, **then** contract state remains committed and the in-app notice remains available.
+
+### Edge cases
+
+- Same idempotency key and payload replays; changed payload with the same key returns 409.
+- Private PDF access requires an authorized expiring link.
+- Signed contracts cannot be edited; cancellation voiding is retained in the audit history.
+
+## 4. Flows (mandatory)
+
+### 4.1 Usage flow
+
+MFG-06 creates PendingContract order with immutable snapshots → Admin selects/publishes a compatible template → system renders PDF/hash and marks current contract Ready → customer reviews and submits consent, typed name, reauthentication and challenge → contract is locked and evidence saved → signed event advances order to AwaitingPayment → both parties receive authorized signed-copy links.
+
+### 4.2 Sequence for the main flow
 
 ```mermaid
 sequenceDiagram
@@ -40,6 +83,104 @@ sequenceDiagram
   K-->>C: Signed copy notice
 ```
 
-Acceptance: Admin can create/publish a template version and old contracts stay unchanged; PDF reflects exact order snapshot and same VND total shown on all screens; customer signs current version only with password reauthentication, explicit consent, typed name and valid one-time challenge; missing consent, mismatch, expired challenge, bad password or stale version leaves order/contract unsigned; concurrent sign/revision allows one winner only; duplicate signing is idempotent; signed contract cannot be edited; notification email outage leaves Ready/Signed state and in-app notice intact; unauthorized users cannot download PDF.
+## 5. Functional requirements (mandatory)
 
-Screens: S30 contract list and templates tabs, S31 create contract template, S32 edit contract template, S33 Company Admin contract detail, S34 customer contract review/signature, S38 notifications. Traceability: F-CONTR-001..009 / FR-001..009; UC-C14, UC-C15, UC-C11. Cross-references use immutable contract/template version and content hash.
+| FR ID | DBIZ2 Subfunction ID | Requirement (system MUST ...) | Actor | Priority |
+| --- | --- | --- | --- | --- |
+| FR-001 | F-CONTR-001 | List compatible active templates for same-company PendingContract orders. | Company Admin | Should |
+| FR-002 | F-CONTR-002 | Preview safe rendered placeholders from an authorized template version. | Company Admin | Should |
+| FR-003 | F-CONTR-003 | Fill immutable draft contract from authoritative stored order/customer/address/item/amount/policy snapshots. | Company Admin | Should |
+| FR-004 | F-CONTR-004 | Render and persist PDF/hash as Ready transactionally with idempotency and private asset access. | System | Should |
+| FR-005 | F-CONTR-005 | Notify customer of Ready contract after commit using authorized review link. | System | Should |
+| FR-006 | F-CONTR-006 | List contracts and create/update/publish/archive versioned templates with allowlisted placeholders. | Company Admin | Should |
+| FR-007 | F-CONTR-007 | Regenerate unsigned PendingContract documents from snapshots, supersede prior version after storage, and notify; cancellation may void while retaining evidence. | Company Admin / System | Should |
+| FR-008 | F-CONTR-008 | Record customer application acknowledgement with consent, matching name, recent reauthentication and one-time challenge bound to contract version/hash. | Customer | Should |
+| FR-009 | F-CONTR-009 | Notify customer and same-company management after successful signing; only then advance order PendingContract→AwaitingPayment. | System | Should |
+
+### 5.1 Input / Output contract
+
+| FR ID | Input field | Type | Required | Output field | Type | Notes / validation |
+| --- | --- | --- | --- | --- | --- | --- |
+| FR-001 | order_id, order_type | UUID / enum | Yes | compatible template IDs, versions, names | Array | Same-company Admin; PendingContract only |
+| FR-002 | template_id, version | UUID / integer | Yes | preview model and placeholder map | Object | Allowlist and escape text; no template code execution |
+| FR-003 | order_id, template_id/version, expected order version | UUIDs / integers | Yes | immutable draft and content_hash | Object/hash | Missing snapshot value 422; stale data 409 |
+| FR-004 | draft, template version, Idempotency-Key | Object/version/key | Yes | contract_id/version, PDF asset ID, expiring URL | Object | Retry same payload replays |
+| FR-005 | Ready contract event | Internal event | Yes | outbox notification ID | UUID | After commit; deduplicated |
+| FR-006 | filters; template name/content/expected_version | Values / structured body / integer | Optional by action | contract list or versioned template | Paginated object | Same-company Admin; create/update/publish/archive; archive blocks new use and preserves past contracts; stale/duplicate 409; invalid fields 422 |
+| FR-007 | order/contract/template versions, expected order version, Idempotency-Key | UUIDs/versions/key | Yes | superseded/new Ready references and notice ID | Object | Signed version immutable |
+| FR-008 | contract ID/version/hash, consent, typed name, current password, one-time challenge, key | Values | Yes | Signed metadata and evidence receipt | Object | Typed name matches account full name after trim/case normalization; reauth ≤5 min; challenge bound to ID/version/hash, expires in 10 min and is single-use |
+| FR-009 | committed signing event | Internal event | Yes | delivery IDs and signed-copy links | UUIDs/authorized URLs | Notify both parties after commit |
+
+### 5.2 Business rules
+
+| Rule ID | Rule | Why it exists |
+| --- | --- | --- |
+| BR-001 | Contract states are Draft→Ready→Signed; Draft/Ready can become Superseded; Draft/Ready/Signed may become Voided on eligible cancellation. | Keep contract and order lifecycle aligned. |
+| BR-002 | Published template versions and signed contracts are immutable. | Preserve the reviewed and signed artifact. |
+| BR-003 | Placeholder values come only from authoritative order/customer/address snapshots and allowlisted fields. | Prevent untrusted template execution or drift. |
+| BR-004 | Successful signature evidence is application acknowledgement, not a certified digital signature. | State the signature capability accurately. |
+| BR-005 | Only a current Ready contract for an owned PendingContract order can be signed; successful signature alone advances the order to AwaitingPayment. | Prevent signing stale contracts or premature payment. |
+
+Contract amounts must match the quote/payment screens using the same VND snapshot. PDF render/storage must succeed before a contract becomes Ready. If cancellation is eligible, the contract becomes Voided with artifact and signature evidence retained.
+
+## 6. Key entities (mandatory)
+
+| Entity | Attributes (from Input/Output fields) | Relationships |
+| --- | --- | --- |
+| ContractTemplate | UUID, company_id, name, version, structured body, active, timestamps, version | Company-owned; published versions are immutable. |
+| Contract | UUID, order_id, company_id, version, template_version, content_hash, PDF asset UUID, status, ready/signed/voided timestamps, evidence, version | Belongs to order/company; versioned; unsigned prior version may be superseded. |
+| SignatureEvidence | signer_id from session, typed_name, consent_text_version, contract_hash, server_timestamp, observed IP/user_agent, challenge digest | Bound to one contract version/hash; never trusts client-reported identity/IP. |
+
+## 7. Screens involved
+
+| Screen ID | Screen name | Priority | Screen Spec file |
+| --- | --- | --- | --- |
+| S30 | Contract list and templates tabs | Should | Module screen |
+| S31 | Create contract template | Should | Module screen |
+| S32 | Edit contract template | Should | Module screen |
+| S33 | Company Admin contract detail | Should | Module screen |
+| S34 | Customer contract review/signature | Should | Module screen |
+| S38 | Notifications | Should | Shared notification screen |
+
+## 8. Success criteria (mandatory)
+
+| SC ID | Criterion | How it is measured |
+| --- | --- | --- |
+| SC-001 | Rendered contract total and terms match immutable order snapshots. | Compare PDF hash/content and VND totals with quote/payment screens. |
+| SC-002 | Only the customer can sign the current Ready version with all required evidence. | Verify ownership, consent, name, reauthentication, challenge and stale-version cases. |
+| SC-003 | Signed documents remain immutable and notifications survive email outage. | Verify artifact retention, audit evidence, inbox and retry behavior. |
+
+## 9. Assumptions
+
+- Company Admin and customer authorization are resolved server-side.
+- PDF assets are private; URLs expire after authorization.
+- MVP priority is Should; no certified digital-signature claim is made.
+
+## 10. Open questions
+
+| # | Question | Blocking? | Owner | Status |
+| --- | --- | --- | --- | --- |
+| 1 | Resolved decisions: Group B; course DBIZ 3; no approver identified; course/demo use only; MVP priority Should. | No | Group B | Resolved |
+| 2 | No remaining open questions. | No | Group B | Resolved |
+
+## 11. Traceability to DBIZ2
+
+| Spec section | DBIZ2 source | Location |
+| --- | --- | --- |
+| 1–2 Scope and actors | MFG-09 Function List No. 68–76 | `F-CONTR-001`–`F-CONTR-009` |
+| 3 Scenarios | UC-C10, UC-C09, UC-C11, UC-C14, UC-C15, UC-C13 | Use-case labels; resolved workflows in this specification |
+| 4 Signing flow | PendingContract to AwaitingPayment | MFG-06/MFG-09 module contract |
+| 5–6 FRs and entities | `F-CONTR-001`–`F-CONTR-009` | Function List MFG-09 |
+| 7 Screens | S30–S34, S38 | Screen List and module contract |
+
+## Completion checklist
+
+- [x] All nine MFG-09 functions have FR rows and contracts.
+- [x] Template versioning, PDF integrity, signature evidence, order transition and notifications are specified.
+- [x] Customer/company authorization and immutability rules are recorded.
+- [x] Resolved inputs are recorded and no unresolved placeholders remain.
+- [x] Traceability identifies function IDs, use cases and screens.
+
+Template source: DBIZ3 Product Design Package specification template.
+
+DBIZ3, FTU.

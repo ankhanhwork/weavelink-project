@@ -1,8 +1,4 @@
-# Use-case catalogue
-
-All 49 inherited UC identifiers remain stable. Actor assignments below are explicit implementation decisions under [D01](../system-decisions.md), replacing indirect/ambiguous diagram associations. Login and password recovery are entered while unauthenticated; Member denotes the authenticated role union. The full actor name, not the UC initial, determines permissions.
-
-| Use case ID | Goal | Primary actor | Other actor / relationship | Canonical functions |
+| Use Case ID | Use case | Primary actor | Other actors | Subfunctions |
 |---|---|---|---|---|
 | UC-G01 | View product catalog | Guest | None | MFG-04/F-PROD-001, MFG-04/F-PROD-002 |
 | UC-G02 | Search products | Guest | None | MFG-04/F-PROD-003 |
@@ -53,5 +49,3 @@ All 49 inherited UC identifiers remain stable. Actor assignments below are expli
 | UC-S09 | Monitor system logs | System Admin | None | MFG-12/F-SYS-001, MFG-12/F-SYS-002 |
 | UC-S10 | Backup & restore data | System Admin | None | MFG-12/F-SYS-003, MFG-12/F-SYS-004, MFG-12/F-SYS-005 |
 | UC-S11 | Configure system | System Admin | None | MFG-12/F-SYS-006, MFG-12/F-SYS-007, MFG-12/F-SYS-008 |
-
-UC-C01 is the concrete design-editor child of UC-C02 and uses the same design functions; it does not create a second implementation. UC-C10 is read-only contract access within UC-C09; it shares contract retrieval with UC-C11 without granting signing to staff. UC-C15 covers template creation/versioning and unsigned contract revision. Module specs and [screen catalogue](../screen-list.md) define navigation and success/failure scenarios. No use-case relationship bypasses ownership, state or payment guards.

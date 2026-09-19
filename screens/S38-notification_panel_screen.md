@@ -1,66 +1,98 @@
-# S38 — Notification Panel
+# Screen Spec: S38 Notification Panel
 
-| Property | Value |
+| Field | Value |
 |---|---|
-| Route | `/notifications` |
-| Module | MFG-01 |
-| Roles and ownership | Authenticated user; server enforces role, company, assignment and ownership per D01. |
+| Screen ID | `S38` |
+| Screen name | Notification Panel |
+| Actor | Authenticated user |
 | Priority | P3 |
-| Mockup | No mockup supplied. |
+| Belongs to module | [MFG-01](../specs/spec-MFG-01.md) |
+| Route | `/notifications` |
+| Mockup image | Don't have mockup |
+| Status | Resolved implementation specification |
 
-## Purpose and data
+## 1. Purpose
 
-The authenticated recipient sees their persisted in-app notifications. Opening a target rechecks authorization; email delivery remains secondary. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
+**Shown when:** The authenticated recipient sees their persisted in-app notifications. Opening a target rechecks authorization; email delivery remains secondary. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
 
-## Fields and validation
+**The user leaves this screen when:** An authorized action in section 5 succeeds, the user follows a role-allowed global route, or they return to the validated originating route.
 
-| Field | Type / requirement | Validation / source |
-|---|---|---|
-| notification_id / recipient | UUID plus session-derived owner | Sanitize event/target content; never accept a submitted recipient as authority. |
-| read_at / pagination | nullable UTC plus D02 paging | Event/recipient uniqueness suppresses duplicates. |
-| target_route | optional internal route | Reauthorize the target when opened; hide invalid or inaccessible deep links. |
-| email_delivery_state | secondary read-only status | The persisted in-app inbox remains authoritative. |
-| API errors | D02 envelope | 400 malformed; 422 invalid fields; 409 stale/duplicate; 429 rate limit; 503 dependency failure |
+## 2. Mockup
 
-## Actions and navigation
+Don't have mockup
 
-| Action | Result | Destination |
-|---|---|---|
-| Mark read | Persist recipient read_at; repeated action is idempotent. | S38 |
-| Open notification | Resolve allowlisted target and reauthorize target access. | authorized target route |
-| Close | Return to prior validated route. | Origin |
-### Global navigation access
+## 3. Element inventory
 
-Home and public catalog are available to Guest and authenticated users. Customer designs, orders, profile and notifications require the customer’s authenticated session. Company Admin routes are S10, S18, S28, S30, S36, S42 and S43; Sales Consultants use S20 and assigned-only S28/S29/S21 access; System Admin routes are S39, S40 and S41. The server rechecks company, membership, ownership and assignment for every route and notification target.
-Functions: shared persisted outbox and D03 recipient event contract. Global navigation and back behavior follow D11. Auth return paths must be internal allowlisted routes.
+| # | Element | Type | Content / data source | Required | Validation |
+|---|---|---|---|---|---|
+| 1 | Screen heading | Heading | Notification Panel | Yes | Static route title. |
+| 2 | Route | Navigation target | /notifications | Yes | Access checked on server. |
+| 3 | notification_id / recipient | Field / control | UUID plus session-derived owner | As specified | Sanitize event/target content; never accept a submitted recipient as authority. |
+| 4 | read_at / pagination | Field / control | nullable UTC plus bounded paging | As specified | Event/recipient uniqueness suppresses duplicates. |
+| 5 | target_route | Field / control | optional internal route | As specified | Reauthorize the target when opened; hide invalid or inaccessible deep links. |
+| 6 | email_delivery_state | Field / control | secondary read-only status | As specified | The persisted in-app inbox remains authoritative. |
+| 7 | API errors | Field / control | standard API error envelope | As specified | 400 malformed; 422 invalid fields; 409 stale/duplicate; 429 rate limit; 503 dependency failure |
+| 8 | Mark read | Action | Persist recipient read_at; repeated action is idempotent. | Available when authorized | Destination: S38 |
+| 9 | Open notification | Action | Resolve allowlisted target and reauthorize target access. | Available when authorized | Destination: authorized target route |
+| 10 | Close | Action | Return to prior validated route. | Available when authorized | Destination: Origin |
 
-## Workflow transitions
+## 4. States
 
-Notification target resolves only to authorized S18, S21, S27, S29, S33 or S35; close returns prior route.
-
-## States
-
-| State | Behavior | Trigger |
+| State | What the user sees | Trigger |
 |---|---|---|
 | Loading | Labelled progress/skeleton; disable duplicate submit. | Request starts |
 | Empty | Show no notifications for this recipient; preserve filters where present and explain eligibility/filter conditions. | Successful query returns no rows |
 | Forbidden/not found | Safe message without revealing inaccessible identifiers. | 401/403/404 |
 | Error | Show code, message, field_errors, request_id; preserve entered values. | Request failure |
-| Retry | Retry reads on transient failure; reuse the same idempotency key only for mutations that require one under D02. | Recoverable failure |
+| Retry | Retry reads on transient failure; reuse the same idempotency key only for mutations that require one for the documented mutation. | Recoverable failure |
 | Success | Show committed state and next valid action; announce via aria-live. | Mutation commits |
 | Conflict | Explain stale state; reload; never silently overwrite. | 409 |
 
-## Acceptance scenarios
+## 5. Interactions and navigation
+
+| # | Element | User action | System response | Goes to screen |
+|---|---|---|---|---|
+| 1 | Mark read | Activate | Persist recipient read_at; repeated action is idempotent. | S38 |
+| 2 | Open notification | Activate | Resolve allowlisted target and reauthorize target access. | authorized target route |
+| 3 | Close | Activate | Return to prior validated route. | Origin |
+
+Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Company Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales Consultant routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks role, company, membership, ownership and assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Company Admin, S20 for Sales Consultant, S41 for System Admin, and S01 for Guest.
+
+## 6. Screen-level rules
+
+| Rule ID | Rule | Source |
+|---|---|---|
+| SR-001 | Access and ownership are checked server-side; do not trust submitted customer, company, role, price, or provider status. Apply 401/403/404 behavior and the field rules above. | Authorization and data ownership requirements |
+| SR-002 | IDs are UUIDs; timestamps are UTC and displayed in Asia/Ho_Chi_Minh; money and quantities are integers. Mutations use expected_version; significant create/sign/pay/batch operations use idempotency keys. | Data representation and concurrency requirements |
+| SR-003 | Apply the module lifecycle and validation rules linked below; preserve immutable submitted snapshots. | Module specification |
+| SR-004 | Selected product and technical defaults are project implementation decisions; do not invent factual company, author, client-approval, or course identifiers. | Project implementation assumptions |
+
+### Acceptance scenarios
 
 1. User sees only own persisted notifications and repeated mark-read is idempotent.
 2. Opening an unauthorized/stale target is blocked after a fresh server access check.
 
-## Responsive and accessibility
+## 7. Linked requirements
 
-Follow D11: 360px through desktop; stack columns and use labelled horizontal-scroll tables on narrow screens; keyboard-operable controls, visible focus, logical headings, associated form labels, aria-live status/error announcements, contrast >=4.5:1 (large text >=3:1), pointer targets >=24px. Preserve form data after recoverable failures; confirm destructive actions; disable duplicate submit while pending and enforce D02 idempotency server-side.
+| FR ID (from the module spec) | What this screen does for it |
+|---|---|
+The rules in this screen and its linked module specifications are complete for implementation.
 
-## Source documents
+## 8. Responsive and accessibility notes
 
-- [MFG-01 specification](../specs/spec-MFG-01.md)
-- [Canonical decisions D01-D12](../docs/system-decisions.md)
-- [Human factual input register](../docs/user-input-needed.md)
+Support 360px through desktop; stack columns and use labelled horizontal-scroll tables on narrow screens. Controls are keyboard-operable with visible focus, logical headings, associated form labels, and aria-live status/error announcements. Text contrast is at least 4.5:1 (large text 3:1); pointer targets are at least 24px. Preserve user-entered data after recoverable failures. Confirm destructive actions, disable duplicate submit while pending, and enforce idempotency on the server.
+
+## 9. Open questions
+
+| # | Question | Blocking? | Status |
+|---|---|---|---|
+| 1 | No unresolved screen behavior questions remain; routes, fields, permissions, and defaults are resolved in this specification and its linked module requirements. | No | Resolved |
+
+## Completion checklist
+
+- [x] Route, actor, module, priority, and mockup status are identified.
+- [x] Element fields, actions, validation, and data ownership are documented.
+- [x] Loading, empty, forbidden, error, retry, success, and conflict states are documented.
+- [x] Navigation and acceptance scenarios are explicit.
+- [x] Responsive and accessibility requirements follow the shared baseline.
+- [x] No unresolved screen-level decisions remain.

@@ -1,8 +1,6 @@
-# Sequence catalogue
+The ten inherited sequence IDs are retained. Authorization, validation, optimistic version checks, idempotency, and durable outbox behavior apply to every call. Error responses never commit partial business state. Internal participants are logical modules in one transactional backend.
 
-The ten inherited sequence IDs are retained and corrected for [shared contracts](../system-decisions.md). D01 authorization, D02 validation/version/idempotency and D03 outbox behavior apply to every call. Error responses never commit partial business state. Internal participants are logical modules in one transactional backend, not a mandate for distributed transactions.
-
-## SD-01 — UC-G01: Browse catalog
+# UC-G01: View product catalog — SD-01: Browse Product Catalog (Guest)
 
 ```mermaid
 sequenceDiagram
@@ -18,7 +16,7 @@ sequenceDiagram
     UI-->>G: Grid or empty state; retry on outage
 ```
 
-## SD-02 — UC-G03: Register and verify
+# UC-G03: Register account — SD-02: Sign Up and Verify Email
 
 ```mermaid
 sequenceDiagram
@@ -44,7 +42,7 @@ sequenceDiagram
 
 Delivery failure is an outbox failure, not a failed account creation. Verification-link consumption uses S02's verification state, not a new undocumented screen.
 
-## SD-03 — UC-M01: Log in
+# UC-M01: Log in — SD-03: Log In
 
 ```mermaid
 sequenceDiagram
@@ -64,7 +62,7 @@ sequenceDiagram
     end
 ```
 
-## SD-04 — UC-G02: Search and product details
+# UC-G02: Search products — SD-04: Search and View Product Detail
 
 ```mermaid
 sequenceDiagram
@@ -83,7 +81,7 @@ sequenceDiagram
     end
 ```
 
-## SD-05A — UC-C01 / UC-C02: Self design
+# UC-C02: Product Customization — SD-05A: Self Design Product
 
 ```mermaid
 sequenceDiagram
@@ -101,7 +99,7 @@ sequenceDiagram
     D-->>UI: Saved design reference for S17
 ```
 
-## SD-05B — UC-C04: Paid design service
+# UC-C04: Request design service — SD-05B: Request Design Service
 
 ```mermaid
 sequenceDiagram
@@ -129,7 +127,7 @@ sequenceDiagram
     end
 ```
 
-## SD-06 — UC-C03: Saved designs
+# UC-C03: View saved design — SD-06: View Saved Design
 
 ```mermaid
 sequenceDiagram
@@ -148,7 +146,7 @@ sequenceDiagram
     end
 ```
 
-## SD-07 — UC-C05 / UC-C06: Quote and create order
+# UC-C05: Finalize order — SD-07: Create Order
 
 ```mermaid
 sequenceDiagram
@@ -176,7 +174,7 @@ sequenceDiagram
 
 Checkout never creates a batch. Changing inputs creates a replacement quote; old quote is invalidated and never changes an already submitted order.
 
-## SD-08 — UC-C09 / UC-C10 / UC-C11 / UC-C14: Contract and signature
+# UC-C09: View/Sign contract — SD-08: View and Sign Digital Contract
 
 ```mermaid
 sequenceDiagram
@@ -203,7 +201,7 @@ sequenceDiagram
 
 Signed-notification dispatch happens after commit. Old unsigned versions may be Superseded; eligible cancellation makes the current contract Voided. A signed version is never revised in place.
 
-## SD-09 — UC-C12: Order payment, retry and reconciliation
+# UC-C12: Make payment — SD-09: Make Order Payment
 
 ```mermaid
 sequenceDiagram
@@ -236,7 +234,7 @@ sequenceDiagram
     end
 ```
 
-A repeated callback for the same transaction has no second effect. Timeout triggers provider query and redacted audit; query-response success alone is not settlement. The [adapter contract](../integrations/vnpay.md) defines protocol encoding and required sandbox cases. Both ORDER and SERVICE use this shared payment engine.
+A repeated callback for the same transaction has no second effect. Timeout triggers a provider query and redacted audit; a browser return or query result alone is not settlement. Both ORDER and SERVICE payments use the same VNPay 2.1.0 adapter with HMAC-SHA512 signing, integer VND amounts multiplied by 100 for `vnp_Amount`, verified server IPN, runtime credentials, and sandbox tests.
 
 ## Additional flow coverage
 

@@ -1,30 +1,72 @@
-# MFG-10 — Merge Preference and Production Batches
+# Spec Document: Order Optimization (Merge)
 
-**Contract:** Complete-system target. Decisions D01–D03, D06–D07, D09, D11–D12 in [system-decisions.md](../docs/system-decisions.md) govern. Human facts remain only in [user-input-needed.md](../docs/user-input-needed.md).
+| Field | Value |
+| --- | --- |
+| Module ID | `MFG-10` |
+| Module name | Order Optimization (Merge) |
+| Spec version | v1.0 |
+| Author (team member) | Group B |
+| Date | 2026-09-19 |
+| Status | Draft |
+| Approved by (Client role) | No approver identified |
+| DBIZ2 source | Function List MFG-10, No. 77–83, `F-MER-001`–`F-MER-007`; UC-C06, UC-C17, UC-C18, UC-C16; screens S23–S25, S29, S38, S42 |
 
-## Actors and boundary
+---
 
-Customer may opt in/out of merge production and explicitly accept the versioned merge policy during quote/checkout. This preference affects fixed pricing/deadline promises only; checkout never creates or reserves a batch. Company Admin uses the new S42 Merge Console to inspect candidates, estimate a batch, confirm it, start production or dissolve a Planned batch. MFG-06 owns quotes, order creation and immutable order/price snapshots; MFG-07 owns post-creation order status; this module manages batch membership and events. MFG-06 also owns payment/refund.
+## 1. Purpose and scope (mandatory)
 
-`MergePreference`: quote_id, customer opt-in, policy_version, accepted_at; submitting that quote copies the accepted preference/version to the immutable order snapshot. `ProductionBatch`: UUID id, company_id, product/material/color/print_method key, state Planned|InProduction|Completed|Dissolved, created_by, immutable membership snapshot, estimate snapshot, timestamps/version. Each order has at most one active batch. Candidates must be same company/product/material/color/print method, Confirmed, paid, current Signed contract, opt-in, unbatched, uncancelled and confirmed within the latest 3 calendar days. At least 2 orders; total quantity <=10000. Distinct customer artwork remains distinct inside the batch.
+Customers may opt into merge production and accept a versioned policy. Company Admins inspect eligible orders, estimate a batch and create, start, complete or dissolve it. The module manages production batches and events; MFG-06 owns quotes, order creation, payment/refund and immutable snapshots, and MFG-07 owns order fulfillment states.
 
-The fixed 5% subtotal discount and maximum 3 extra calendar days are honored whenever customer opts in, even if no batch forms. Standard production is due 7 days after confirmation; merge production is due 10 days after confirmation. These are production-completion commitments, not carrier-delivery promises. If no batch exists at the three-day eligibility cutoff, start the order as individual production at the promised price/due date. Discount is always floor(subtotal*5/100), even when a fallback to individual production occurs. No checkout batch assignment. Customer merge preference alone is not batch membership.
+MVP priority: **Could**. Opt-in pricing/deadline terms apply even if no batch forms. The 5% subtotal discount and maximum three extra calendar days are promised; standard production is due seven days after confirmation and merge production ten days after confirmation. These are production-completion commitments, not carrier delivery promises. No batch is created at checkout.
 
-## Function contracts and requirements
+## 2. Actors (mandatory)
 
-| FR / function | Inputs and output | Validation, effect, and failure |
-|---|---|---|
-| FR-001 / F-MER-001 Merge Option View | Route product/design and session; output comparison view model with standard vs merge price/deadline and eligibility summary. | Show merge only for a saved eligible design/product. Price uses server quote. Terms clearly state 5% subtotal discount, max 3 extra days, admin batching later, and individual fallback retains terms. No batch created. |
-| FR-002 / F-MER-002 Merge Terms View | policy_version; output versioned readable policy text. | Read-only; policy version recorded on customer acceptance and order snapshot. |
-| FR-003 / F-MER-003 Save Preference Logic | quote_id, merge_opt_in boolean, policy_version, expected quote version; output saved preference and a newly issued immutable quote with refreshed breakdown. | Authenticated customer owns current quote. Validate product/design eligibility and policy version; server computes fixed discount. A preference change supersedes the prior quote and issues a new quote_id with a 30-minute validity window; never mutate a quote in place. Customer reviews the new breakdown before submission. Submitted order snapshot cannot be edited. Same total shown in S23/S25/S34/S35. Stale quote 409; invalid option 422. |
-| FR-004 / F-MER-004 Merge Console View | Company Admin, candidate filters, pagination; output grouped eligible candidates and reasons for excluded candidates. | S42 console; only same-company data, allowlisted filters. Recompute eligibility server-side when requested; candidates are read-only until confirmed. |
-| FR-005 / F-MER-005 Estimate Logic | selected order UUIDs; output exact estimate: gross_setup_saving_vnd, customer_discount_vnd, estimated_net_saving_vnd, setup_minutes_saved, total_quantity and production_due_at summary. | Demo planning model: setup cost 100000 VND; gross saving=(count−1)*100000; discount=sum(order merge discount); net=gross−discount; minutes=(count−1)*30. Negative net shown, requires explicit Admin acknowledgement at confirm. Setup minutes never shorten the promised production due date. Revalidate candidate list; invalid candidate 409. |
-| FR-006 / F-MER-006 Batch Exec Logic | `action` enum create, start, complete or dissolve; create requires order_ids (>=2), estimate version, acknowledge_negative_net boolean if applicable and expected order versions; start/complete/dissolve require batch_id and expected batch version. All mutations require Idempotency-Key. Output batch id/state, immutable membership snapshot, and affected order links/statuses. | Create: in one transaction lock/revalidate all orders: same eligible key, paid/current Signed/Confirmed, opted in, within 3-day window, no cancel or batch, total quantity <=10000. Start: Planned only; atomically advance every linked order Confirmed→InProduction. Complete: InProduction only; record batch completion, leaving per-order shipment/delivery transitions to MFG-07. Dissolve: Planned only; mark Dissolved and clear active order.batch_id while retaining immutable membership history. Cross-company/mixed dimensions/duplicate IDs reject 422; stale eligibility/state 409; rollback all changes on failure. |
-| FR-007 / F-MER-007 Merge Notify Logic | Internal committed batch event with batch_id/member IDs; output outbox IDs for each customer and production planning. | Resolve recipients from persisted membership, never caller-supplied customer IDs. Notify after commit. Duplicate event/recipient suppressed; email failure does not undo batch. |
+| Actor | Role in this module | Where it comes from |
+| --- | --- | --- |
+| Customer | Views merge option/terms and opts in or out on a quote | MFG-10 resolved contract; UC-C06 |
+| Company Admin | Reviews candidates, estimates, confirms, starts/completes or dissolves batches | MFG-10 resolved contract; UC-C17/UC-C18 |
+| System / scheduler | Enforces three-day fallback and emits durable batch/status events | MFG-10 module contract |
+| MFG-06 / MFG-07 | Owns quote/order/payment and order fulfillment state | Module boundaries |
 
-### Batch transitions and operations
+## 3. User scenarios and acceptance criteria (mandatory)
 
-Only Company Admin in the batch's company may call F-MER-006 start/complete/dissolve. Planned→InProduction atomically advances all member orders Confirmed→InProduction; reject if any member is no longer eligible. Planned→Dissolved clears active order.batch_id while retaining immutable membership/audit history. No membership changes once InProduction. InProduction→Completed marks batch completion only; shipment/delivery remain per-order MFG-07 transitions. Cancellation becomes possible after dissolution subject to MFG-07 rules. At 3 calendar days after confirmation, a trusted scheduled job locks each still-unbatched opted-in order, records individual fallback, atomically advances Confirmed→InProduction, and emits the normal status notification without changing price or production_due_at. A concurrent batch/cancellation/fallback has one winner through row locks and expected state. Concurrent confirm/dissolve/start/complete is serialized by expected_version and row locks.
+### US-1: Choose merge option (Could)
+
+Customer sees standard and merge price/deadline, accepts the current policy version and saves the preference. A preference change supersedes the prior quote and issues a fresh immutable quote for 30 minutes.
+
+1. **Given** the customer opts in, **when** the quote is issued, **then** the exact 5% subtotal discount and ten-day production commitment appear consistently on S23/S25/S34/S35.
+2. **Given** the quote is submitted, **when** the order is created, **then** preference and policy version are snapshotted and no batch is assigned.
+3. **Given** the customer changes preference, **when** it is saved, **then** a new quote ID and refreshed breakdown are issued; the prior quote is not mutated.
+
+### US-2: View eligible orders and estimate (Could)
+
+Company Admin sees same-company candidates and exclusion reasons. The estimate shows gross setup savings, customer discount, estimated net savings, saved setup minutes, total quantity and production due date.
+
+1. **Given** candidates differ by company/product/material/color/print method, are not paid/currently signed/Confirmed, opted in, are batched/cancelled, or are outside the three-day window, **when** eligibility is recomputed, **then** they are excluded.
+2. **Given** estimate net savings are negative, **when** Admin confirms, **then** explicit acknowledgement is required.
+
+### US-3: Confirm and operate batch (Could)
+
+At least two eligible orders can be atomically placed in a Planned batch. Admin starts or dissolves a Planned batch, or completes an InProduction batch.
+
+1. **Given** a Planned batch starts, **when** all members remain eligible, **then** all member orders advance atomically to InProduction.
+2. **Given** a Planned batch dissolves, **when** the operation commits, **then** active order links clear while immutable membership history remains.
+3. **Given** no batch forms by three calendar days after confirmation, **when** fallback runs, **then** individual production starts at the same discounted price and promised due date.
+4. **Given** concurrent cancellation, batch, fallback or state changes, **when** mutations contend, **then** one wins and no partial batch membership is committed.
+
+### Edge cases
+
+- Minimum batch is two orders; aggregate quantity cannot exceed 10,000.
+- Negative net savings are displayed and require Admin acknowledgement.
+- Production completion does not mark individual orders shipped or delivered.
+
+## 4. Flows (mandatory)
+
+### 4.1 Usage flow
+
+Customer opts in and accepts policy → quote snapshots fixed discount/deadline → order submitted PendingContract → contract signed and payment verified → Admin confirms eligible batch within three days and starts production; otherwise eligible orders enter individual production at the same terms. Admin may dissolve a Planned batch before start.
+
+### 4.2 Sequence for the main flow
 
 ```mermaid
 flowchart TD
@@ -38,8 +80,103 @@ flowchart TD
   E -->|No batch forms| I[Individual production with same discount and promise]
 ```
 
-### Acceptance scenarios
+## 5. Functional requirements (mandatory)
 
-Opt-in quote always shows exact 5% discount and merge deadline on every screen; submission creates an order with preference but no batch; admin confirmation with two eligible orders creates one batch; a third-party concurrent cancellation/production change causes atomic rejection with no partial membership; single order, mixed product/material, >10000 quantity or >3-day candidate rejects; no batch by deadline releases individual production without removing discount; negative estimate is visible and blocks confirmation until acknowledged; duplicate confirmation idempotently returns same batch; simultaneous start/dissolve has one winner; dissolution preserves audit history and clears active order links; notifications are persisted once even if SMTP fails.
+| FR ID | DBIZ2 Subfunction ID | Requirement (system MUST ...) | Actor | Priority |
+| --- | --- | --- | --- | --- |
+| FR-001 | F-MER-001 | Show standard versus merge price/deadline and eligibility summary for saved eligible designs; do not create a batch. | Customer | Could |
+| FR-002 | F-MER-002 | Display versioned merge policy text and record accepted policy version. | Customer | Could |
+| FR-003 | F-MER-003 | Save preference on owned quote, compute fixed discount server-side and issue a new immutable 30-minute quote. | Customer | Could |
+| FR-004 | F-MER-004 | Show same-company eligible candidates and exclusion reasons using server-recomputed eligibility. | Company Admin | Could |
+| FR-005 | F-MER-005 | Compute exact savings/quantity/due-date estimate using demo planning assumptions and require acknowledgement of negative net. | Company Admin | Could |
+| FR-006 | F-MER-006 | Atomically create/start/complete/dissolve batches with idempotency, version validation and immutable membership history. | Company Admin | Could |
+| FR-007 | F-MER-007 | Notify each customer and production planning after committed batch events, deduplicating recipients. | System | Could |
 
-Screens: S23 quote/merge choice, S24 merge policy, S25 checkout summary, S29 production management, S42 Merge Console, S38 notifications. Traceability: F-MER-001..007 / FR-001..007; UC-C06, UC-C17, UC-C18, UC-C16. D09 is authoritative where legacy descriptions imply automatic merge or checkout batch creation.
+### 5.1 Input / Output contract
+
+| FR ID | Input field | Type | Required | Output field | Type | Notes / validation |
+| --- | --- | --- | --- | --- | --- | --- |
+| FR-001 | product/design and session | IDs/session | Yes | comparison view model | Object | Merge option only for eligible saved design |
+| FR-002 | policy_version | Version | Yes | readable policy | Text/object | Read-only versioned terms |
+| FR-003 | quote_id, merge_opt_in, policy_version, expected quote version | UUID, boolean, version | Yes | new quote and breakdown | Object | Stale 409; invalid option 422 |
+| FR-004 | company session, filters, pagination | Session/allowlisted values | Optional | candidate groups and exclusion reasons | Paginated object | Same-company data only |
+| FR-005 | selected order IDs | UUID array | Yes | gross_setup_saving_vnd, customer_discount_vnd, estimated_net_saving_vnd, setup_minutes_saved, total_quantity, production_due_at | Estimate object | Gross=(count−1)×100,000 VND; minutes=(count−1)×30; negative net requires Admin acknowledgement |
+| FR-006 | action; order IDs or batch ID; expected versions; acknowledgement; Idempotency-Key | Enum, IDs, versions, boolean, key | Yes | batch state, membership snapshot, affected orders | Object | Create ≥2; total quantity ≤10,000 |
+| FR-007 | committed batch event and member IDs | Internal event | Yes | customer/planning outbox IDs | UUID array | Recipients resolved from persisted membership |
+
+### 5.2 Business rules
+
+| Rule ID | Rule | Why it exists |
+| --- | --- | --- |
+| BR-001 | Merge discount is floor(subtotal × 5/100); maximum extra production time is three days. Standard due is seven days after confirmation; merge due is ten days. | Honor fixed customer promises whether or not batching succeeds. |
+| BR-002 | Eligibility requires same company/product/material/color/print method, paid, current Signed contract, Confirmed, opted-in, uncancelled, unbatched, and confirmed within the latest three calendar days. | Batch compatible work only. |
+| BR-003 | At least two orders and total quantity ≤10,000; each order has at most one active batch. | Bound batch operation. |
+| BR-004 | Estimate gross saving=(count−1)×100,000 VND; discount is sum of member discounts; net=gross−discount; setup minutes saved=(count−1)×30. | Make demo estimate reproducible. |
+| BR-005 | At three calendar days after confirmation, a trusted scheduled job locks each still-unbatched opted-in order, records individual fallback, atomically advances Confirmed→InProduction and emits the normal status notification without changing price or production_due_at. | Preserve commitments when no batch forms. |
+| BR-006 | Planned→InProduction atomically advances all members; Planned→Dissolved clears active links; InProduction→Completed does not change shipment/delivery state. | Keep batch and order lifecycles consistent. |
+
+Mixed companies or compatibility dimensions and duplicate order IDs are rejected with 422; stale candidate, order, batch or state versions return 409. A retry with the same idempotency key and payload returns the prior result; the same key with a different payload returns 409. Only a Company Admin of the batch company can start, complete or dissolve it.
+
+## 6. Key entities (mandatory)
+
+| Entity | Attributes (from Input/Output fields) | Relationships |
+| --- | --- | --- |
+| MergePreference | quote_id, merge_opt_in, policy_version, accepted_at | Quote preference/version is copied into immutable order snapshot at submission. |
+| ProductionBatch | UUID, company_id, compatibility key, state Planned/InProduction/Completed/Dissolved, creator, immutable membership and estimate snapshots, timestamps/version | Contains at least two orders; active membership unique per order. |
+| Order merge snapshot | preference, policy version, discount, production due date, batch_id? | MFG-06 owns order snapshot; MFG-07 owns fulfillment progression. |
+
+Distinct customer artwork remains distinct inside a shared production batch.
+
+## 7. Screens involved
+
+| Screen ID | Screen name | Priority | Screen Spec file |
+| --- | --- | --- | --- |
+| S23 | Quote and merge choice | Could | Module boundary |
+| S24 | Merge policy | Could | Module screen |
+| S25 | Checkout summary | Could | Module boundary |
+| S29 | Production management | Could | Shared operations screen |
+| S38 | Notifications | Could | Shared notification screen |
+| S42 | Merge Console | Could | Module screen |
+
+## 8. Success criteria (mandatory)
+
+| SC ID | Criterion | How it is measured |
+| --- | --- | --- |
+| SC-001 | Every opt-in quote and order preserves the fixed discount and deadline through batch or individual fallback. | Compare quote/order snapshots and resulting production due date. |
+| SC-002 | Batch membership and order transitions are all-or-nothing and meet eligibility limits. | Verify candidate matrix, limits, concurrent mutations and idempotent replay. |
+| SC-003 | A Planned batch can be dissolved without losing immutable membership history. | Inspect batch audit record and cleared order links. |
+
+## 9. Assumptions
+
+- Demo estimates use 100,000 VND setup cost and 30 minutes saved per additional order.
+- Setup minutes do not shorten the promised production due date.
+- MVP priority is Could; policy-v1 fixed values are not editable by system configuration.
+
+## 10. Open questions
+
+| # | Question | Blocking? | Owner | Status |
+| --- | --- | --- | --- | --- |
+| 1 | Resolved decisions: Group B; course DBIZ 3; no approver identified; course/demo use only; MVP priority Could. | No | Group B | Resolved |
+| 2 | No remaining open questions. | No | Group B | Resolved |
+
+## 11. Traceability to DBIZ2
+
+| Spec section | DBIZ2 source | Location |
+| --- | --- | --- |
+| 1–2 Scope and actors | MFG-10 Function List No. 77–83 | `F-MER-001`–`F-MER-007` |
+| 3 Scenarios | UC-C06, UC-C17, UC-C18, UC-C16 | Use-case labels and resolved flow |
+| 4 Flow | Preference, quote, batch and fallback lifecycle | Current MFG-10 resolved contract |
+| 5–6 FRs and entities | `F-MER-001`–`F-MER-007` | Function List MFG-10 |
+| 7 Screens | S23–S25, S29, S38, S42 | Screen List and module contract |
+
+## Completion checklist
+
+- [x] All seven MFG-10 functions have FR rows and contracts.
+- [x] Discount, production commitments, eligibility, estimate and fallback logic are explicit.
+- [x] Batch transitions, membership, idempotency and concurrency rules are recorded.
+- [x] Resolved inputs are recorded and no unresolved placeholders remain.
+- [x] Traceability identifies use cases, functions and screens.
+
+Template source: DBIZ3 Product Design Package specification template.
+
+DBIZ3, FTU.

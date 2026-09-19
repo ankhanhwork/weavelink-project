@@ -1,58 +1,201 @@
-# MFG-05 — Product Design and Design Service
+# Spec Document: Product Design
 
-**Contract:** Complete-system target. All listed functions are in scope. Decisions D01–D05 and D11–D12 in [system-decisions.md](../docs/system-decisions.md) govern shared behavior. Human facts, if later supplied, belong only in [user-input-needed.md](../docs/user-input-needed.md).
+| Field | Value |
+| --- | --- |
+| Module ID | `MFG-05` |
+| Module name | Product Design |
+| Spec version | v1.0 |
+| Author (team member) | Group B |
+| Date | 2026-09-19 |
+| Status | Draft |
+| Approved by (Client role) | No approver assigned |
+| DBIZ2 source | Historical IDs retained: Function List No. 36-46; `F-DES-001` .. `F-DES-011`; `UC-C02` .. `UC-C04`, `UC-S03`; S09, S13, S15-S22, S38. External DBIZ2 comparison is not required. |
 
-## Purpose, actors, and boundary
+---
 
-Customers configure a company product, preview and save versioned designs, inspect their own saved designs, and optionally request paid design work. Sales Consultants deliver designs only for requests assigned to them. Company Admin assigns paid requests and establishes a committed due date. Payment settlement belongs to MFG-06; this module consumes its authoritative settlement event and does not process payment callbacks. Product rule authoring belongs to MFG-04; this module validates against its active version. Order creation and immutable order snapshots belong to MFG-06.
+## 1. Purpose and scope (mandatory)
 
-Every record is company-scoped. Customer calls require ownership; consultant calls require active same-company membership and assignment; Company Admin calls require same-company membership. Server enforces access: 401 unauthenticated, 403 prohibited, 404 inaccessible IDs. Submitted customer/company/role values are ignored in favor of session identity.
+Customers configure, preview and save versioned product designs and may request paid consultant design work. Self-design/upload/preview/save is MVP Must; paid design service is MVP Could.
 
-## Entities and state
+**In scope:** validate product options/assets; save immutable design versions; list owned designs; create/cancel paid requests; consume verified settlement; assign via MFG-08; deliver consultant design and notify owner.
 
-`Design`: UUID id, company_id, customer_id, product_id, product_version, version, status (Draft, Saved, Delivered), options_json, print_assets[], preview_asset_id, created_at, updated_at. Each save creates an immutable version; edits to ordered designs fork a version and never mutate an order snapshot. Only Saved and Delivered versions may be ordered.
+**Out of scope:** payment callback processing is MFG-06; product-rule authoring is MFG-04; order creation is MFG-06.
 
-`DesignRequest`: UUID id, company_id, customer_id, product_id, requirements (20–5000 chars), attachment_ids (0–5 private safe image assets), requested_deadline, committed_due_at nullable, fee_vnd integer (default 200000, snapshotted), status, assigned_consultant_id nullable, version, created_at, updated_at. States: AwaitingPayment → Paid → Assigned → InProgress → Delivered; AwaitingPayment → Cancelled/Expired; Paid while unassigned → Cancelled with full refund. No assignment before Paid; cancellation after assignment is rejected.
+## 2. Actors (mandatory)
 
-Design-request lifecycle operations: customer may cancel an own AwaitingPayment request, or a Paid request before assignment, by submitting `request_id`, `expected_version`, `reason` (optional, 1–500 chars) and Idempotency-Key. Cancellation atomically sets Cancelled; for Paid, MFG-06 creates a full SERVICE refund intent. Assignment or later state returns 409. A scheduled expiration after 24 hours changes still-AwaitingPayment to Expired. Company Admin assigns through MFG-08/F-ORD-003, which atomically sets the customer's assigned consultant, request assignee and committed_due_at; F-DES-009 then lists only assigned actionable requests.
+| Actor | Role in this module | Where it comes from |
+| --- | --- | --- |
+| Customer | Creates own designs/requests and views own results | MFG-05 resolved contract; UC-C02/UC-C03/UC-C04 |
+| Sales Consultant | Works assigned paid requests | MFG-05 role boundary |
+| Company Admin | Views queue, assigns, sets committed due date, may deliver | MFG-05 role boundary |
+| Payment/System | Sends verified settlement and durable notifications | MFG-05 function contract |
 
-`Consultation` is a separate CRM record: id, company_id, customer_id, consultant_id, notes, related request/order IDs, status New → Contacted → InProgress → ClosedWon/ClosedLost. Reopen a closed record only as Company Admin. Consultation outcomes never alter order status. Internal notes are visible only to assigned consultant and Company Admin.
+## 3. User scenarios and acceptance criteria (mandatory)
 
-## Function contracts and functional requirements
+### US-1 (Must): Design product
 
-| FR / function | Inputs and output | Validation, effect, and failure |
-|---|---|---|
-| FR-001 / F-DES-001 Design Workspace | Route `product_id`; output design view model with active product version, supported options, 2D canvas and print-area coordinates. | Product must be Published and belong to selected company. No request body. Inaccessible/unavailable product returns 404; loading/error states retain route. 3D is not required. |
-| FR-002 / F-DES-002 Preview Logic | `design_id?`, `product_id`, options object, asset UUIDs; output compatibility result and preview asset UUID. | Validate each option against current product rules, asset ownership/access, supported MIME and image bounds. Reject incompatible combinations with 422 field errors; changed product version invalidates preview and requests review. Unsafe files rejected. Preview is non-persistent until saved. |
-| FR-003 / F-DES-003 Save Design Logic | `configuration_json`, authenticated customer session, `product_id`, expected product/design version, Idempotency-Key; output `saved_design_id`, version, asset UUID/private expiring URL. | Validate against D04 and D02; customer_id comes from session. Transaction stores design/version and assets. Stale version 409; invalid rules 422; same key/payload replays result; changed payload with same key 409. |
-| FR-004 / F-DES-004 Saved Designs List | Customer route/query with page, page_size, allowlisted sort/filter; output gallery view model `items,total,page,page_size`. | Own saved/delivered designs only, company scoped; drafts excluded unless explicitly viewing own editor drafts. Invalid pagination 400. Empty list is successful. |
-| FR-005 / F-DES-005 Request Form | Route product_id and current session; output form view model with requirements, attachment and requested-deadline fields plus snapshotted fee. | Product must be Published; no business write. |
-| FR-006 / F-DES-006 Create Request Logic | product_id, requirements, attachment_ids, requested_deadline, expected version, Idempotency-Key; output request record in AwaitingPayment and payable fee. | Trimmed requirements 20–5000 chars; deadline at least 3 calendar days ahead in Asia/Ho_Chi_Minh; 0–5 safe files <=10 MiB each, PNG/JPEG/WebP actual MIME checked/scanned. Create AwaitingPayment before payment initiation; fee defaults 200000 VND and snapshots active config. No notification/assignment until paid. Invalid fields 422; duplicate key replays; company suspended 409. |
-| FR-007 / F-DES-007 Update Payment Status | Internal verified SERVICE settlement event with payment_transaction_id and request_id; output updated request and notification event ID. | Only the payment service may invoke. Lock request/payment; exactly-once AwaitingPayment→Paid. Duplicate event returns existing result. Late or cancelled-resource settlement follows D08 refund path; never resurrect request. |
-| FR-008 / F-DES-008 Notify Admin Logic | Internal event plus request summary; output durable notification/outbox event ID and delivery state. | Enqueue actionable Company Admin notification transactionally on Paid. In-app inbox is authoritative; email retries per D03 and cannot roll back payment. Deduplicate by event/recipient. |
-| FR-009 / F-DES-009 Customer Select View | Consultant session, optional filter, pagination; output assigned paid request list with customer, product, due date and status. | Only requests assigned to this consultant in same company; Company Admin may view the company queue. No unassigned unpaid requests appear. |
-| FR-010 / F-DES-010 Push Design Logic | request_id, design payload/assets, expected request version, Idempotency-Key; output immutable Delivered design version and private asset references. | Caller must be assigned active consultant or Company Admin; request must be InProgress (Paid may first be assigned and started by Admin). Validate design against current product rules and asset checks. Store new immutable design version, set Delivered atomically, notify owner through outbox. Stale state 409; invalid design 422. |
-| FR-011 / F-DES-011 Notify Customer Logic | Internal delivery event; output notification/outbox event ID. | Notify request owner with authorized design route/private expiring link only after commit. No raw public asset URL or caller-supplied email. Deduplicate; email failure does not undo delivery. |
+Compatible options/assets produce a 2D preview and immutable Saved version. Incompatible/stale rules return actionable 422/409 and persist nothing. Only Saved/Delivered versions are orderable.
 
-## Flows and acceptance
+### US-2 (Must): Product customization
+
+Every option and print asset is validated against the current Published product version, ownership, actual MIME, scan result and print-area bounds.
+
+### US-3 (Must): View saved design
+
+Customer receives only own same-company Saved/Delivered designs with pagination; empty result is successful. Editing an ordered design forks a version.
+
+### US-4 (Could): Request design service
+
+Valid request creates AwaitingPayment with fee snapshot. Verified SERVICE settlement changes it exactly once to Paid and notifies Company Admin. An unassigned Paid request may cancel with full refund; assignment or later rejects cancellation.
+
+### US-5 (Could): Send design to customer
+
+Assigned consultant/Admin validates and stores an immutable Delivered version, atomically updates request and sends an authorized notification. Concurrent deliveries yield one success and one 409.
+
+### Edge cases
+
+- Another customer or unassigned consultant receives 404/403 without data leakage.
+- AwaitingPayment expires after 24 hours; late settlement follows refund flow and never resurrects it.
+- Email outage leaves in-app notification/state intact.
+- Unsafe/oversized attachments are rejected before persistence.
+
+## 4. Flows (mandatory)
+
+### 4.1 Usage flow
+
+```mermaid
+flowchart LR
+  Product[S09 Product] --> Workspace[S13 Design]
+  Workspace --> Preview[Validate and preview]
+  Preview --> Save[Save version]
+  Save --> Gallery[S17 Designs]
+  Product --> Request[S15 Request service]
+  Request --> Payment[S16 Service payment]
+  Payment --> Assign[S18/S19 Assignment]
+  Assign --> Deliver[S20/S21 Delivery]
+  Deliver --> Gallery
+```
+
+### 4.2 Sequence for the main flow
 
 ```mermaid
 sequenceDiagram
   actor C as Customer
-  participant D as Design service
-  participant P as Payment service
+  participant D as Design Service
+  participant P as Payment Service
   participant A as Company Admin
   participant S as Sales Consultant
-  C->>D: Create service request
+  C->>D: create request
   D-->>C: AwaitingPayment + fee snapshot
-  C->>P: Initiate SERVICE payment
-  P->>D: Verified settlement event
-  D-->>A: Persisted paid-request notification
-  A->>D: Assign consultant + committed due date
-  S->>D: Deliver validated immutable design
-  D-->>C: In-app notification + authorized design link
+  P->>D: verified SERVICE settlement
+  D-->>A: durable paid-request notification
+  A->>D: assign consultant + committed due date
+  S->>D: deliver validated immutable design
+  D-->>C: in-app notification + authorized link
 ```
 
-Acceptance scenarios: a customer saves a compatible design and sees it in their gallery; an incompatible option or stale product rule is rejected with actionable field errors and no saved state; a service request persists AwaitingPayment before payment and only verified settlement makes it actionable; repeated payment/delivery requests are idempotent; two concurrent deliveries using one version yield one success and one 409; an email outage leaves the in-app notification and delivered design intact; another customer or unassigned consultant receives 404/403 without leaking details; cancellation of an unassigned paid request creates a full refund workflow, while assigned cancellation is rejected.
+## 5. Functional requirements (mandatory)
 
-Screens: S09 product detail is the design entry point; S13 is the design workspace/preview; S15 creates a service request; S16 shows its payment/status; S17 lists owned designs; S18 is the Company Admin request queue; S19 assigns a paid request; S20 lists consultant tasks; S21 displays request context and delivers the final design; S22 starts ordering an eligible design; S38 shows notifications. Shared status, form, and loading/error behavior follows D11. Traceability: F-DES-001..011 and FR-001..011; UC-C02, UC-C03, UC-C04, UC-S03.
+### 5.1 Input / Output contract
+
+| FR ID | DBIZ2 Subfunction ID | Requirement (system MUST ...) | Actor | Priority |
+| --- | --- | --- | --- | --- |
+| FR-001 | F-DES-001 | Render the design workspace using current Published product rules and options. | Customer | Must |
+| FR-002 | F-DES-002 | Validate compatibility/assets and produce a nonpersistent 2D preview. | Customer | Must |
+| FR-003 | F-DES-003 | Save an immutable design version transactionally with idempotency. | Customer | Must |
+| FR-004 | F-DES-004 | List only the customer's Saved/Delivered designs with pagination. | Customer | Must |
+| FR-005 | F-DES-005 | Render the paid design-service request form and fee. | Customer | Could |
+| FR-006 | F-DES-006 | Create a validated AwaitingPayment request with fee snapshot and idempotency. | Customer | Could |
+| FR-007 | F-DES-007 | Settle a SERVICE request exactly once from a verified internal payment event. | System | Could |
+| FR-008 | F-DES-008 | Notify same-company administrators after request payment commits. | System | Could |
+| FR-009 | F-DES-009 | List paid requests available to authorized consultants/admins. | Sales Consultant / Company Admin | Could |
+| FR-010 | F-DES-010 | Deliver an immutable validated design for an assigned request atomically. | Sales Consultant / Company Admin | Could |
+| FR-011 | F-DES-011 | Notify the owning customer after design delivery. | System | Could |
+
+### 5.1 Input / Output contract
+
+| FR ID | Input field | Type | Required | Output field | Type | Notes / validation |
+| --- | --- | --- | --- | --- | --- | --- |
+| FR-001 | product UUID, session | UUID / session | Yes | S13 workspace model | View model | Published same-company product |
+| FR-002 | product/design/options/assets | IDs / configuration | Yes | compatibility and preview UUID | Object | Current rules, ownership, MIME and bounds; 422 incompatible |
+| FR-003 | configuration, versions, idempotency key | Object / integers / key | Yes | saved design ID/version | Object | Immutable; stale/key conflict 409 |
+| FR-004 | page, filters, sort, session | Integers / values / session | Optional | own design gallery | Paginated object | Saved/Delivered only; empty success |
+| FR-005 | product UUID, session | UUID / session | Yes | S15 form and fee | View model | Published product; read only |
+| FR-006 | requirements, attachments, deadline, key | Strings / assets / date / key | Yes | AwaitingPayment request | Object | Requirements 20-5000; 0-5 attachments; deadline >=3 days; default 200000 VND |
+| FR-007 | verified SERVICE event | Internal event | Yes | Paid request/event | Object | Settle once; late/cancelled event refunded |
+| FR-008 | paid event | Internal event | Yes | durable notification | Object | In-app authoritative; deduplicated |
+| FR-009 | company/assignment filters, session | Values / session | Optional | authorized paid requests | Paginated object | Same company and assignment |
+| FR-010 | request/design/assets/version/key | IDs / values / key | Yes | Delivered immutable design | Object | Assignment/current rules; stale 409 |
+| FR-011 | delivery event | Internal event | Yes | notification/outbox ID | UUID | Owner only; private expiring link |
+
+### 5.2 Business rules
+
+| Rule ID | Rule | Why it exists |
+| --- | --- | --- |
+| BR-001 | Design status is Draft, Saved or Delivered; every save is immutable and ordered designs fork on edit. | Preserve designs referenced by quotes/orders. |
+| BR-002 | Request state: AwaitingPayment → Paid → Assigned → InProgress → Delivered; AwaitingPayment → Cancelled/Expired; unassigned Paid → Cancelled + full refund. | Define service request lifecycle. |
+| BR-003 | No assignment before Paid; cancellation after assignment is rejected. | Prevent unpaid work and unsafe cancellation. |
+| BR-004 | Fee is integer VND, default 200000, snapshotted on creation. | Keep request price stable. |
+| BR-005 | Attachments are 0-5 PNG/JPEG/WebP files <=10 MiB each, actual MIME checked/scanned. | Protect users and storage. |
+| BR-006 | Consultation CRM state is independent and never changes order status. | Keep sales workflow separate from fulfillment. |
+
+## 6. Key entities (mandatory)
+
+| Entity | Attributes (from Input/Output fields) | Relationships |
+| --- | --- | --- |
+| Design | company/customer/product IDs, product/design versions, status, options, assets, preview, timestamps | Immutable saved versions; owner/company scoped |
+| DesignRequest | company/customer/product, requirements, attachments, deadlines, fee, state, assignee, version | Paid before assignment; optimistic versioning |
+| Consultation | company/customer/consultant, notes, related IDs, CRM status | Internal notes visible to assignee/Admin only |
+| Notification | event/recipient/type/payload/delivery state | Deduplicated; in-app record authoritative |
+
+## 7. Screens involved
+
+| Screen ID | Screen name | Priority | Screen Spec file |
+| --- | --- | --- | --- |
+| S09 | Product detail and design entry | Must | `screens/S09-product_detail_screen.md` |
+| S13 | Product design workspace | Must | `screens/S13-product_design_tool_screen.md` |
+| S17 | Customer designs | Must | `screens/S17-customer_designs_screen.md` |
+| S15 | Design service request | Could | `screens/S15-design_service_request_screen.md` |
+| S16 | Design service payment | Could | `screens/S16-design_service_payment_screen.md` |
+| S18/S19 | Consultation queue and assignment | Could | `screens/S18-consultation_requests_and_customers_screen.md` |
+| S20/S21 | Consultant tasks and delivery | Could | `screens/S20-consultant_tasks_and_customers_screen.md` |
+| S22 | Order eligible design | Must | `screens/S22-create_order_screen.md` |
+| S38 | Notifications | Could | `screens/S38-notification_panel_screen.md` |
+
+## 8. Success criteria (mandatory)
+
+| SC ID | Criterion | How it is measured |
+| --- | --- | --- |
+| SC-001 | MVP self-design safely saves versioned, orderable work. | Verify rule validation, saved versions and order eligibility. |
+| SC-002 | Verified settlement alone makes a paid request actionable. | Confirm request state changes only on verified settlement. |
+| SC-003 | Ownership, assignment, idempotency and concurrent delivery are enforced; all functions map to FRs. | Exercise authorization/retry/race cases and compare F-DES IDs with FRs. |
+
+## 9. Assumptions
+
+- DBIZ 3 classroom demo by Group B; no approver; demo business/contact data are fictional samples.
+- Self-design is Must; paid design service and consultant workflow are Could.
+- 2D preview is required; 3D preview is outside this scope.
+
+## 10. Open questions
+
+| # | Question | Blocking? | Owner | Status |
+| --- | --- | --- | --- | --- |
+| 1 | Are any design/request state, fee, deadline, cancellation, refund or delivery decisions still undecided? | No | Group B | Resolved — no remaining open questions; sections 3–6 define the complete behavior. |
+
+## 11. Traceability to DBIZ2
+
+Historical IDs are retained; external DBIZ2 comparison is not required.
+
+| Spec section | DBIZ2 source | Location |
+| --- | --- | --- |
+| Scope and actors | Function List MFG-05 | Rows 36–46; IDs appear in FR table |
+| Design/customize | UC-C02; F-DES-001..003 | S13; sections 3 and 5 |
+| Saved designs | UC-C03; F-DES-004 | S17; sections 3 and 5 |
+| Service request/delivery | UC-C04, UC-S03; F-DES-005..011 | S15-S21; sections 3 and 5 |
+
+## Completion checklist
+
+- [x] Scope, actors, scenarios, flows and edge cases are defined.
+- [x] Function, state, entity, screen and ID traceability is complete.
+- [x] MVP priorities and demo assumptions are explicit.
+- [x] No unresolved placeholders remain.

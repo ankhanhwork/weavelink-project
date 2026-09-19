@@ -1,48 +1,208 @@
-# MFG-01 — Identity & Access
+# Spec Document: Identity & Access
 
-Implementation specification · Draft · 2026-09-19. Scope covers the complete system. Function/source traceability: [function list](../docs/function-list.md), rows 1–11; shared rules: [system decisions](../docs/system-decisions.md) D01–D03; factual provenance and pending human inputs: [user input register](../docs/user-input-needed.md).
+| Field | Value |
+| --- | --- |
+| Module ID | `MFG-01` |
+| Module name | Identity & Access |
+| Spec version | v1.0 |
+| Author (team member) | Group B |
+| Date | 2026-09-19 |
+| Status | Draft |
+| Approved by (Client role) | No approver assigned |
+| DBIZ2 source | Historical IDs retained: Function List No. 1-11; `F-USER-001` .. `F-USER-011`; `UC-G03`, `UC-M01` .. `UC-M04`; S02-S06 and S08. External DBIZ2 comparison is not required. |
 
-## Purpose, roles and screens
+---
 
-Provide account creation, authentication, session termination and account recovery for customers and provisioned staff. Assignable roles are Customer, Sales Consultant, Company Admin and System Admin. Public registration creates Customer only. Staff accounts and company memberships are provisioned by System Admin. A Member means an authenticated active user. Authorization is enforced server-side; inaccessible objects return 404, missing authentication 401 and prohibited actions 403. Do not accept role, user ID or company membership from a client as authority.
+## 1. Purpose and scope (mandatory)
 
-Screens: S02 registration; S03 sign-in; S04 forgot password; S05 reset password; S06 profile/session entry; S08 public landing/catalog entry. S06 logout invokes F-USER-006. Forms expose loading, validation, error, success and retry states; preserve input on recoverable failure. Route redirects accept internal allowlisted destinations only.
+This module provides registration, verification, authentication, sign-out and password recovery. Public registration creates Customer capability only. Staff and System Admin access is provisioned by MFG-03.
 
-## Entities and shared constraints
+**In scope:** register and verify a Customer; sign in with server-resolved capabilities; revoke a session; request and complete email recovery.
 
-`User(id: UUID,email: normalized globally unique,full_name,password_hash,customer_capability:boolean,email_verified_at?,active,created_at,updated_at,version)`; `Membership(id,company_id,user_id,role:Company Admin|Sales Consultant,active,version)`; `SystemCapability(user_id,role:System Admin,active)`; `Session(id,user_id,token_hash,created_at,idle_expires_at,absolute_expires_at,revoked_at?)`; `OneTimeToken(id,user_id,purpose,token_hash,expires_at,consumed_at?)`. Do not model staff authority as one global `User.role`: authorization resolves Customer capability, active company Membership and system capability separately; staff selects only an active authorized company. Email is globally unique and case-normalized. Name is 1–100 characters. Password is 12–128 characters, spaces allowed, stored as a password hash. Verification links expire in 24 hours, reset links in 30 minutes; tokens are random, stored hashed, single-use and replaced on resend. Sessions use Secure, HttpOnly, SameSite=Lax cookies, CSRF protection, 30-minute idle and 24-hour absolute expiry. After five failed login attempts in 15 minutes, return the ordinary generic credential failure for attempt five; subsequent attempts in the account/IP window return 429 until the window clears. Link requests: 3/account/IP/hour. Generic reset responses do not expose account existence. D02 errors, UUIDs, UTC timestamps, version checks and idempotency apply.
+**Out of scope:** profile maintenance is MFG-02; staff provisioning is MFG-03; phone/SMS verification is disabled.
 
-## Function contracts (all IDs retained)
+**Depends on:** a durable email outbox, secure session storage and server-side authorization.
 
-| Function | Actor | Inputs and validation | Result / behavior |
-|---|---|---|---|
-| F-USER-001 Registration Screen (FR-001) | Guest | No business body; route/session context only. | S02 view model: full name, email, password and confirmation fields; consent/verification explanation. |
-| F-USER-002 Registration Logic (FR-002) | Guest | `full_name` 1–100; `email` valid and normalized; `password` 12–128; confirmation equal. | Transaction creates Customer capability inactive pending verification and returns user summary plus generic success. Invalid fields: 422; duplicate global email: 409. |
-| F-USER-003 Send Verification (FR-003) | Guest/System | `user_id` is server-derived from registration; resend takes email and is rate-limited. | Create one 24-hour verification token and enqueue email atomically. SMTP delivery is secondary; failed delivery remains retryable and never exposes token in logs. Verification activates account once; expired/consumed token is rejected. |
-| F-USER-004 Login Screen (FR-004) | Guest | No body; route/session context. | S03 view model with email and password inputs and generic recovery link. |
-| F-USER-005 Authentication Logic (FR-005) | Guest | `username_email`, `password`; normalized email; rate limits above. | Valid verified active user receives revocable server session, Customer capability plus active membership/system capabilities and safe internal redirect. Invalid credentials return generic 401; unverified account gets resend guidance without session; after five failures later attempts are rate-limited 429. New invited staff may use S03 invitation mode to consume a valid invitation and set full_name/password; existing identities must authenticate before accepting membership. |
-| F-USER-006 Logout Logic (FR-006) | Member | Current session from secure cookie; no client-supplied token. | Revoke session, clear cookie/local transient auth state, return `session_invalidated=true`; navigate S03. Repeated logout is successful no-op. |
-| F-USER-007 Forgot Password Screen (FR-007) | Guest/Member | No body; S04 form asks registered email. | S04 recovery form view model; never prefill or reveal account status. |
-| F-USER-008 Identity Validation (FR-008) | Guest/Member | `email_address_or_phone_number` normalized email; 3 requests/hour. | Return generic `accepted` whether account exists; for eligible account enqueue reset issuance. No phone channel is enabled in this release. |
-| F-USER-009 Send Reset Link (FR-009) | System | Server-derived user ID and email delivery channel. | Issue single-use 30-minute token and enqueue HTTPS internal reset URL. Outbox retries after 1, 5, 30 minutes; failed delivery is visible to operations. |
-| F-USER-010 Verify Token Logic (FR-010) | Guest | `reset_token` opaque token; purpose and expiry checked against hash. | Return `valid` only for unconsumed, unexpired token and allow reset form; otherwise `invalid_or_expired`, without revealing account details. Concurrent consumption permits only one winner. |
-| F-USER-011 Update Password Logic (FR-011) | Guest with valid reset token | `new_password`, `confirm_password`; policy above; token valid at commit. | Atomically consume token, replace hash and revoke all user sessions. Return confirmation and updated user summary. Stale/used token 409; weak/mismatch 422. |
+## 2. Actors (mandatory)
 
-## Flows and acceptance
+| Actor | Role in this module | Where it comes from |
+| --- | --- | --- |
+| Guest | Registers, verifies, signs in and recovers access | MFG-01 resolved contract; UC-G03/UC-M01/UC-M02/UC-M03 |
+| Member | Authenticated active user; signs out | MFG-01 resolved contract; UC-M04 |
+| Customer | Capability created by public registration | MFG-01 role boundary |
+| System | Issues tokens, sends email and enforces limits | MFG-01 function contract |
 
-Registration: guest submits S02 → validate and create inactive Customer → send verification → user follows link → activate → sign in at S03 → safe destination or S08. Authentication: guest submits credentials → rate limit and verify → establish session → route. Recovery: submit email → generic acknowledgement → email link → token check → submit new password → consume token and revoke sessions. Sign-out revokes the current session.
+## 3. User scenarios and acceptance criteria (mandatory)
 
-Use cases: UC-G03 Register Account (F-USER-001..003); UC-M01 Log In (F-USER-004..005); UC-M04 Log Out (F-USER-006); UC-M02 Forgot Password (F-USER-007..009); UC-M03 Reset Password (F-USER-010..011).
+### US-1 (Must): Register account
 
-- **Given** a new valid email and matching policy-compliant password, **when** the guest registers, **then** one pending Customer and one verification outbox event exist; retrying with the same email produces 409 without a second account.
-- **Given** an unverified account, **when** correct credentials are submitted, **then** no session is issued and the UI offers verification resend; after successful verification the same credentials establish a session.
-- **Given** invalid credentials, **when** a login is attempted, **then** attempts one through five return generic 401 and subsequent attempts in the 15-minute account/IP window return 429; account existence is not disclosed.
-- **Given** any submitted reset email, **when** recovery is requested, **then** the same acknowledgement is returned; known accounts receive a single-use link and unknown addresses reveal nothing.
-- **Given** two requests consume the same valid reset token concurrently, **when** both attempt password update, **then** exactly one commits; the other receives 409 and the winning update revokes existing sessions.
-- **Given** an expired, resent or consumed token, **when** it is opened or submitted, **then** the form reports an expired/invalid link and offers a new recovery request.
-- **Given** a signed-in user logs out twice, **when** either request reaches the server, **then** access is revoked on the first call and the second is an idempotent success; protected routes then return 401.
-- **Given** a login redirect contains an external URL, **when** authentication succeeds, **then** the redirect is discarded and the safe default is used.
+1. **Given** a new normalized email and valid fields, **when** submitted, **then** one pending Customer and verification event are created atomically.
+2. **Given** a duplicate email, **when** retried, **then** return 409 without another account.
+3. **Given** a valid unconsumed verification link, **when** opened within 24 hours, **then** activate exactly once.
 
-## Errors and operations
+### US-2 (Must): Log in
 
-Use common D02 error envelope/status codes. Preserve forms on 422/503. Email outage does not roll back account/token state; show generic next steps and keep delivery retryable. Audit auth outcomes without passwords, raw tokens or secrets. Trace each FR to the corresponding F-USER identifier above; no implementation scope is excluded by historical MVP notes.
+1. **Given** a verified active user, **when** credentials are correct, **then** create a revocable session with active capabilities.
+2. **Given** invalid credentials, **when** attempts one through five occur in 15 minutes, **then** return generic 401; later attempts in the account/IP window return 429.
+3. **Given** an external redirect, **when** login succeeds, **then** discard it and use an allowlisted internal route.
+
+### US-3 (Must): Forgot password
+
+1. **Given** any valid email syntax, **when** recovery is requested, **then** return the same acknowledgement.
+2. **Given** an eligible account, **when** accepted, **then** queue a single-use 30-minute reset link.
+
+### US-4 (Must): Reset password
+
+1. **Given** a valid token and matching compliant password, **when** reset commits, **then** consume the token, replace the hash and revoke every session atomically.
+2. **Given** concurrent use of one token, **when** both submit, **then** one succeeds and the other returns 409.
+
+### US-5 (Must): Log out
+
+1. **Given** an active session, **when** logout runs, **then** revoke it, clear the cookie and route to S03.
+2. **Given** an already-revoked session, **when** repeated, **then** succeed as an idempotent no-op.
+
+### Edge cases
+
+- Expired, consumed or replaced tokens are rejected without revealing account details.
+- Email failure does not roll back account/token state; delivery remains retryable.
+- Recoverable errors preserve nonsecret input; passwords/tokens are never echoed.
+- Missing authentication returns 401, prohibited action 403 and inaccessible object 404.
+
+## 4. Flows (mandatory)
+
+### 4.1 Usage flow
+
+```mermaid
+flowchart LR
+  Start([Start]) --> Registered{Registered?}
+  Registered -->|No| SignUp[Sign up and verify]
+  Registered -->|Yes| SignIn[Sign in]
+  SignUp --> SignIn
+  SignIn --> Catalog[Open catalog]
+  SignIn --> Forgot[Request recovery]
+  Forgot --> Reset[Reset password]
+  Reset --> SignIn
+```
+
+### 4.2 Sequence for the main flow
+
+```mermaid
+sequenceDiagram
+  actor Guest
+  participant UI as Auth UI
+  participant Auth as Auth Service
+  participant DB as User Store
+  participant Mail as Email Outbox
+  Guest->>UI: submit registration
+  UI->>Auth: validated fields
+  Auth->>DB: create pending Customer and token
+  Auth->>Mail: enqueue verification
+  Auth-->>UI: generic success
+  Guest->>UI: verify and sign in
+  UI->>Auth: credentials
+  Auth->>DB: resolve user and capabilities
+  Auth-->>UI: secure session and safe route
+```
+
+## 5. Functional requirements (mandatory)
+
+| FR ID | DBIZ2 Subfunction ID | Requirement (system MUST ...) | Actor | Priority |
+| --- | --- | --- | --- | --- |
+| FR-001 | F-USER-001 | Render the registration form and verification guidance. | Guest | Must |
+| FR-002 | F-USER-002 | Validate fields and atomically create one pending Customer. | Guest | Must |
+| FR-003 | F-USER-003 | Issue a hashed verification token and durable email event. | Guest / System | Must |
+| FR-004 | F-USER-004 | Render login and recovery entry. | Guest | Must |
+| FR-005 | F-USER-005 | Authenticate, rate-limit and establish a secure server session. | Guest | Must |
+| FR-006 | F-USER-006 | Revoke the current session idempotently. | Member | Must |
+| FR-007 | F-USER-007 | Render the email-only recovery form. | Guest / Member | Must |
+| FR-008 | F-USER-008 | Validate recovery input without exposing account existence. | Guest / Member | Must |
+| FR-009 | F-USER-009 | Issue and deliver a hashed reset token. | System | Must |
+| FR-010 | F-USER-010 | Verify token purpose, expiry and consumption state. | Guest | Must |
+| FR-011 | F-USER-011 | Atomically replace the password and revoke sessions. | Valid token holder | Must |
+
+### 5.1 Input / Output contract
+
+| FR ID | Input field | Type | Required | Output field | Type | Notes / validation |
+| --- | --- | --- | --- | --- | --- | --- |
+| FR-001 | route/session context | Session context | Yes | registration form | View model | Name, email, password, confirmation |
+| FR-002 | full_name, email, password, confirmation | Strings | Yes | pending Customer | Object | Name 1-100; password 12-128; 422 invalid; 409 duplicate |
+| FR-003 | server user; resend email | UUID / email | Yes | token and email event | Object | Hashed, single-use, 24 hours, rate-limited |
+| FR-004 | route/session context | Session context | Yes | login model | View model | Includes recovery link |
+| FR-005 | email, password, redirect | Strings / URL | Yes | session and capabilities | Object | Generic 401; later limited attempts 429; redirect allowlisted |
+| FR-006 | secure-cookie session | Session | Yes | session_invalidated | Boolean | Clear cookie; repeated call succeeds |
+| FR-007 | route context | Route context | Yes | recovery form | View model | Email only |
+| FR-008 | email | String | Yes | accepted | Boolean/status | Three requests/account/IP/hour; generic response |
+| FR-009 | server user/channel | UUID / enum | Yes | reset email event | Object | Hashed 30-minute token; retries at 1, 5, 30 minutes |
+| FR-010 | reset token | Opaque token | Yes | validity status | Enum | Purpose/expiry/consumption checked; one concurrent winner |
+| FR-011 | token, new_password, confirmation | Token / strings | Yes | confirmation | Object | Consume token, replace hash, revoke sessions; 409/422 as specified |
+
+### 5.2 Business rules
+
+| Rule ID | Rule | Why it exists |
+| --- | --- | --- |
+| BR-001 | Email is case-normalized and globally unique. | Prevent duplicate identities. |
+| BR-002 | Client-supplied role, user ID or company membership is never authority. | Prevent privilege escalation. |
+| BR-003 | Password is 12-128 characters, spaces allowed, stored only as a hash. | Protect credentials. |
+| BR-004 | Sessions use Secure, HttpOnly, SameSite=Lax cookies, CSRF protection, 30-minute idle and 24-hour absolute expiry. | Bound session exposure. |
+| BR-005 | Tokens are random, hashed, purpose-bound, single-use and replaced on resend. | Prevent token replay/leakage. |
+| BR-006 | UUIDs, UTC timestamps, version checks and idempotency apply. | Make retries and concurrency deterministic. |
+
+## 6. Key entities (mandatory)
+
+| Entity | Attributes (from Input/Output fields) | Relationships |
+| --- | --- | --- |
+| User | id, email, full_name, password_hash, customer_capability, verified_at, active, version | No single global staff role |
+| Membership | id, company_id, user_id, role, active, version | Per-company Company Admin or Sales Consultant |
+| SystemCapability | user_id, role, active | System Admin is separate |
+| Session | id, user_id, token_hash, expiries, revoked_at | Raw token not stored/logged |
+| OneTimeToken | user_id, purpose, token_hash, expires_at, consumed_at | Single-use and purpose-bound |
+
+## 7. Screens involved
+
+| Screen ID | Screen name | Priority | Screen Spec file |
+| --- | --- | --- | --- |
+| S02 | Registration | Must | `screens/S02-sign_up_screen.md` |
+| S03 | Login and invitation acceptance | Must | `screens/S03-login_screen.md` |
+| S04 | Recovery request | Must | `screens/S04-forgot_password_screen.md` |
+| S05 | Password reset | Must | `screens/S05-reset_password_screen.md` |
+| S06 | Session entry/logout | Must | `screens/S06-user_profile_screen.md` |
+| S08 | Safe default catalog destination | Must | `screens/S08-product_catalog_screen.md` |
+
+## 8. Success criteria (mandatory)
+
+| SC ID | Criterion | How it is measured |
+| --- | --- | --- |
+| SC-001 | All eleven functions map one-to-one to FRs and retries/concurrency are deterministic. | Contract, idempotency and race tests. |
+| SC-002 | Authentication and recovery do not disclose account existence. | Compare responses for known and unknown accounts. |
+| SC-003 | Passwords, raw tokens and session secrets never appear in responses/logs/demo data. | Security and log inspection. |
+
+## 9. Assumptions
+
+- This is a DBIZ 3 classroom demo by Group B; no client approver is assigned.
+- Organization/contact data are fictional labeled samples.
+- Email is the only verification/recovery channel.
+
+## 10. Open questions
+
+| # | Question | Blocking? | Owner | Status |
+| --- | --- | --- | --- | --- |
+| 1 | Administrative project inputs | No | Group B | Group B; DBIZ 3; no approver; classroom demo with fictional labeled data. |
+| 2 | Identity and access behavior | No | Group B | Resolved — no remaining open questions; roles, lifetimes, session policy, limits and email-only recovery are specified in sections 3, 5 and 9. |
+
+## 11. Traceability to DBIZ2
+
+Historical IDs are retained for continuity; external DBIZ2 comparison is not required.
+
+| Spec section | DBIZ2 source | Location |
+| --- | --- | --- |
+| Registration | `UC-G03`; `F-USER-001` .. `003` | S02; Sections 3 and 5 |
+| Login | `UC-M01`; `F-USER-004` .. `005` | S03; Sections 3 and 5 |
+| Logout | `UC-M04`; `F-USER-006` | S06; Sections 3 and 5 |
+| Recovery | `UC-M02`, `UC-M03`; `F-USER-007` .. `011` | S04-S05; Sections 3 and 5 |
+
+## Completion checklist
+
+- [x] Scope, actors, scenarios, flows and edge cases are defined.
+- [x] Function, entity, screen and ID traceability is complete.
+- [x] Assumptions and resolved decisions are explicit.
+- [x] No unresolved placeholders remain.

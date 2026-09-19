@@ -1,187 +1,167 @@
-# Function catalogue
-
-The complete-system target contains 12 modules and 94 source function entries. All are included; implementation phases are ordering, not exclusions. The module specification linked in each section defines typed input/output contracts, validation, permissions, failures and acceptance criteria. This catalogue is the traceability index, avoiding duplicate schemas that can drift. [Shared decisions](system-decisions.md) apply to every function. Historical High/Medium/Low priorities below are retained for provenance; current phases use D12.
-
-**Identity rule:** F-ORD IDs overlap between MFG-07 and MFG-08. Use the composite module/function key shown below. FR and US IDs are module-local. System event processors execute with verified service authority on behalf of the listed initiating actor; a customer never posts a trusted payment result.
+# Function List
 
 ## I. MFG-01: Identity & Access
 
-[Canonical specification](../specs/spec-MFG-01.md) · Phase P1
 
-| No | Use case | Canonical function key | Function | Implementation action | Category | Initiating actor | Source priority |
-|---|---|---|---|---|---|---|---|
-| 1 | UC-G03 | MFG-01/F-USER-001 | Register Account | Registration Screen | Screen | Guest | High |
-| 2 | UC-G03 | MFG-01/F-USER-002 | Register Account | Registration Logic | Process | Guest | High |
-| 3 | UC-G03 | MFG-01/F-USER-003 | Register Account | Send email verification link | Process | Guest | High |
-| 4 | UC-M01 | MFG-01/F-USER-004 | Log In | Login Screen | Screen | Guest | High |
-| 5 | UC-M01 | MFG-01/F-USER-005 | Log In | Authentication Logic | Process | Guest | High |
-| 6 | UC-M04 | MFG-01/F-USER-006 | Log Out | Logout Logic | Process | Member | Low |
-| 7 | UC-M02 | MFG-01/F-USER-007 | Forgot Password | Forgot Password Screen | Screen | Guest | High |
-| 8 | UC-M02 | MFG-01/F-USER-008 | Forgot Password | Identity Validation | Process | Guest | High |
-| 9 | UC-M02 | MFG-01/F-USER-009 | Forgot Password | Send password-reset email | Process | System (recovery request) | High |
-| 10 | UC-M03 | MFG-01/F-USER-010 | Reset Password | Verify Token Logic | Process | Guest | High |
-| 11 | UC-M03 | MFG-01/F-USER-011 | Reset Password | Update Password Logic | Process | Guest | High |
+| No | Use Case ID | Function name | Subfunction ID | Subfunction name | Function overview | Category | Actor | Input | Output | Priority |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | UC-G03 | Register Account | F-USER-001 | Registration Screen | Render the registration form and verification guidance. | Screen | Guest | route/session context (Session context; Required: Yes; Name, email, password, confirmation) | registration form (View model; Name, email, password, confirmation) | High |
+| 2 | UC-G03 | Register Account | F-USER-002 | Registration Logic | Validate fields and atomically create one pending Customer. | Process | Guest | full_name, email, password, confirmation (Strings; Required: Yes; Name 1-100; password 12-128; 422 invalid; 409 duplicate) | pending Customer (Object; Name 1-100; password 12-128; 422 invalid; 409 duplicate) | High |
+| 3 | UC-G03 | Register Account | F-USER-003 | Send email verification link | Issue a hashed verification token and durable email event. | Process | Guest | server user; resend email (UUID / email; Required: Yes; Hashed, single-use, 24 hours, rate-limited) | token and email event (Object; Hashed, single-use, 24 hours, rate-limited) | High |
+| 4 | UC-M01 | Log In | F-USER-004 | Login Screen | Render login and recovery entry. | Screen | Guest | route/session context (Session context; Required: Yes; Includes recovery link) | login model (View model; Includes recovery link) | High |
+| 5 | UC-M01 | Log In | F-USER-005 | Authentication Logic | Authenticate, rate-limit and establish a secure server session. | Process | Guest | email, password, redirect (Strings / URL; Required: Yes; Generic 401; later limited attempts 429; redirect allowlisted) | session and capabilities (Object; Generic 401; later limited attempts 429; redirect allowlisted) | High |
+| 6 | UC-M04 | Log Out | F-USER-006 | Logout Logic | Revoke the current session idempotently. | Process | Member | secure-cookie session (Session; Required: Yes; Clear cookie; repeated call succeeds) | session_invalidated (Boolean; Clear cookie; repeated call succeeds) | Low |
+| 7 | UC-M02 | Forgot Password | F-USER-007 | Forgot Password Screen | Render the email-only recovery form. | Screen | Guest | route context (Route context; Required: Yes; Email only) | recovery form (View model; Email only) | High |
+| 8 | UC-M02 | Forgot Password | F-USER-008 | Identity Validation | Validate recovery input without exposing account existence. | Process | Guest | email (String; Required: Yes; Three requests/account/IP/hour; generic response) | accepted (Boolean/status; Three requests/account/IP/hour; generic response) | High |
+| 9 | UC-M02 | Forgot Password | F-USER-009 | Send password-reset email | Issue and deliver a hashed reset token. | Process | System (recovery request) | server user/channel (UUID / enum; Required: Yes; Hashed 30-minute token; retries at 1, 5, 30 minutes) | reset email event (Object; Hashed 30-minute token; retries at 1, 5, 30 minutes) | High |
+| 10 | UC-M03 | Reset Password | F-USER-010 | Verify Token Logic | Verify token purpose, expiry and consumption state. | Process | Guest | reset token (Opaque token; Required: Yes; Purpose/expiry/consumption checked; one concurrent winner) | validity status (Enum; Purpose/expiry/consumption checked; one concurrent winner) | High |
+| 11 | UC-M03 | Reset Password | F-USER-011 | Update Password Logic | Atomically replace the password and revoke sessions. | Process | Guest | token, new_password, confirmation (Token / strings; Required: Yes; Consume token, replace hash, revoke sessions; 409/422 as specified) | confirmation (Object; Consume token, replace hash, revoke sessions; 409/422 as specified) | High |
 
 ## II. MFG-02: Profile & Settings
 
-[Canonical specification](../specs/spec-MFG-02.md) · Phase P2
 
-| No | Use case | Canonical function key | Function | Implementation action | Category | Initiating actor | Source priority |
-|---|---|---|---|---|---|---|---|
-| 12 | UC-M05 | MFG-02/F-PROF-001 | View Profile | Profile View | Screen | Member | Medium |
-| 13 | UC-M07 | MFG-02/F-PROF-002 | Edit Profile | Edit Profile Form | Screen | Member | Medium |
-| 14 | UC-M07 | MFG-02/F-PROF-003 | Edit Profile | Save Profile Logic | Process | Member | Medium |
-| 15 | UC-M08 | MFG-02/F-PROF-004 | Change Password | Change Password Form | Screen | Member | Low |
-| 16 | UC-M08 | MFG-02/F-PROF-005 | Change Password | Save Password Logic | Process | Member | Low |
+| No | Use Case ID | Function name | Subfunction ID | Subfunction name | Function overview | Category | Actor | Input | Output | Priority |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 12 | UC-M05 | View Profile | F-PROF-001 | Profile View | Return only the session owner's profile. | Screen | Member | authenticated session (Session; Required: Yes; 401 unauthenticated; ignores client user_id) | own profile summary (Object; 401 unauthenticated; ignores client user_id) | Medium |
+| 13 | UC-M07 | Edit Profile | F-PROF-002 | Edit Profile Form | Render the own-profile edit model. | Screen | Member | own profile read (Session/object; Required: Yes; Full name/email only) | S06 edit model (View model; Full name/email only) | Medium |
+| 14 | UC-M07 | Edit Profile | F-PROF-003 | Save Profile Logic | Save allowlisted name/email changes with version and verification controls. | Process | Member | full_name, pending_email, current_password for email, expected_version (Strings / integer; Required: By action; 422 invalid; 409 duplicate/stale/token replay) | updated profile or pending verification (Object; 422 invalid; 409 duplicate/stale/token replay) | Medium |
+| 15 | UC-M08 | Change Password | F-PROF-004 | Change Password Form | Render the secure password-change form. | Screen | Member | authenticated session (Session; Required: Yes; Current/new/confirmation; no secret returned) | S07 form model (View model; Current/new/confirmation; no secret returned) | Low |
+| 16 | UC-M08 | Change Password | F-PROF-005 | Save Password Logic | Verify the current password, replace the hash and revoke other sessions. | Process | Member | old_password, new_password, confirmation, expected_version (Strings / integer; Required: Yes; CSRF-valid; replace hash; revoke other sessions) | success event (Object; CSRF-valid; replace hash; revoke other sessions) | Low |
 
 ## III. MFG-03: Company Accounts
 
-[Canonical specification](../specs/spec-MFG-03.md) · Phase P2
 
-| No | Use case | Canonical function key | Function | Implementation action | Category | Initiating actor | Source priority |
-|---|---|---|---|---|---|---|---|
-| 17 | UC-S06 | MFG-03/F-ACC-001 | Add Account | Account List View | Screen | System Admin | High |
-| 18 | UC-S06 | MFG-03/F-ACC-002 | Add Account | Add Account Form | Screen | System Admin | High |
-| 19 | UC-S06 | MFG-03/F-ACC-003 | Add Account | Generate staff invitation | Process | System Admin | High |
-| 20 | UC-S06 | MFG-03/F-ACC-004 | Add Account | Save Account Logic | Process | System Admin | High |
-| 21 | UC-S07 | MFG-03/F-ACC-005 | Update Account | Account Detail View | Screen | System Admin | Medium |
-| 22 | UC-S07 | MFG-03/F-ACC-006 | Update Account | Update Account Logic | Process | System Admin | Medium |
-| 23 | UC-S08 | MFG-03/F-ACC-007 | Delete Account | Confirm Delete UI | Screen | System Admin | Low |
-| 24 | UC-S08 | MFG-03/F-ACC-008 | Delete Account | Soft-delete company or staff membership | Process | System Admin | Low |
+| No | Use Case ID | Function name | Subfunction ID | Subfunction name | Function overview | Category | Actor | Input | Output | Priority |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 17 | UC-S06 | Add Account | F-ACC-001 | Account List View | List companies with pagination and authorized filters. | Screen | System Admin | `page`, `page_size`, `status`, `query` (Integer / Integer / Enum / String; Required: No; Positive bounded paging; filters are allowlisted; System Admin only.) | `companies`, `total` (Array<CompanySummary> / Integer; Positive bounded paging; filters are allowlisted; System Admin only.) | High |
+| 18 | UC-S06 | Add Account | F-ACC-002 | Add Account Form | Render the company creation form for an authorized System Admin. | Screen | System Admin | Authenticated System Admin session (Session; Required: Yes; Exposes company name, tax ID, address, contact and initial-admin email fields.) | `company_form` (ViewModel; Exposes company name, tax ID, address, contact and initial-admin email fields.) | High |
+| 19 | UC-S06 | Add Account | F-ACC-003 | Generate staff invitation | Generate and deliver a hashed, single-use 48-hour invitation without exposing its raw token. | Process | System Admin | `company_id`, `email`, `role` (UUID / Email / Enum; Required: Yes; Email is normalized; role is Company Admin or Sales Consultant; token is hashed, single-use and valid for 48 hours.) | `invitation_id`, `expires_at`, `delivery_status` (UUID / DateTime / Enum; Email is normalized; role is Company Admin or Sales Consultant; token is hashed, single-use and valid for 48 hours.) | High |
+| 20 | UC-S06 | Add Account | F-ACC-004 | Save Account Logic | Atomically create a Provisioning company, inactive initial admin membership, invitation and outbox event. | Process | System Admin | `company`, `initial_admin_email`, `idempotency_key` (Object / Email / UUID; Required: Yes; One transaction creates a Provisioning company, inactive membership, invitation and outbox event; repeated key returns the same result.) | `company_id`, `membership_id`, `invitation_id`, `status` (UUID / UUID / UUID / Enum; One transaction creates a Provisioning company, inactive membership, invitation and outbox event; repeated key returns the same result.) | High |
+| 21 | UC-S07 | Update Account | F-ACC-005 | Account Detail View | Return authorized company and membership details with open-work counts. | Screen | System Admin | `company_id` (UUID; Required: Yes; Inaccessible company returns 404; secrets and raw invitation tokens are omitted.) | `company`, `memberships`, `open_work_counts` (Company / Array<Membership> / Object; Inaccessible company returns 404; secrets and raw invitation tokens are omitted.) | Medium |
+| 22 | UC-S07 | Update Account | F-ACC-006 | Update Account Logic | Update only allowlisted company/membership fields with expected-version checks and audit event. | Process | System Admin | `company_id`, `expected_version`, allowlisted changes (UUID / Integer / Object; Required: Yes; Reject stale version with 409; prevent removal of the last active administrator.) | `updated_company_or_membership`, `version` (Object / Integer; Reject stale version with 409; prevent removal of the last active administrator.) | Medium |
+| 23 | UC-S08 | Delete Account | F-ACC-007 | Confirm Delete UI | Require explicit identity and consequence confirmation before removal. | Screen | System Admin | `target_id`, `target_type`, `expected_version`, `confirmation` (UUID / Enum / Integer / String; Required: Yes; Confirmation must identify the target; unresolved orders, contracts, requests or batches block removal.) | `eligibility`, `blocking_counts` (Boolean / Object; Confirmation must identify the target; unresolved orders, contracts, requests or batches block removal.) | Low |
+| 24 | UC-S08 | Delete Account | F-ACC-008 | Soft-delete company or staff membership | Soft-delete/deactivate eligible accounts, revoke affected sessions and retain audit history. | Process | System Admin | `target_id`, `expected_version`, `idempotency_key` (UUID / Integer / UUID; Required: Yes; Soft-delete only; retain history, revoke access and make repeated execution idempotent.) | `status`, `revoked_session_count`, `audit_event_id` (Enum / Integer / UUID; Soft-delete only; retain history, revoke access and make repeated execution idempotent.) | Low |
 
 ## IV. MFG-04: Product Catalog
 
-[Canonical specification](../specs/spec-MFG-04.md) · Phase P1
 
-| No | Use case | Canonical function key | Function | Implementation action | Category | Initiating actor | Source priority |
-|---|---|---|---|---|---|---|---|
-| 25 | UC-G01 | MFG-04/F-PROD-001 | View Catalog | Catalog Grid View | Screen | Guest | High |
-| 26 | UC-G01 | MFG-04/F-PROD-002 | View Catalog | Product Detail View | Screen | Guest | High |
-| 27 | UC-G02 | MFG-04/F-PROD-003 | Search Product | Search Result View | Screen | Guest | Medium |
-| 28 | UC-C24 | MFG-04/F-PROD-004 | Add Product | Management Dashboard | Screen | Company Admin | Medium |
-| 29 | UC-C24 | MFG-04/F-PROD-005 | Add Product | Add Product Form | Screen | Company Admin | High |
-| 30 | UC-C24 | MFG-04/F-PROD-006 | Add Product | Save Product Logic | Process | Company Admin | High |
-| 31 | UC-C25 | MFG-04/F-PROD-007 | Update Product | Edit Product Form | Screen | Company Admin | Medium |
-| 32 | UC-C25 | MFG-04/F-PROD-008 | Update Product | Update Product Logic | Process | Company Admin | Medium |
-| 33 | UC-C26 | MFG-04/F-PROD-009 | Delete Product | Delete Prompt UI | Screen | Company Admin | Low |
-| 34 | UC-C26 | MFG-04/F-PROD-010 | Delete Product | Archive product | Process | Company Admin | Low |
-| 35 | UC-C27 | MFG-04/F-PROD-011 | Publish Product | Publish or hide product | Screen | Company Admin | Low |
+| No | Use Case ID | Function name | Subfunction ID | Subfunction name | Function overview | Category | Actor | Input | Output | Priority |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 25 | UC-G01 | View Catalog | F-PROD-001 | Catalog Grid View | Return a paginated grid of Published products from Active companies using allowlisted category and sort values. | Screen | Guest | category, page, page_size, sort (Allowlisted values / integers; Required: Optional; page >=1; size 1-100) | Published product grid (Paginated object; page >=1; size 1-100) | High |
+| 26 | UC-G01 | View Catalog | F-PROD-002 | Product Detail View | Return a product detail and options for a canonical product UUID; nonpublic products return 404. | Screen | Guest | product UUID (UUID; Required: Yes; Nonpublic product 404) | product detail/options (Object; Nonpublic product 404) | High |
+| 27 | UC-G02 | Search Product | F-PROD-003 | Search Result View | Search using bounded keywords and allowlisted filters without broadening invalid queries. | Screen | Guest | keyword, filters, price range, page (String / allowlisted values; Required: Optional; Keyword <=100; invalid values rejected) | search results (Paginated object; Keyword <=100; invalid values rejected) | Medium |
+| 28 | UC-C24 | Add Product | F-PROD-004 | Management Dashboard | Show management actions only for same-company Company Admins. | Screen | Company Admin | same-company Company Admin session (Session; Required: Yes; Foreign-company data inaccessible) | S10 management list/actions (View model; Foreign-company data inaccessible) | Medium |
+| 29 | UC-C24 | Add Product | F-PROD-005 | Add Product Form | Render product creation form and upload constraints. | Screen | Company Admin | authorized session (Session; Required: Yes; Includes upload constraints) | S11 creation model (View model; Includes upload constraints) | High |
+| 30 | UC-C24 | Add Product | F-PROD-006 | Save Product Logic | Save a validated Draft product with idempotency and company-scoped SKU uniqueness. | Process | Company Admin | name, SKU, price, attributes, capacity, image UUIDs, key (Fields / integer / key; Required: Yes; Bounds specified in source contract; 422 invalid; 409 duplicate SKU) | Draft UUID/version (Object; Bounds specified in source contract; 422 invalid; 409 duplicate SKU) | High |
+| 31 | UC-C25 | Update Product | F-PROD-007 | Edit Product Form | Render an authorized product edit model with current version. | Screen | Company Admin | same-company product UUID/session (UUID / session; Required: Yes; Foreign product inaccessible) | S12 edit model/version (View model; Foreign product inaccessible) | Medium |
+| 32 | UC-C25 | Update Product | F-PROD-008 | Update Product Logic | Update allowlisted product fields atomically with expected-version checks. | Process | Company Admin | allowlisted changes, expected version (Values / integer; Required: Yes; Atomic; stale 409; relevant quote invalidation) | updated product/version (Object; Atomic; stale 409; relevant quote invalidation) | Medium |
+| 33 | UC-C26 | Delete Product | F-PROD-009 | Delete Prompt UI | Require explicit confirmation before archiving a product. | Screen | Company Admin | same-company product/version (UUID / integer; Required: Yes; Explicit confirmation) | confirmation/impact model (View model; Explicit confirmation) | Low |
+| 34 | UC-C26 | Delete Product | F-PROD-010 | Archive product | Soft-archive a product while retaining historical references. | Process | Company Admin | product UUID, confirmation, version (UUID / boolean / integer; Required: Yes; Soft archive; repeated success) | archived product (Object; Soft archive; repeated success) | Low |
+| 35 | UC-C27 | Publish Product | F-PROD-011 | Publish or hide product | Change product visibility to an explicitly requested valid state. | Screen | Company Admin | product UUID, target state, version (UUID / enum / integer; Required: Yes; Archived is terminal) | visibility state (Object; Archived is terminal) | Low |
 
 ## V. MFG-05: Product Design
 
-[Canonical specification](../specs/spec-MFG-05.md) · Phase P1
 
-| No | Use case | Canonical function key | Function | Implementation action | Category | Initiating actor | Source priority |
-|---|---|---|---|---|---|---|---|
-| 36 | UC-C02 | MFG-05/F-DES-001 | Design Product | Design Workspace | Screen | Customer | High |
-| 37 | UC-C02 | MFG-05/F-DES-002 | Design Product | Preview Logic | Process | Customer | High |
-| 38 | UC-C02 | MFG-05/F-DES-003 | Design Product | Save Design Logic | Process | Customer | High |
-| 39 | UC-C03 | MFG-05/F-DES-004 | View Designs | Saved Designs List | Screen | Customer | Medium |
-| 40 | UC-C04 | MFG-05/F-DES-005 | Request Service | Request Form | Screen | Customer | Medium |
-| 41 | UC-C04 | MFG-05/F-DES-006 | Request Service | Create Request Logic | Process | Customer | Medium |
-| 42 | UC-C04 | MFG-05/F-DES-007 | Request Service | Apply verified SERVICE payment result | Process | Customer | High |
-| 43 | UC-C04 | MFG-05/F-DES-008 | Request Service | Notify admin of paid design request | Process | Customer | Medium |
-| 44 | UC-S03 | MFG-05/F-DES-009 | Send Design | Customer Select View | Screen | Sales Consultant | Medium |
-| 45 | UC-S03 | MFG-05/F-DES-010 | Send Design | Push Design Logic | Process | Sales Consultant | High |
-| 46 | UC-S03 | MFG-05/F-DES-011 | Send Design | Notify Customer Logic | Process | Sales Consultant | Medium |
+| No | Use Case ID | Function name | Subfunction ID | Subfunction name | Function overview | Category | Actor | Input | Output | Priority |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 36 | UC-C02 | Design Product | F-DES-001 | Design Workspace | Render the design workspace using current Published product rules and options. | Screen | Customer | product UUID, session (UUID / session; Required: Yes; Published same-company product) | S13 workspace model (View model; Published same-company product) | High |
+| 37 | UC-C02 | Design Product | F-DES-002 | Preview Logic | Validate compatibility/assets and produce a nonpersistent 2D preview. | Process | Customer | product/design/options/assets (IDs / configuration; Required: Yes; Current rules, ownership, MIME and bounds; 422 incompatible) | compatibility and preview UUID (Object; Current rules, ownership, MIME and bounds; 422 incompatible) | High |
+| 38 | UC-C02 | Design Product | F-DES-003 | Save Design Logic | Save an immutable design version transactionally with idempotency. | Process | Customer | configuration, versions, idempotency key (Object / integers / key; Required: Yes; Immutable; stale/key conflict 409) | saved design ID/version (Object; Immutable; stale/key conflict 409) | High |
+| 39 | UC-C03 | View Designs | F-DES-004 | Saved Designs List | List only the customer's Saved/Delivered designs with pagination. | Screen | Customer | page, filters, sort, session (Integers / values / session; Required: Optional; Saved/Delivered only; empty success) | own design gallery (Paginated object; Saved/Delivered only; empty success) | Medium |
+| 40 | UC-C04 | Request Service | F-DES-005 | Request Form | Render the paid design-service request form and fee. | Screen | Customer | product UUID, session (UUID / session; Required: Yes; Published product; read only) | S15 form and fee (View model; Published product; read only) | Medium |
+| 41 | UC-C04 | Request Service | F-DES-006 | Create Request Logic | Create a validated AwaitingPayment request with fee snapshot and idempotency. | Process | Customer | requirements, attachments, deadline, key (Strings / assets / date / key; Required: Yes; Requirements 20-5000; 0-5 attachments; deadline >=3 days; default 200000 VND) | AwaitingPayment request (Object; Requirements 20-5000; 0-5 attachments; deadline >=3 days; default 200000 VND) | Medium |
+| 42 | UC-C04 | Request Service | F-DES-007 | Apply verified SERVICE payment result | Settle a SERVICE request exactly once from a verified internal payment event. | Process | Customer | verified SERVICE event (Internal event; Required: Yes; Settle once; late/cancelled event refunded) | Paid request/event (Object; Settle once; late/cancelled event refunded) | High |
+| 43 | UC-C04 | Request Service | F-DES-008 | Notify admin of paid design request | Notify same-company administrators after request payment commits. | Process | Customer | paid event (Internal event; Required: Yes; In-app authoritative; deduplicated) | durable notification (Object; In-app authoritative; deduplicated) | Medium |
+| 44 | UC-S03 | Send Design | F-DES-009 | Customer Select View | List paid requests available to authorized consultants/admins. | Screen | Sales Consultant | company/assignment filters, session (Values / session; Required: Optional; Same company and assignment) | authorized paid requests (Paginated object; Same company and assignment) | Medium |
+| 45 | UC-S03 | Send Design | F-DES-010 | Push Design Logic | Deliver an immutable validated design for an assigned request atomically. | Process | Sales Consultant | request/design/assets/version/key (IDs / values / key; Required: Yes; Assignment/current rules; stale 409) | Delivered immutable design (Object; Assignment/current rules; stale 409) | High |
+| 46 | UC-S03 | Send Design | F-DES-011 | Notify Customer Logic | Notify the owning customer after design delivery. | Process | Sales Consultant | delivery event (Internal event; Required: Yes; Owner only; private expiring link) | notification/outbox ID (UUID; Owner only; private expiring link) | Medium |
 
 ## VI. MFG-06: Order & Payment
 
-[Canonical specification](../specs/spec-MFG-06.md) · Phase P1
 
-| No | Use case | Canonical function key | Function | Implementation action | Category | Initiating actor | Source priority |
-|---|---|---|---|---|---|---|---|
-| 47 | UC-C05 | MFG-06/F-PAY-001 | Finalize Order | Checkout View | Screen | Customer | High |
-| 48 | UC-C05 | MFG-06/F-PAY-002 | Finalize Order | Order Summary View | Screen | Customer | High |
-| 49 | UC-C05 | MFG-06/F-PAY-003 | Finalize Order | Create Order Logic | Process | Customer | High |
-| 50 | UC-C12 | MFG-06/F-PAY-004 | Make Payment | Payment Request Gen | Process | Customer | High |
-| 51 | UC-C12 | MFG-06/F-PAY-005 | Make Payment | IPN Handler Logic | Process | Customer | High |
-| 52 | UC-C12 | MFG-06/F-PAY-006 | Make Payment | Receipt View | Screen | Customer | Medium |
+| No | Use Case ID | Function name | Subfunction ID | Subfunction name | Function overview | Category | Actor | Input | Output | Priority |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 47 | UC-C05 | Finalize Order | F-PAY-001 | Checkout View | Render checkout for the customer's eligible design and same-company Published product. | Screen | Customer | session, product/design UUID (Session / UUIDs; Required: Yes; Own Saved/Delivered design; Published same-company product) | S22 checkout model (View model; Own Saved/Delivered design; Published same-company product) | High |
+| 48 | UC-C05 | Finalize Order | F-PAY-002 | Order Summary View | Recompute quote from validated quantities, address and merge choice with 30-minute expiry. | Screen | Customer | quantities, VN address, merge choice/version (Integers / address / values; Required: Yes; Capacity checked; server recomputes; 422 invalid; 409 stale) | quote, breakdown, expiry (Object; Capacity checked; server recomputes; 422 invalid; 409 stale) | High |
+| 49 | UC-C05 | Finalize Order | F-PAY-003 | Create Order Logic | Atomically create one PendingContract order from a current quote with immutable snapshots and idempotency. | Process | Customer | quote UUID/version, idempotency key, confirmation (UUID / integer / key / boolean; Required: Yes; Lock/revalidate/consume; duplicate returns original) | PendingContract order/snapshots (Object; Lock/revalidate/consume; duplicate returns original) | High |
+| 50 | UC-C12 | Make Payment | F-PAY-004 | Payment Request Gen | Initiate one payable ORDER or SERVICE payment attempt and return hosted-provider redirect details. | Process | Customer | ORDER order_id or SERVICE request_id, purpose/key (UUID / enum / key; Required: Yes; Payable state; one pending attempt; provider failure 503) | payment/provider reference, redirect, expiry (Object; Payable state; one pending attempt; provider failure 503) | High |
+| 51 | UC-C12 | Make Payment | F-PAY-005 | IPN Handler Logic | Verify and deduplicate provider notifications; settle once and support authorized reconciliation/full refund. | Process | Customer | signed provider query or authorized reconcile/refund request (Query / IDs / version / key; Required: Yes; Verify signature, merchant, reference, amount, currency; full refund only) | acknowledged payment/refund state (Object; Verify signature, merchant, reference, amount, currency; full refund only) | High |
+| 52 | UC-C12 | Make Payment | F-PAY-006 | Receipt View | Show the owner's payment receipt/state; browser return remains read-only. | Screen | Customer | authenticated owner, payment/transaction ID (Session / UUID; Required: Yes; Browser return cannot settle; ownership check; unknown 404) | receipt status/amount/purpose/next route (View model; Browser return cannot settle; ownership check; unknown 404) | Medium |
 
 ## VII. MFG-07: Order Management
 
-[Canonical specification](../specs/spec-MFG-07.md) · Phase P1
 
-| No | Use case | Canonical function key | Function | Implementation action | Category | Initiating actor | Source priority |
-|---|---|---|---|---|---|---|---|
-| 53 | UC-C08 | MFG-07/F-ORD-001 | Track Order | Order List View | Screen | Customer | Medium |
-| 54 | UC-C08 | MFG-07/F-ORD-002 | Track Order | Order Detail View | Screen | Customer | Medium |
-| 55 | UC-C07 | MFG-07/F-ORD-003 | Cancel Order | Cancel eligible order and request refund if paid | Process | Customer | Medium |
-| 56 | UC-C07 | MFG-07/F-ORD-004 | Cancel Order | Cancel Notify Logic | Process | Customer | Medium |
-| 57 | UC-S04 | MFG-07/F-ORD-005 | Update Status | Admin Order Dashboard | Screen | Company Admin | Medium |
-| 58 | UC-S04 | MFG-07/F-ORD-006 | Update Status | Status Update Logic | Process | Company Admin | High |
-| 59 | UC-S04 | MFG-07/F-ORD-007 | Update Status | Status Notify Logic | Process | Company Admin | Medium |
+| No | Use Case ID | Function name | Subfunction ID | Subfunction name | Function overview | Category | Actor | Input | Output | Priority |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 53 | UC-C08 | Track Order | F-ORD-001 | Order List View | List own orders with pagination and allowlisted status/date filters; default newest first; empty results are valid. | Screen | Customer | page, page_size, filters, sort (Integer / allowlisted values; Required: Optional; page ≥1; page_size 1–100) | order summaries, total, page, page_size (Paginated object; page ≥1; page_size 1–100) | Medium |
+| 54 | UC-C08 | Track Order | F-ORD-002 | Order Detail View | Return an authorized order snapshot, timeline, contract/payment/refund summaries and tracking details without recalculating historical prices. | Screen | Customer | order_id, session (UUID / session; Required: Yes; Own customer or same-company staff; inaccessible ID 404) | authorized order snapshot and timeline (Object; Own customer or same-company staff; inaccessible ID 404) | Medium |
+| 55 | UC-C07 | Cancel Order | F-ORD-003 | Cancel eligible order and request refund if paid | Cancel eligible orders with trimmed 1–500 character reason, expected_version and Idempotency-Key; retain order and request full refund through MFG-06 when paid. | Process | Customer | order_id, reason_for_cancellation, expected_version, Idempotency-Key (UUID, string, integer, key; Required: Yes; Valid transitions only; duplicate key replays) | status, refund workflow reference (Object; Valid transitions only; duplicate key replays) | Medium |
+| 56 | UC-C07 | Cancel Order | F-ORD-004 | Cancel Notify Logic | Notify customer and same-company management after cancellation commit; deduplicate recipients/events and include refund status when relevant. | Process | Customer | committed cancellation event (Internal event; Required: Yes; After commit; deduplicated) | notification/outbox IDs (UUIDs; After commit; deduplicated) | Medium |
+| 57 | UC-S04 | Update Status | F-ORD-005 | Admin Order Dashboard | Provide paginated same-company admin dashboard with allowlisted status/date/customer filters and counts. | Screen | Company Admin | filters, page, page_size (Allowlisted values / integers; Required: Optional; Same-company only) | company order list and counts (Paginated object; Same-company only) | Medium |
+| 58 | UC-S04 | Update Status | F-ORD-006 | Status Update Logic | Advance only Confirmed→InProduction→Shipped→Delivered; require same-company Admin or actively assigned consultant; Shipped requires carrier, tracking_number and server shipped_at. | Process | Company Admin | order_id, target status, carrier, tracking_number, expected_version, Idempotency-Key (UUID, enum, strings, integer, key; Required: Yes; Carrier/tracking required for Shipped) | updated order and timeline (Object; Carrier/tracking required for Shipped) | High |
+| 59 | UC-S04 | Update Status | F-ORD-007 | Status Notify Logic | Notify order owner after committed status change with timestamp and safe tracking link; suppress duplicates and retry email. | Process | Company Admin | committed status event (Internal event; Required: Yes; After commit; inbox authoritative) | durable notification/outbox IDs (UUIDs; After commit; inbox authoritative) | Medium |
 
 ## VIII. MFG-08: Sales Consultant
 
-[Canonical specification](../specs/spec-MFG-08.md) · Phase P2
 
-| No | Use case | Canonical function key | Function | Implementation action | Category | Initiating actor | Source priority |
-|---|---|---|---|---|---|---|---|
-| 60 | UC-C19 | MFG-08/F-ORD-001 | Assign Consultant | Unassigned Cust View | Screen | Company Admin | Medium |
-| 61 | UC-C19 | MFG-08/F-ORD-002 | Assign Consultant | Customer Detail View | Screen | Company Admin | Medium |
-| 62 | UC-C19 | MFG-08/F-ORD-003 | Assign Consultant | Assign Sales Logic | Process | Company Admin | Medium |
-| 63 | UC-C19 | MFG-08/F-ORD-004 | Assign Consultant | Assign Notify Logic | Process | Company Admin | Low |
-| 64 | UC-S01 | MFG-08/F-ORD-005 | View Assignment | Assigned Cust View | Screen | Sales Consultant | Medium |
-| 65 | UC-S01 | MFG-08/F-ORD-006 | View Assignment | Context View | Screen | Sales Consultant | Medium |
-| 66 | UC-S02 | MFG-08/F-ORD-007 | Update Consult | Consultation Detail | Screen | Sales Consultant | Medium |
-| 67 | UC-S02 | MFG-08/F-ORD-008 | Update Consult | Update Status Logic | Process | Sales Consultant | Medium |
+| No | Use Case ID | Function name | Subfunction ID | Subfunction name | Function overview | Category | Actor | Input | Output | Priority |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 60 | UC-C19 | Assign Consultant | F-ORD-001 | Unassigned Cust View | List same-company customers without active assignment, with relevant company request/order summaries and pagination. | Screen | Company Admin | page, page_size, filters (Integers / allowlisted values; Required: Optional; Relevant company activity only; page_size 1–100; invalid filters 400; empty list valid) | unassigned company customers and activity summaries (Paginated object; Relevant company activity only; page_size 1–100; invalid filters 400; empty list valid) | Medium |
+| 61 | UC-C19 | Assign Consultant | F-ORD-002 | Customer Detail View | Show company-specific customer/contact data, request/order summaries and current assignment. | Screen | Company Admin | customer_id (UUID; Required: Yes; Same-company relationship required) | company customer profile, history summaries, assignment (Object; Same-company relationship required) | Medium |
+| 62 | UC-C19 | Assign Consultant | F-ORD-003 | Assign Sales Logic | Assign/reassign an active same-company consultant with version checks, idempotency and atomic paired assignment of affected paid design requests; `committed_due_at` is the company's commitment, not the customer's requested deadline. | Process | Company Admin | customer_id, consultant_user_id, expected versions, request IDs, committed_due_at, Idempotency-Key (UUIDs, versions, timestamps, key; Required: Yes; Due date after now and is the company's promise; first assignment only for Paid request; delivered history unchanged) | assignment and affected request assignments/due dates (Object; Due date after now and is the company's promise; first assignment only for Paid request; delivered history unchanged) | Medium |
+| 63 | UC-C19 | Assign Consultant | F-ORD-004 | Assign Notify Logic | Notify the newly assigned consultant with authorized customer context after commit; reassignment also notifies affected staff and customer; deduplicate and retry delivery. | Process | Company Admin | committed assignment event (Internal event; Required: Yes; In-app inbox authoritative) | durable notification/outbox ID (UUID; In-app inbox authoritative) | Low |
+| 64 | UC-S01 | View Assignment | F-ORD-005 | Assigned Cust View | List only the consultant's active same-company assignments with pagination and allowlisted filters. | Screen | Sales Consultant | page, page_size, filters (Integers / allowlisted values; Required: Optional; Active assigned customers only; Admin may inspect company list) | consultant assignment summaries (Paginated object; Active assigned customers only; Admin may inspect company list) | Medium |
+| 65 | UC-S01 | View Assignment | F-ORD-006 | Context View | Return authorized customer context and chronological interaction history without exposing another company's records or CRM notes to customers. | Screen | Sales Consultant | customer_id (UUID; Required: Yes; Same-company active assignment required; internal notes only through authorized consultation detail) | company/customer context, product interest, customer-visible request/order summaries and interaction_history_logs (Object/chronological array; Same-company active assignment required; internal notes only through authorized consultation detail) | Medium |
+| 66 | UC-S02 | Update Consult | F-ORD-007 | Consultation Detail | Show consultation status, notes and linked record summaries to assigned consultant or same-company Admin. | Screen | Sales Consultant | consultation_id (UUID; Required: Yes; Assigned consultant or same-company Admin) | status, notes, linked summaries, version (Object; Assigned consultant or same-company Admin) | Medium |
+| 67 | UC-S02 | Update Consult | F-ORD-008 | Update Status Logic | Advance valid consultation status with trimmed 1–5000 character notes, version checks and idempotency; only Admin may reopen a closed consultation. | Process | Sales Consultant | consultation_id, new_status, notes, expected_version, Idempotency-Key (UUID, enum, string, version, key; Required: Yes; Notes 1–5000 chars; valid transition required) | consultation and timeline (Object; Notes 1–5000 chars; valid transition required) | Medium |
 
 ## IX. MFG-09: Contract Management
 
-[Canonical specification](../specs/spec-MFG-09.md) · Phase P1
 
-| No | Use case | Canonical function key | Function | Implementation action | Category | Initiating actor | Source priority |
-|---|---|---|---|---|---|---|---|
-| 68 | UC-C14 | MFG-09/F-CONTR-001 | Generate Contract | Template Select View | Screen | Company Admin | High |
-| 69 | UC-C14 | MFG-09/F-CONTR-002 | Generate Contract | Template Detail View | Screen | Company Admin | High |
-| 70 | UC-C14 | MFG-09/F-CONTR-003 | Generate Contract | Fill Contract Logic | Process | Company Admin | High |
-| 71 | UC-C14 | MFG-09/F-CONTR-004 | Generate Contract | Render PDF Logic | Process | Company Admin | High |
-| 72 | UC-C14 | MFG-09/F-CONTR-005 | Generate Contract | Ready Notify Logic | Process | Company Admin | High |
-| 73 | UC-C15 | MFG-09/F-CONTR-006 | Update Contract | List contracts and manage versioned templates | Screen | Company Admin | Medium |
-| 74 | UC-C15 | MFG-09/F-CONTR-007 | Update Contract | Replace unsigned contract and notify customer | Process | Company Admin | High |
-| 75 | UC-C11 | MFG-09/F-CONTR-008 | Sign Contract | Record authenticated contract acknowledgement | Process | Customer | High |
-| 76 | UC-C11 | MFG-09/F-CONTR-009 | Sign Contract | Signed Notify Logic | Process | Customer | High |
+| No | Use Case ID | Function name | Subfunction ID | Subfunction name | Function overview | Category | Actor | Input | Output | Priority |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 68 | UC-C14 | Generate Contract | F-CONTR-001 | Template Select View | List compatible active templates for same-company PendingContract orders. | Screen | Company Admin | order_id, order_type (UUID / enum; Required: Yes; Same-company Admin; PendingContract only) | compatible template IDs, versions, names (Array; Same-company Admin; PendingContract only) | High |
+| 69 | UC-C14 | Generate Contract | F-CONTR-002 | Template Detail View | Preview safe rendered placeholders from an authorized template version. | Screen | Company Admin | template_id, version (UUID / integer; Required: Yes; Allowlist and escape text; no template code execution) | preview model and placeholder map (Object; Allowlist and escape text; no template code execution) | High |
+| 70 | UC-C14 | Generate Contract | F-CONTR-003 | Fill Contract Logic | Fill immutable draft contract from authoritative stored order/customer/address/item/amount/policy snapshots. | Process | Company Admin | order_id, template_id/version, expected order version (UUIDs / integers; Required: Yes; Missing snapshot value 422; stale data 409) | immutable draft and content_hash (Object/hash; Missing snapshot value 422; stale data 409) | High |
+| 71 | UC-C14 | Generate Contract | F-CONTR-004 | Render PDF Logic | Render and persist PDF/hash as Ready transactionally with idempotency and private asset access. | Process | Company Admin | draft, template version, Idempotency-Key (Object/version/key; Required: Yes; Retry same payload replays) | contract_id/version, PDF asset ID, expiring URL (Object; Retry same payload replays) | High |
+| 72 | UC-C14 | Generate Contract | F-CONTR-005 | Ready Notify Logic | Notify customer of Ready contract after commit using authorized review link. | Process | Company Admin | Ready contract event (Internal event; Required: Yes; After commit; deduplicated) | outbox notification ID (UUID; After commit; deduplicated) | High |
+| 73 | UC-C15 | Update Contract | F-CONTR-006 | List contracts and manage versioned templates | List contracts and create/update/publish/archive versioned templates with allowlisted placeholders. | Screen | Company Admin | filters; template name/content/expected_version (Values / structured body / integer; Required: Optional by action; Same-company Admin; create/update/publish/archive; archive blocks new use and preserves past contracts; stale/duplicate 409; invalid fields 422) | contract list or versioned template (Paginated object; Same-company Admin; create/update/publish/archive; archive blocks new use and preserves past contracts; stale/duplicate 409; invalid fields 422) | Medium |
+| 74 | UC-C15 | Update Contract | F-CONTR-007 | Replace unsigned contract and notify customer | Regenerate unsigned PendingContract documents from snapshots, supersede prior version after storage, and notify; cancellation may void while retaining evidence. | Process | Company Admin | order/contract/template versions, expected order version, Idempotency-Key (UUIDs/versions/key; Required: Yes; Signed version immutable) | superseded/new Ready references and notice ID (Object; Signed version immutable) | High |
+| 75 | UC-C11 | Sign Contract | F-CONTR-008 | Record authenticated contract acknowledgement | Record customer application acknowledgement with consent, matching name, recent reauthentication and one-time challenge bound to contract version/hash. | Process | Customer | contract ID/version/hash, consent, typed name, current password, one-time challenge, key (Values; Required: Yes; Typed name matches account full name after trim/case normalization; reauth ≤5 min; challenge bound to ID/version/hash, expires in 10 min and is single-use) | Signed metadata and evidence receipt (Object; Typed name matches account full name after trim/case normalization; reauth ≤5 min; challenge bound to ID/version/hash, expires in 10 min and is single-use) | High |
+| 76 | UC-C11 | Sign Contract | F-CONTR-009 | Signed Notify Logic | Notify customer and same-company management after successful signing; only then advance order PendingContract→AwaitingPayment. | Process | Customer | committed signing event (Internal event; Required: Yes; Notify both parties after commit) | delivery IDs and signed-copy links (UUIDs/authorized URLs; Notify both parties after commit) | High |
 
 ## X. MFG-10: Order Optimization (Merge)
 
-[Canonical specification](../specs/spec-MFG-10.md) · Phase P2
 
-| No | Use case | Canonical function key | Function | Implementation action | Category | Initiating actor | Source priority |
-|---|---|---|---|---|---|---|---|
-| 77 | UC-C06 | MFG-10/F-MER-001 | Select Merge | Merge Option View | Screen | Customer | Medium |
-| 78 | UC-C06 | MFG-10/F-MER-002 | Select Merge | Merge Terms View | Screen | Customer | Low |
-| 79 | UC-C06 | MFG-10/F-MER-003 | Select Merge | Save Preference Logic | Process | Customer | Medium |
-| 80 | UC-C17 | MFG-10/F-MER-004 | View Eligible | Merge Console View | Screen | Company Admin | High |
-| 81 | UC-C17 | MFG-10/F-MER-005 | View Eligible | Estimate setup savings and setup time saved | Process | Company Admin | High |
-| 82 | UC-C18 | MFG-10/F-MER-006 | Confirm Merge | Batch Exec Logic | Process | Company Admin | High |
-| 83 | UC-C18 | MFG-10/F-MER-007 | Confirm Merge | Merge Notify Logic | Process | Company Admin | Medium |
+| No | Use Case ID | Function name | Subfunction ID | Subfunction name | Function overview | Category | Actor | Input | Output | Priority |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 77 | UC-C06 | Select Merge | F-MER-001 | Merge Option View | Show standard versus merge price/deadline and eligibility summary for saved eligible designs; do not create a batch. | Screen | Customer | product/design and session (IDs/session; Required: Yes; Merge option only for eligible saved design) | comparison view model (Object; Merge option only for eligible saved design) | Medium |
+| 78 | UC-C06 | Select Merge | F-MER-002 | Merge Terms View | Display versioned merge policy text and record accepted policy version. | Screen | Customer | policy_version (Version; Required: Yes; Read-only versioned terms) | readable policy (Text/object; Read-only versioned terms) | Low |
+| 79 | UC-C06 | Select Merge | F-MER-003 | Save Preference Logic | Save preference on owned quote, compute fixed discount server-side and issue a new immutable 30-minute quote. | Process | Customer | quote_id, merge_opt_in, policy_version, expected quote version (UUID, boolean, version; Required: Yes; Stale 409; invalid option 422) | new quote and breakdown (Object; Stale 409; invalid option 422) | Medium |
+| 80 | UC-C17 | View Eligible | F-MER-004 | Merge Console View | Show same-company eligible candidates and exclusion reasons using server-recomputed eligibility. | Screen | Company Admin | company session, filters, pagination (Session/allowlisted values; Required: Optional; Same-company data only) | candidate groups and exclusion reasons (Paginated object; Same-company data only) | High |
+| 81 | UC-C17 | View Eligible | F-MER-005 | Estimate setup savings and setup time saved | Compute exact savings/quantity/due-date estimate using demo planning assumptions and require acknowledgement of negative net. | Process | Company Admin | selected order IDs (UUID array; Required: Yes; Gross=(count−1)×100,000 VND; minutes=(count−1)×30; negative net requires Admin acknowledgement) | gross_setup_saving_vnd, customer_discount_vnd, estimated_net_saving_vnd, setup_minutes_saved, total_quantity, production_due_at (Estimate object; Gross=(count−1)×100,000 VND; minutes=(count−1)×30; negative net requires Admin acknowledgement) | High |
+| 82 | UC-C18 | Confirm Merge | F-MER-006 | Batch Exec Logic | Atomically create/start/complete/dissolve batches with idempotency, version validation and immutable membership history. | Process | Company Admin | action; order IDs or batch ID; expected versions; acknowledgement; Idempotency-Key (Enum, IDs, versions, boolean, key; Required: Yes; Create ≥2; total quantity ≤10,000) | batch state, membership snapshot, affected orders (Object; Create ≥2; total quantity ≤10,000) | High |
+| 83 | UC-C18 | Confirm Merge | F-MER-007 | Merge Notify Logic | Notify each customer and production planning after committed batch events, deduplicating recipients. | Process | Company Admin | committed batch event and member IDs (Internal event; Required: Yes; Recipients resolved from persisted membership) | customer/planning outbox IDs (UUID array; Recipients resolved from persisted membership) | Medium |
 
 ## XI. MFG-11: Data Analytics
 
-[Canonical specification](../specs/spec-MFG-11.md) · Phase P3
 
-| No | Use case | Canonical function key | Function | Implementation action | Category | Initiating actor | Source priority |
-|---|---|---|---|---|---|---|---|
-| 84 | UC-C21 | MFG-11/F-DA-001 | View Dashboard | Charts View | Screen | Company Admin | Medium |
-| 85 | UC-C21 | MFG-11/F-DA-002 | View Dashboard | Filter Logic | Process | Company Admin | Medium |
-| 86 | UC-C22 | MFG-11/F-DA-003 | Export Data | Export Exec Logic | Process | Company Admin | Medium |
+| No | Use Case ID | Function name | Subfunction ID | Subfunction name | Function overview | Category | Actor | Input | Output | Priority |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 84 | UC-C21 | View Dashboard | F-DA-001 | Charts View | Return company-scoped chart view model for revenue, orders and customer growth with range, timezone, refreshed_at, points and totals. | Screen | Company Admin | date_range, metric_type (Dates / enum; Required: Optional; `{range,timezone,refreshed_at,metrics:[{name,unit,points,total}]}`) | visual_charts (Typed object; `{range,timezone,refreshed_at,metrics:[{name,unit,points,total}]}`) | Medium |
+| 85 | UC-C21 | View Dashboard | F-DA-002 | Filter Logic | Recalculate typed dataset using the same metrics and company scope; return zero/empty values for empty data. | Process | Company Admin | start_date, end_date, product_id, metric_type, page fields (Dates, UUID, enum, integers; Required: Optional; End exclusive; max 366 days; invalid range/product 422) | refreshed_dataset_for_charts (Typed data; End exclusive; max 366 days; invalid range/product 422) | Medium |
+| 86 | UC-C22 | Export Data | F-DA-003 | Export Exec Logic | Queue CSV/XLSX export, report asynchronous state and expose only authorized short-lived private link on success. | Process | Company Admin | dataset_selection, file_format, date/product filters, Idempotency-Key; export_id for polling (Enum, filters, key, UUID; Required: Yes; CSV/XLSX; maximum 100,000 rows; URL expires in 10 minutes) | export_id/status; successful private link/format/row_count/watermark (Job/object; CSV/XLSX; maximum 100,000 rows; URL expires in 10 minutes) | Medium |
 
 ## XII. MFG-12: System Operations
 
-[Canonical specification](../specs/spec-MFG-12.md) · Phase P3
 
-| No | Use case | Canonical function key | Function | Implementation action | Category | Initiating actor | Source priority |
-|---|---|---|---|---|---|---|---|
-| 87 | UC-S09 | MFG-12/F-SYS-001 | System Logs | Log List View | Screen | System Admin | Low |
-| 88 | UC-S09 | MFG-12/F-SYS-002 | System Logs | Search Log View | Screen | System Admin | Low |
-| 89 | UC-S10 | MFG-12/F-SYS-003 | Backup Data | Backup Option View | Screen | System Admin | Medium |
-| 90 | UC-S10 | MFG-12/F-SYS-004 | Backup Data | Backup Exec Logic | Process | System Admin | High |
-| 91 | UC-S10 | MFG-12/F-SYS-005 | Restore Data | Restore Exec Logic | Process | System Admin | High |
-| 92 | UC-S11 | MFG-12/F-SYS-006 | Config System | Settings Form | Screen | System Admin | Medium |
-| 93 | UC-S11 | MFG-12/F-SYS-007 | Config System | Save Config Logic | Process | System Admin | High |
-| 94 | UC-S11 | MFG-12/F-SYS-008 | Config System | Config Notify Logic | Process | System Admin | Low |
-
-## Cross-cutting extensions
-
-Email verification consumption belongs to MFG-01/F-USER-003; design-rule editing to MFG-04/F-PROD-007 and F-PROD-008; payment reconciliation/refunds to MFG-06/F-PAY-005 and MFG-07/F-ORD-003; notification inbox/read state to the existing notification-producing functions plus the shared outbox (S38); account invitations and company/staff lifecycle to MFG-03/F-ACC-001..008 (S41); batch dissolve/start/fallback to MFG-10/F-MER-006 (S42). These complete source functions without inventing colliding IDs.
+| No | Use Case ID | Function name | Subfunction ID | Subfunction name | Function overview | Category | Actor | Input | Output | Priority |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 87 | UC-S09 | System Logs | F-SYS-001 | Log List View | Display paginated redacted audit events with allowlisted filters and default last-30-day UTC range. | Screen | System Admin | severity, action/outcome/actor/company/target filters, UTC date, page/page_size (Enums/IDs/date/integers; Required: Optional; page_size 1–100; malformed range 422) | redacted audit rows and pagination (Paginated object; page_size 1–100; malformed range 422) | Low |
+| 88 | UC-S09 | System Logs | F-SYS-002 | Search Log View | Search redacted audit events by text, allowlisted fields, severity, date and pagination. | Screen | System Admin | search text ≤100 chars, allowlisted field, severity/date/pagination (Text/enums/filters; Required: Optional; System Admin only) | filtered redacted results (Paginated object; System Admin only) | Low |
+| 89 | UC-S10 | Backup Data | F-SYS-003 | Backup Option View | Show backup schedule/retention, base/log watermarks, recent jobs, operation lock and available controls. | Screen | System Admin | session-derived Admin privilege (Session; Required: Yes; No client privilege flag) | schedule, retention, watermarks, recent jobs, lock/control state (View model; No client privilege flag) | Medium |
+| 90 | UC-S10 | Backup Data | F-SYS-004 | Backup Exec Logic | Queue verified encrypted snapshot and return backup job state/manifest reference. | Process | System Admin | manual trigger or trusted scheduler, Idempotency-Key (Enum/internal trigger/key; Required: Yes; Verify database/assets/checksums/schema/log watermark before success) | backup_id, manifest reference, status (Job object; Verify database/assets/checksums/schema/log watermark before success) | High |
+| 91 | UC-S10 | Restore Data | F-SYS-005 | Restore Exec Logic | Restore selected verified base plus continuous transaction logs through pre-maintenance watermark under one restore lock. | Process | System Admin | backup UUID, exact ID confirmation, reauthentication, expected system version, key (UUID/text/session/version/key; Required: Yes; Single lock; replay logs; rollback and maintenance rules apply) | restore job ID/status (Job object; Single lock; replay logs; rollback and maintenance rules apply) | High |
+| 92 | UC-S11 | Config System | F-SYS-006 | Settings Form | Show typed allowlisted settings, masked write-only secret references, active version and validation guidance; fixed policy-v1 merge values are read-only. | Screen | System Admin | session-derived Admin privilege (Session; Required: Yes; Fixed policy values read-only) | typed values, masked references, active version (View model; Fixed policy values read-only) | Medium |
+| 93 | UC-S11 | Config System | F-SYS-007 | Save Config Logic | Validate entire typed config patch, atomically activate new version and audit; reject fixed policy edits. | Process | System Admin | allowlisted typed patch, expected version, reauthentication (Object/version/session; Required: Yes; Invalid 422; stale 409; prior config preserved) | activated version/status (Object; Invalid 422; stale 409; prior config preserved) | High |
+| 94 | UC-S11 | Config System | F-SYS-008 | Config Notify Logic | Notify active admins of committed configuration key names/version/time, excluding secret values. | Process | System Admin | server-generated committed change log (Internal event; Required: Yes; Active admin recipients; no secret values) | in-app/email outbox IDs (UUIDs; Active admin recipients; no secret values) | Low |

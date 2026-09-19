@@ -1,65 +1,100 @@
-# S01 — Home Page
+# Screen Spec: S01 Home Page
 
-| Property | Value |
+| Field | Value |
 |---|---|
-| Route | `/` |
-| Module | MFG-04 |
-| Roles and ownership | Guest and all authenticated roles; server filters staff/customer data by D01. |
+| Screen ID | `S01` |
+| Screen name | Home Page |
+| Actor | Guest and all authenticated roles |
 | Priority | P1 |
-| Mockup | Historical mockup: [img/S01-home_page.png](img/S01-home_page.png); written rules supersede sample text. |
+| Belongs to module | [MFG-04](../specs/spec-MFG-04.md) |
+| Route | `/` |
+| Mockup image | img/S01-home_page.png |
+| Status | Resolved implementation specification |
 
-## Purpose and data
+## 1. Purpose
 
-The landing page queries only currently Published products and configured public company contacts. It keeps sign-up, sign-in, catalog browsing and named information panels available without exposing staff data. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
+**Shown when:** The landing page queries only currently Published products and configured public company contacts. It keeps sign-up, sign-in, catalog browsing and named information panels available without exposing staff data. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
 
-## Fields and validation
+**The user leaves this screen when:** An authorized action in section 5 succeeds, the user follows a role-allowed global route, or they return to the validated originating route.
 
-| Field | Type / requirement | Validation / source |
-|---|---|---|
-| product_id |  UUID, nullable | product_id: UUID, nullable; only Published products with public-safe name/image/price. |
-| company_name/contact_links |  strings from configured company profile | company_name/contact_links: strings from configured company profile; omit unknown contacts. |
-| navigation_visibility | role-derived | Show Sign up/Sign in to Guest; render authenticated navigation from server permissions. |
-| API errors | D02 envelope | 400 malformed; 422 invalid fields; 409 stale/duplicate; 429 rate limit; 503 dependency failure |
+## 2. Mockup
 
-## Actions and navigation
+![S01 historical reference](img/S01-home_page.png)
 
-| Action | Result | Destination |
-|---|---|---|
-| Browse published item | Open product detail. | S09 |
-| Start customization/request | Preserve intended route through sign-in when needed. | S13 or S15 |
-| About/contact/help/policies | Open named content panel on S01; show configured contacts only. | S01 panel |
-### Global navigation access
+Written behavior below takes precedence over obsolete sample content.
 
-Home and public catalog are available to Guest and authenticated users. Customer designs, orders, profile and notifications require the customer’s authenticated session. Company Admin routes are S10, S18, S28, S30, S36, S42 and S43; Sales Consultants use S20 and assigned-only S28/S29/S21 access; System Admin routes are S39, S40 and S41. The server rechecks company, membership, ownership and assignment for every route and notification target.
-Functions: MFG-04/F-PROD-001. Global navigation and back behavior follow D11. Auth return paths must be internal allowlisted routes.
+## 3. Element inventory
 
-## Workflow transitions
+| # | Element | Type | Content / data source | Required | Validation |
+|---|---|---|---|---|---|
+| 1 | Screen heading | Heading | Home Page | Yes | Static route title. |
+| 2 | Route | Navigation target | / | Yes | Access checked on server. |
+| 3 | product_id | Field / control | UUID, nullable | As specified | product_id: UUID, nullable; only Published products with public-safe name/image/price. |
+| 4 | company_name/contact_links | Field / control | strings from configured company profile | As specified | company_name/contact_links: strings from configured company profile; omit unknown contacts. |
+| 5 | navigation_visibility | Field / control | role-derived | As specified | Show Sign up/Sign in to Guest; render authenticated navigation from server permissions. |
+| 6 | API errors | Field / control | standard API error envelope | As specified | 400 malformed; 422 invalid fields; 409 stale/duplicate; 429 rate limit; 503 dependency failure |
+| 7 | Browse published item | Action | Open product detail. | Available when authorized | Destination: S09 |
+| 8 | Start customization/request | Action | Preserve intended route through sign-in when needed. | Available when authorized | Destination: S13 or S15 |
+| 9 | About/contact/help/policies | Action | Open named content panel on S01; show configured contacts only. | Available when authorized | Destination: S01 panel |
 
-Sign up → S02; sign in → S03; browse → S08; about/contact/help/policies open named panel on S01.
+## 4. States
 
-## States
-
-| State | Behavior | Trigger |
+| State | What the user sees | Trigger |
 |---|---|---|
 | Loading | Labelled progress/skeleton; disable duplicate submit. | Request starts |
 | Empty | Show no Published products or configured public links; preserve filters where present and explain eligibility/filter conditions. | Successful query returns no rows |
 | Forbidden/not found | Safe message without revealing inaccessible identifiers. | 401/403/404 |
 | Error | Show code, message, field_errors, request_id; preserve entered values. | Request failure |
-| Retry | Retry reads on transient failure; reuse the same idempotency key only for mutations that require one under D02. | Recoverable failure |
+| Retry | Retry reads on transient failure; reuse the same idempotency key only for mutations that require one for the documented mutation. | Recoverable failure |
 | Success | Show committed state and next valid action; announce via aria-live. | Mutation commits |
 | Conflict | Explain stale state; reload; never silently overwrite. | 409 |
 
-## Acceptance scenarios
+## 5. Interactions and navigation
+
+| # | Element | User action | System response | Goes to screen |
+|---|---|---|---|---|
+| 1 | Browse published item | Activate | Open product detail. | S09 |
+| 2 | Start customization/request | Activate | Preserve intended route through sign-in when needed. | S13 or S15 |
+| 3 | About/contact/help/policies | Activate | Open named content panel on S01; show configured contacts only. | S01 panel |
+
+Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Company Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales Consultant routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks role, company, membership, ownership and assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Company Admin, S20 for Sales Consultant, S41 for System Admin, and S01 for Guest.
+
+## 6. Screen-level rules
+
+| Rule ID | Rule | Source |
+|---|---|---|
+| SR-001 | Access and ownership are checked server-side; do not trust submitted customer, company, role, price, or provider status. Apply 401/403/404 behavior and the field rules above. | Authorization and data ownership requirements |
+| SR-002 | IDs are UUIDs; timestamps are UTC and displayed in Asia/Ho_Chi_Minh; money and quantities are integers. Mutations use expected_version; significant create/sign/pay/batch operations use idempotency keys. | Data representation and concurrency requirements |
+| SR-003 | Apply the module lifecycle and validation rules linked below; preserve immutable submitted snapshots. | Module specification |
+| SR-004 | Selected product and technical defaults are project implementation decisions; do not invent factual company, author, client-approval, or course identifiers. | Project implementation assumptions |
+
+### Acceptance scenarios
 
 1. When no published products exist, show an honest empty catalog panel and continue navigation.
 2. When no company contact is configured, hide contact/social links and render no fabricated values.
 
-## Responsive and accessibility
+## 7. Linked requirements
 
-Follow D11: 360px through desktop; stack columns and use labelled horizontal-scroll tables on narrow screens; keyboard-operable controls, visible focus, logical headings, associated form labels, aria-live status/error announcements, contrast >=4.5:1 (large text >=3:1), pointer targets >=24px. Preserve form data after recoverable failures; confirm destructive actions; disable duplicate submit while pending and enforce D02 idempotency server-side.
+| FR ID (from the module spec) | What this screen does for it |
+|---|---|
+| MFG-04/F-PROD-001 | Implements this screen's validated user flow and the linked source function. |
+The rules in this screen and its linked module specifications are complete for implementation.
 
-## Source documents
+## 8. Responsive and accessibility notes
 
-- [MFG-04 specification](../specs/spec-MFG-04.md)
-- [Canonical decisions D01-D12](../docs/system-decisions.md)
-- [Human factual input register](../docs/user-input-needed.md)
+Support 360px through desktop; stack columns and use labelled horizontal-scroll tables on narrow screens. Controls are keyboard-operable with visible focus, logical headings, associated form labels, and aria-live status/error announcements. Text contrast is at least 4.5:1 (large text 3:1); pointer targets are at least 24px. Preserve user-entered data after recoverable failures. Confirm destructive actions, disable duplicate submit while pending, and enforce idempotency on the server.
+
+## 9. Open questions
+
+| # | Question | Blocking? | Status |
+|---|---|---|---|
+| 1 | No unresolved screen behavior questions remain; routes, fields, permissions, and defaults are resolved in this specification and its linked module requirements. | No | Resolved |
+
+## Completion checklist
+
+- [x] Route, actor, module, priority, and mockup status are identified.
+- [x] Element fields, actions, validation, and data ownership are documented.
+- [x] Loading, empty, forbidden, error, retry, success, and conflict states are documented.
+- [x] Navigation and acceptance scenarios are explicit.
+- [x] Responsive and accessibility requirements follow the shared baseline.
+- [x] No unresolved screen-level decisions remain.

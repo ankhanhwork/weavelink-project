@@ -1,6 +1,6 @@
 {
   "passed": true,
-  "checks": 7016,
+  "checks": 9785,
   "markdownFiles": 68,
   "functions": 94,
   "useCases": [
@@ -55,22 +55,17 @@
     "UC-S11"
   ],
   "screens": 43,
-  "localLinks": 279,
-  "mermaidBlocks": 19,
+  "localLinks": 147,
+  "mermaidBlocks": 29,
   "errors": [],
   "files": [
-    "docs/acceptance-checklist.md",
     "docs/architecture/context.md",
     "docs/architecture/sequence.md",
     "docs/architecture/system-configuration.md",
     "docs/architecture/usage-flow.md",
     "docs/architecture/use-case.md",
     "docs/function-list.md",
-    "docs/integrations/vnpay.md",
     "docs/screen-list.md",
-    "docs/system-decisions.md",
-    "docs/user-input-needed.md",
-    "docs/validation-report.md",
     "specs/spec-MFG-01.md",
     "specs/spec-MFG-02.md",
     "specs/spec-MFG-03.md",
@@ -126,6 +121,11 @@
     "screens/S41-company_and_staff_accounts_screen.md",
     "screens/S42-merge_console_screen.md",
     "screens/S43-analytics_dashboard_screen.md",
+    "ai-files/docs/acceptance-checklist.md",
+    "ai-files/docs/integrations/vnpay.md",
+    "ai-files/docs/system-decisions.md",
+    "ai-files/docs/user-input-needed.md",
+    "ai-files/docs/validation-report.md",
     "README.md"
   ],
   "functionKeys": [

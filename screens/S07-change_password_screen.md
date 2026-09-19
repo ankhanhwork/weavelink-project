@@ -1,65 +1,98 @@
-# S07 — Change Password
+# Screen Spec: S07 Change Password
 
-| Property | Value |
+| Field | Value |
 |---|---|
-| Route | `/profile/change-password` |
-| Module | MFG-02 |
-| Roles and ownership | Member; server enforces role, company, assignment and ownership per D01. |
+| Screen ID | `S07` |
+| Screen name | Change Password |
+| Actor | Member |
 | Priority | P3 |
-| Mockup | No mockup supplied. |
+| Belongs to module | [MFG-02](../specs/spec-MFG-02.md) |
+| Route | `/profile/change-password` |
+| Mockup image | Don't have mockup |
+| Status | Resolved implementation specification |
 
-## Purpose and data
+## 1. Purpose
 
-This form changes only the authenticated user password. It requires the current password, retains the current session and revokes other sessions. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
+**Shown when:** This form changes only the authenticated user password. It requires the current password, retains the current session and revokes other sessions. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
 
-## Fields and validation
+**The user leaves this screen when:** An authorized action in section 5 succeeds, the user follows a role-allowed global route, or they return to the validated originating route.
 
-| Field | Type / requirement | Validation / source |
-|---|---|---|
-| current_password |  required secret | current_password: required secret; verify against stored hash. |
-| new_password |  required 12..128 characters | new_password: required 12..128 characters; spaces allowed. |
-| confirm_password |  required exact match | confirm_password: required exact match; reject current/new equality. |
-| session_effect | server rule | On success retain the current session and revoke all other sessions. |
-| API errors | D02 envelope | 400 malformed; 422 invalid fields; 409 stale/duplicate; 429 rate limit; 503 dependency failure |
+## 2. Mockup
 
-## Actions and navigation
+Don't have mockup
 
-| Action | Result | Destination |
-|---|---|---|
-| Change password | Verify current password, hash new password, revoke other sessions, show confirmation. | S06 |
-| Cancel | Discard unsaved password fields. | S06 |
-### Global navigation access
+## 3. Element inventory
 
-Home and public catalog are available to Guest and authenticated users. Customer designs, orders, profile and notifications require the customer’s authenticated session. Company Admin routes are S10, S18, S28, S30, S36, S42 and S43; Sales Consultants use S20 and assigned-only S28/S29/S21 access; System Admin routes are S39, S40 and S41. The server rechecks company, membership, ownership and assignment for every route and notification target.
-Functions: MFG-02/F-PROF-004, MFG-02/F-PROF-005. Global navigation and back behavior follow D11. Auth return paths must be internal allowlisted routes.
+| # | Element | Type | Content / data source | Required | Validation |
+|---|---|---|---|---|---|
+| 1 | Screen heading | Heading | Change Password | Yes | Static route title. |
+| 2 | Route | Navigation target | /profile/change-password | Yes | Access checked on server. |
+| 3 | current_password | Field / control | required secret | As specified | current_password: required secret; verify against stored hash. |
+| 4 | new_password | Field / control | required 12..128 characters | As specified | new_password: required 12..128 characters; spaces allowed. |
+| 5 | confirm_password | Field / control | required exact match | As specified | confirm_password: required exact match; reject current/new equality. |
+| 6 | session_effect | Field / control | server rule | As specified | On success retain the current session and revoke all other sessions. |
+| 7 | API errors | Field / control | standard API error envelope | As specified | 400 malformed; 422 invalid fields; 409 stale/duplicate; 429 rate limit; 503 dependency failure |
+| 8 | Change password | Action | Verify current password, hash new password, revoke other sessions, show confirmation. | Available when authorized | Destination: S06 |
+| 9 | Cancel | Action | Discard unsaved password fields. | Available when authorized | Destination: S06 |
 
-## Workflow transitions
+## 4. States
 
-Password changed → S06; cancel → validated origin or S06.
-
-## States
-
-| State | Behavior | Trigger |
+| State | What the user sees | Trigger |
 |---|---|---|
 | Loading | Labelled progress/skeleton; disable duplicate submit. | Request starts |
 | Empty | Render the screen-specific form/detail state; if a required route object is absent, show safe not-found and return to the authorized parent route. | Empty initial form or missing detail payload |
 | Forbidden/not found | Safe message without revealing inaccessible identifiers. | 401/403/404 |
 | Error | Show code, message, field_errors, request_id; preserve entered values. | Request failure |
-| Retry | Retry reads on transient failure; reuse the same idempotency key only for mutations that require one under D02. | Recoverable failure |
+| Retry | Retry reads on transient failure; reuse the same idempotency key only for mutations that require one for the documented mutation. | Recoverable failure |
 | Success | Show committed state and next valid action; announce via aria-live. | Mutation commits |
 | Conflict | Explain stale state; reload; never silently overwrite. | 409 |
 
-## Acceptance scenarios
+## 5. Interactions and navigation
+
+| # | Element | User action | System response | Goes to screen |
+|---|---|---|---|---|
+| 1 | Change password | Activate | Verify current password, hash new password, revoke other sessions, show confirmation. | S06 |
+| 2 | Cancel | Activate | Discard unsaved password fields. | S06 |
+
+Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Company Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales Consultant routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks role, company, membership, ownership and assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Company Admin, S20 for Sales Consultant, S41 for System Admin, and S01 for Guest.
+
+## 6. Screen-level rules
+
+| Rule ID | Rule | Source |
+|---|---|---|
+| SR-001 | Access and ownership are checked server-side; do not trust submitted customer, company, role, price, or provider status. Apply 401/403/404 behavior and the field rules above. | Authorization and data ownership requirements |
+| SR-002 | IDs are UUIDs; timestamps are UTC and displayed in Asia/Ho_Chi_Minh; money and quantities are integers. Mutations use expected_version; significant create/sign/pay/batch operations use idempotency keys. | Data representation and concurrency requirements |
+| SR-003 | Apply the module lifecycle and validation rules linked below; preserve immutable submitted snapshots. | Module specification |
+| SR-004 | Selected product and technical defaults are project implementation decisions; do not invent factual company, author, client-approval, or course identifiers. | Project implementation assumptions |
+
+### Acceptance scenarios
 
 1. Correct current password and matching 12..128-char new password update hash and revoke other sessions.
 2. Incorrect current password or confirmation mismatch leaves stored password unchanged.
 
-## Responsive and accessibility
+## 7. Linked requirements
 
-Follow D11: 360px through desktop; stack columns and use labelled horizontal-scroll tables on narrow screens; keyboard-operable controls, visible focus, logical headings, associated form labels, aria-live status/error announcements, contrast >=4.5:1 (large text >=3:1), pointer targets >=24px. Preserve form data after recoverable failures; confirm destructive actions; disable duplicate submit while pending and enforce D02 idempotency server-side.
+| FR ID (from the module spec) | What this screen does for it |
+|---|---|
+| MFG-02/F-PROF-004 | Implements this screen's validated user flow and the linked source function. |
+| MFG-02/F-PROF-005 | Implements this screen's validated user flow and the linked source function. |
+The rules in this screen and its linked module specifications are complete for implementation.
 
-## Source documents
+## 8. Responsive and accessibility notes
 
-- [MFG-02 specification](../specs/spec-MFG-02.md)
-- [Canonical decisions D01-D12](../docs/system-decisions.md)
-- [Human factual input register](../docs/user-input-needed.md)
+Support 360px through desktop; stack columns and use labelled horizontal-scroll tables on narrow screens. Controls are keyboard-operable with visible focus, logical headings, associated form labels, and aria-live status/error announcements. Text contrast is at least 4.5:1 (large text 3:1); pointer targets are at least 24px. Preserve user-entered data after recoverable failures. Confirm destructive actions, disable duplicate submit while pending, and enforce idempotency on the server.
+
+## 9. Open questions
+
+| # | Question | Blocking? | Status |
+|---|---|---|---|
+| 1 | No unresolved screen behavior questions remain; routes, fields, permissions, and defaults are resolved in this specification and its linked module requirements. | No | Resolved |
+
+## Completion checklist
+
+- [x] Route, actor, module, priority, and mockup status are identified.
+- [x] Element fields, actions, validation, and data ownership are documented.
+- [x] Loading, empty, forbidden, error, retry, success, and conflict states are documented.
+- [x] Navigation and acceptance scenarios are explicit.
+- [x] Responsive and accessibility requirements follow the shared baseline.
+- [x] No unresolved screen-level decisions remain.
