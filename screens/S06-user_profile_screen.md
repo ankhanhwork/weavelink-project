@@ -1,200 +1,65 @@
-# Screen Spec: S06 User Profile Screen
+# S06 — User Profile
 
-<!--
-
-DBIZ3 Session 4 template. One file per screen. Keep the DBIZ2 Screen ID unchanged.
-
-The mockup image stays an image; everything around it becomes text.
-
--->
-
-| Field | Value |
+| Property | Value |
 |---|---|
-| Screen ID | `S06` |
-| Screen name | User Profile Screen |
-| Actor | Member |
-| Priority | [NEEDS CLARIFICATION: Must / Should / Could not given in Screen List] |
-| Belongs to module | `spec-MFG-02.md` [NEEDS CLARIFICATION: file unavailable] |
-| Mockup image | `img/S06-user_profile_screen.png` |
-| Status | Draft |
+| Route | `/profile` |
+| Module | MFG-02 |
+| Roles and ownership | Member; server enforces role, company, assignment and ownership per D01. |
+| Priority | P3 |
+| Mockup | Historical mockup: [img/S06-user_profile_screen.png](img/S06-user_profile_screen.png); written rules supersede sample text. |
 
-## 1. Purpose
+## Purpose and data
 
-**Shown when:** Allow users to view and update personal profile information and assigned roles.
+The signed-in user can edit full_name and request a pending email change. The current email remains active until the new address is verified; memberships are display-only. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
 
-**The user leaves this screen when:** [NEEDS CLARIFICATION: all exit paths are not specified; documented interactions appear in section 5.]
+## Fields and validation
 
-## 2. Mockup
-
-![S06](img/S06-user_profile_screen.png)
-
-<!-- The image is the visual contract: spacing, grouping, and hierarchy. The tables below are the behavioural contract. -->
-
-## 3. Element inventory
-
-<!-- Walk the mockup top to bottom, left to right. Every visible element gets a stable name. -->
-
-| # | Element | Type | Content / data source | Required | Validation |
-|---|---|---|---|---|---|
-| 1 | Shipping promotion banner | Text | Static: For free shipping on orders over $100 and more use code FREESHIPPINGYAY | No | Not applicable — display only |
-| 2 | Header logo | Image | Static logo placeholder | No | Not applicable — display only |
-| 3 | Catalog navigation | Button | Static: CATALOG | No | Not applicable — display only |
-| 4 | About Dony navigation | Button | Static: ABOUT DONY | No | Not applicable — display only |
-| 5 | My Design navigation | Button | Static: MY DESIGN | No | Not applicable — display only |
-| 6 | My Order navigation | Button | Static: MY ORDER | No | Not applicable — display only |
-| 7 | Contact Us navigation | Button | Static: CONTACT US | No | Not applicable — display only |
-| 8 | Notification bell | Button | Bell icon | No | Not applicable — display only |
-| 9 | Account icon | Button | Account icon | No | Not applicable — display only |
-| 10 | Breadcrumb Home | Button | Static: Home | No | Not applicable — display only |
-| 11 | Breadcrumb Account Info | Text | Static: Account Info | No | Not applicable — display only |
-| 12 | Personal Info heading | Header | Static: Personal Info | No | Not applicable — display only |
-| 13 | Profile sidebar icon | Image | Person icon | No | Not applicable — display only |
-| 14 | Personal Info sidebar item | Button | Static: Personal Info | No | Not applicable — display only |
-| 15 | Security sidebar icon | Image | Shield icon | No | Not applicable — display only |
-| 16 | Login and Security sidebar item | Button | Static: Login and Security | No | Not applicable — display only |
-| 17 | Language sidebar icon | Image | Globe icon | No | Not applicable — display only |
-| 18 | Language sidebar item | Button | Static: Language | No | Not applicable — display only |
-| 19 | Logout sidebar icon | Image | Exit icon | No | Not applicable — display only |
-| 20 | Log out sidebar item | Button | Static: Log out | No | Not applicable — display only |
-| 21 | Account Info subheading | Header | Static: Account Info | No | Not applicable — display only |
-| 22 | Display name label | Text | Static: DISPLAY NAME | No | Not applicable — display only |
-| 23 | Display name input | Input | current_profile_data.display_name [NEEDS CLARIFICATION: field name not defined in F-PROF-002] | [NEEDS CLARIFICATION] | [NEEDS CLARIFICATION: validation rule not specified] |
-| 24 | Real name label | Text | Static: REALNAME | No | Not applicable — display only |
-| 25 | Real name input | Input | current_profile_data.real_name [NEEDS CLARIFICATION: field name not defined] | [NEEDS CLARIFICATION] | [NEEDS CLARIFICATION: validation rule not specified] |
-| 26 | Phone label | Text | Static: PHONE | No | Not applicable — display only |
-| 27 | Phone input | Input | current_profile_data.phone [NEEDS CLARIFICATION: field name not defined] | [NEEDS CLARIFICATION] | [NEEDS CLARIFICATION: validation rule not specified] |
-| 28 | Email label | Text | Static: EMAIL | No | Not applicable — display only |
-| 29 | Email input | Input | current_profile_data.email [NEEDS CLARIFICATION: field name not defined] | [NEEDS CLARIFICATION] | [NEEDS CLARIFICATION: validation rule not specified] |
-| 30 | Company name label | Text | Static: COMPANY NAME (Optional) | No | Not applicable — display only |
-| 31 | Company name input | Input | current_profile_data.company_name [NEEDS CLARIFICATION: field name not defined] | No | [NEEDS CLARIFICATION: validation rule not specified] |
-| 32 | Update profile button | Button | Static: Update profile | No | Not applicable — display only |
-| 33 | Cancel button | Button | Static: Cancel | No | Not applicable — display only |
-| 34 | Zalo contact button | Button | Static: Zalo | No | Not applicable — display only |
-| 35 | Telephone contact button | Button | Static: Tel | No | Not applicable — display only |
-| 36 | Footer contact heading | Text | Static: Contact Information | No | Not applicable — display only |
-| 37 | Company name | Text | Static: DONY Garment Manufacturing Co., Ltd. | No | Not applicable — display only |
-| 38 | Tax code | Text | Static: 0315676786 | No | Not applicable — display only |
-| 39 | Factory and office address | Text | Static address printed in mockup | No | Not applicable — display only |
-| 40 | Phone numbers | Text | Static phone numbers printed in mockup | No | Not applicable — display only |
-| 41 | Email addresses | Text | Static email addresses printed in mockup | No | Not applicable — display only |
-| 42 | Footer DONY logo | Image | Static DONY logo | No | Not applicable — display only |
-| 43 | Footer Facebook icon | Button | Facebook icon | No | Not applicable — display only |
-| 44 | Footer X icon | Button | X icon | No | Not applicable — display only |
-| 45 | Footer LinkedIn icon | Button | LinkedIn icon | No | Not applicable — display only |
-| 46 | Footer YouTube icon | Button | YouTube icon | No | Not applicable — display only |
-| 47 | Footer TikTok icon | Button | TikTok icon | No | Not applicable — display only |
-| 48 | Footer certification badge | Image | Green certification badge | No | Not applicable — display only |
-| 49 | Footer policy heading | Text | Static: Information - Policies | No | Not applicable — display only |
-| 50 | Company profile link | Button | Static: DONY Garment Manufacturing Company Profile | No | Not applicable — display only |
-| 51 | Quality policy link | Button | Static: Quality Policy | No | Not applicable — display only |
-| 52 | Warranty policy link | Button | Static: Warranty Policy | No | Not applicable — display only |
-| 53 | Delivery and return policy link | Button | Static: Delivery & Return Policy | No | Not applicable — display only |
-| 54 | Second warranty policy link | Button | Static: Warranty Policy (repeated in mockup) | No | Not applicable — display only |
-| 55 | Shipping policy link | Button | Static: Shipping Policy | No | Not applicable — display only |
-| 56 | Payment methods link | Button | Static: Payment Methods | No | Not applicable — display only |
-| 57 | Business areas link | Button | Static: Business Areas | No | Not applicable — display only |
-| 58 | FAQ link | Button | Static: Frequently Asked Questions (FAQ) | No | Not applicable — display only |
-
-## 4. States
-
-| State | What the user sees | Trigger |
+| Field | Type / required | Validation and source |
 |---|---|---|
-| Default | Profile fields populated with shown sample values. | Open S06 |
-| Empty (no data) | [NEEDS CLARIFICATION: behavior when profile data is missing] | No relevant records or input |
-| Loading | [NEEDS CLARIFICATION: loading treatment for user_profile_object] | Data request or submit in progress |
-| Error | [NEEDS CLARIFICATION: save or load error treatment] | Data request or submit fails |
-| Success / confirmation | F-PROF-003 provides success_notification; placement [NEEDS CLARIFICATION]. | Successful relevant action |
+| full_name | string, required | Editable; trim; length 1..100. D03 |
+| email | normalized email, read-only display | Change flow requests new email and verifies it before replacement; email remains globally unique. D03 refinement |
+| pending_email | normalized email, optional | Show pending verification status; current email remains active until verified. D03 refinement |
+| role memberships | enum array, read-only | Display assigned roles; Member cannot assign self. D01 |
+| expected_version | version, required on update | Stale profile edit returns 409. D02 |
+## Actions and navigation
 
-## 5. Interactions and navigation
-
-| # | Element | User action | System response | Goes to screen |
-|---|---|---|---|---|
-| 1 | Header logo | tap | Open home page | S01 |
-| 2 | Catalog navigation | tap | Open product catalog | S08 |
-| 3 | About Dony navigation | tap | [NEEDS CLARIFICATION: destination not in Screen List] | stays |
-| 4 | My Design navigation | tap | Open saved designs | S17 |
-| 5 | My Order navigation | tap | Open customer orders | S26 |
-| 6 | Contact Us navigation | tap | [NEEDS CLARIFICATION: destination not in Screen List] | stays |
-| 7 | Notification bell | tap | Open notification panel | S38 |
-| 8 | Account icon | tap | Open user profile | S06 |
-| 9 | Breadcrumb Home | tap | Open home | S01 |
-| 10 | Personal Info sidebar item | tap | Show current profile | stays |
-| 11 | Login and Security sidebar item | tap | [NEEDS CLARIFICATION: whether opens S07 or a different screen] | stays |
-| 12 | Language sidebar item | tap | [NEEDS CLARIFICATION: language screen/behavior] | stays |
-| 13 | Log out sidebar item | tap | F-USER-006 invalidates session and redirects to login | S03 |
-| 14 | Display name input | type | Update field locally | stays |
-| 15 | Real name input | type | Update field locally | stays |
-| 16 | Phone input | type | Update field locally | stays |
-| 17 | Email input | type | Update field locally | stays |
-| 18 | Company name input | type | Update field locally | stays |
-| 19 | Update profile button | tap | F-PROF-003 saves updated_fields; success_notification behavior [NEEDS CLARIFICATION] | stays |
-| 20 | Cancel button | tap | [NEEDS CLARIFICATION: discard or navigation behavior] | stays |
-| 21 | Zalo contact button | tap | [NEEDS CLARIFICATION: contact destination] | stays |
-| 22 | Telephone contact button | tap | [NEEDS CLARIFICATION: dial behavior] | stays |
-| 23 | Footer Facebook icon | tap | [NEEDS CLARIFICATION: external or in-system destination] | stays |
-| 24 | Footer X icon | tap | [NEEDS CLARIFICATION: external or in-system destination] | stays |
-| 25 | Footer LinkedIn icon | tap | [NEEDS CLARIFICATION: external or in-system destination] | stays |
-| 26 | Footer YouTube icon | tap | [NEEDS CLARIFICATION: external or in-system destination] | stays |
-| 27 | Footer TikTok icon | tap | [NEEDS CLARIFICATION: external or in-system destination] | stays |
-| 28 | Company profile link | tap | [NEEDS CLARIFICATION: external or in-system destination] | stays |
-| 29 | Quality policy link | tap | [NEEDS CLARIFICATION: external or in-system destination] | stays |
-| 30 | Warranty policy link | tap | [NEEDS CLARIFICATION: external or in-system destination] | stays |
-| 31 | Delivery and return policy link | tap | [NEEDS CLARIFICATION: external or in-system destination] | stays |
-| 32 | Second warranty policy link | tap | [NEEDS CLARIFICATION: external or in-system destination] | stays |
-| 33 | Shipping policy link | tap | [NEEDS CLARIFICATION: external or in-system destination] | stays |
-| 34 | Payment methods link | tap | [NEEDS CLARIFICATION: external or in-system destination] | stays |
-| 35 | Business areas link | tap | [NEEDS CLARIFICATION: external or in-system destination] | stays |
-| 36 | FAQ link | tap | [NEEDS CLARIFICATION: external or in-system destination] | stays |
-
-## 6. Screen-level rules
-
-| Rule ID | Rule | Source |
+| Action | Result | Destination |
 |---|---|---|
-| SR-001 | Company Name is explicitly marked Optional in the mockup. | Mockup |
+| Save profile | Check expected_version, update full_name and updated_at. | S06 |
+| Change password | Open current/new password form. | S07 |
+| Sign out | Revoke current session, clear cookie, record audit event. | S03 |
+### Global navigation access
 
-## 7. Linked requirements
+Home and public catalog are available to Guest and authenticated users. Customer designs, orders, profile and notifications require the customer’s authenticated session. Company Admin routes are S10, S18, S28, S30, S36, S42 and S43; Sales Consultants use S20 and assigned-only S28/S29/S21 access; System Admin routes are S39, S40 and S41. The server rechecks company, membership, ownership and assignment for every route and notification target.
+Functions: MFG-02/F-PROF-001, MFG-02/F-PROF-002, MFG-02/F-PROF-003; MFG-01/F-USER-006. Global navigation and back behavior follow D11. Auth return paths must be internal allowlisted routes.
 
-| FR ID (from the module spec) | What this screen does for it |
-|---|---|
-| F-PROF-001 [NEEDS CLARIFICATION: module spec unavailable] | Retrieve and display the current user's personal profile details. |
-| F-PROF-002 [NEEDS CLARIFICATION: module spec unavailable] | Display a form allowing the user to modify their personal contact information. |
-| F-PROF-003 [NEEDS CLARIFICATION: module spec unavailable] | Save the changes made to the user's personal information into the system. |
-| F-USER-006 [NEEDS CLARIFICATION: module spec unavailable] | Invalidate the current session token, revoke user access permissions, redirect to the login screen |
+## Workflow transitions
 
-## 8. Responsive and accessibility notes
+Edit profile stays S06; change password → S07; logout → S03; orders → S26; designs → S17.
 
-- Smallest supported width: [NEEDS CLARIFICATION: not specified in sources.]
+## States
 
-- What collapses or stacks on a narrow screen: [NEEDS CLARIFICATION: no narrow-screen mockup or rule provided.]
+| State | Behavior | Trigger |
+|---|---|---|
+| Loading | Labelled progress/skeleton; disable duplicate submit. | Request starts |
+| Empty | Render the screen-specific form/detail state; if a required route object is absent, show safe not-found and return to the authorized parent route. | Empty initial form or missing detail payload |
+| Forbidden/not found | Safe message without revealing inaccessible identifiers. | 401/403/404 |
+| Error | Show code, message, field_errors, request_id; preserve entered values. | Request failure |
+| Retry | Retry reads on transient failure; reuse the same idempotency key only for mutations that require one under D02. | Recoverable failure |
+| Success | Show committed state and next valid action; announce via aria-live. | Mutation commits |
+| Conflict | Explain stale state; reload; never silently overwrite. | 409 |
 
-- Text that must remain readable (contrast, minimum size): [NEEDS CLARIFICATION: no numeric accessibility criteria provided.]
+## Acceptance scenarios
 
-## 9. Open questions
+1. A user can update only own full_name; stale expected_version returns 409 without overwriting.
+2. Role display cannot be edited by Member; logout revokes current server session.
 
-| # | Question | Blocking? | Status |
-|---|---|---|---|
-| 1 | [NEEDS CLARIFICATION: Screen List does not provide Must / Should / Could priority.] | [NEEDS CLARIFICATION: impact not assessed] | Open |
-| 2 | [NEEDS CLARIFICATION: module spec spec-MFG-02.md is not present in project.] | [NEEDS CLARIFICATION: impact not assessed] | Open |
-| 3 | [NEEDS CLARIFICATION: smallest supported width, narrow layout, and accessibility minimums are not specified.] | [NEEDS CLARIFICATION: impact not assessed] | Open |
-| 4 | [NEEDS CLARIFICATION: Screen Overview mentions assigned roles, but none are visible in the mockup. Where are roles displayed?] | [NEEDS CLARIFICATION: impact not assessed] | Open |
-| 5 | [NEEDS CLARIFICATION: mockup file uses a descriptive suffix; template assumes img/<SCREEN-ID>.png.] | [NEEDS CLARIFICATION: impact not assessed] | Open |
+## Responsive and accessibility
 
----
+Follow D11: 360px through desktop; stack columns and use labelled horizontal-scroll tables on narrow screens; keyboard-operable controls, visible focus, logical headings, associated form labels, aria-live status/error announcements, contrast >=4.5:1 (large text >=3:1), pointer targets >=24px. Preserve form data after recoverable failures; confirm destructive actions; disable duplicate submit while pending and enforce D02 idempotency server-side.
 
-## Completion checklist
+## Source documents
 
-- [ ] The mockup is a separate cropped image file, named with the Screen ID. [NEEDS CLARIFICATION: actual image filenames include descriptive suffixes.]
-
-- [x] Every visible element in the mockup appears in the element inventory.
-
-- [x] Every input element has a validation rule or an explicit clarification.
-
-- [x] All five states are filled in, or marked not applicable with a reason.
-
-- [x] Every navigation target is an existing Screen ID or "stays".
-
-- [ ] Every element that displays data names the field it displays, matching the module spec. [NEEDS CLARIFICATION: module specs and several field schemas unavailable.]
-
----
-
-Template source: DBIZ3, VJCBI College - FTU, Session 4. Built on the DBIZ2 Screen Design structure (Screen List and Screen Layout), per DBIZ3 Syllabus v3.
+- [MFG-02 specification](../specs/spec-MFG-02.md)
+- [Canonical decisions D01-D12](../docs/system-decisions.md)
+- [Human factual input register](../docs/user-input-needed.md)

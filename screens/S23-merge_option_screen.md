@@ -1,190 +1,66 @@
-# Screen Spec: S23 Merge Option Screen
+# S23 — Merge Option
 
-<!--
-
-DBIZ3 Session 4 template. One file per screen. Keep the DBIZ2 Screen ID unchanged.
-
-The mockup image stays an image; everything around it becomes text.
-
--->
-
-| Field | Value |
+| Property | Value |
 |---|---|
-| Screen ID | `S23` |
-| Screen name | Merge Option Screen |
-| Actor | Customer |
-| Priority | [NEEDS CLARIFICATION: Must / Should / Could not given in Screen List] |
-| Belongs to module | `spec-MFG-10.md` [NEEDS CLARIFICATION: file unavailable] |
-| Mockup image | `img/S23-merge_option_screen.png` |
-| Status | Draft |
+| Route | `/orders/merge?design_id={id}` |
+| Module | MFG-10 |
+| Roles and ownership | Customer owner; server enforces role, company, assignment and ownership per D01. |
+| Priority | P3 |
+| Mockup | Historical mockup: [img/S23-merge_option_screen.png](img/S23-merge_option_screen.png); written rules supersede sample text. |
 
-## 1. Purpose
+## Purpose and data
 
-**Shown when:** Allow customer to opt for merge production after filling the order information.
+The customer explicitly opts into or out of merging and reviews the fixed 5 percent discount policy before quote calculation. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
 
-**The user leaves this screen when:** [NEEDS CLARIFICATION: all exit paths are not specified; documented interactions appear in section 5.]
+## Fields and validation
 
-## 2. Mockup
-
-![S23](img/S23-merge_option_screen.png)
-
-<!-- The image is the visual contract: spacing, grouping, and hierarchy. The tables below are the behavioural contract. -->
-
-## 3. Element inventory
-
-<!-- Walk the mockup top to bottom, left to right. Every visible element gets a stable name. -->
-
-| # | Element | Type | Content / data source | Required | Validation |
-|---|---|---|---|---|---|
-| 1 | Shipping promotion banner | Text | Static: For free shipping on orders over $100 and more use code FREESHIPPINGYAY | No | Not applicable — display only |
-| 2 | Header logo | Image | Static logo placeholder | No | Not applicable — display only |
-| 3 | Catalog navigation | Button | Static: CATALOG | No | Not applicable — display only |
-| 4 | About Dony navigation | Button | Static: ABOUT DONY | No | Not applicable — display only |
-| 5 | My Design navigation | Button | Static: MY DESIGN | No | Not applicable — display only |
-| 6 | My Order navigation | Button | Static: MY ORDER | No | Not applicable — display only |
-| 7 | Contact Us navigation | Button | Static: CONTACT US | No | Not applicable — display only |
-| 8 | Notification bell | Button | Bell icon | No | Not applicable — display only |
-| 9 | Account icon | Button | Account icon | No | Not applicable — display only |
-| 10 | Back link | Button | Static: Back | No | Not applicable — display only |
-| 11 | Merge Options heading | Header | Static: Merge Options | No | Not applicable — display only |
-| 12 | What is merge explanation | Text | Static explanation printed in mockup | No | Not applicable — display only |
-| 13 | Why choose merge heading | Header | Static: Why Choose to Merge? | No | Not applicable — display only |
-| 14 | Merge benefits | List | Reduced Production Costs; Eco-Friendly Manufacturing; Price Transparency | No | Not applicable — display only |
-| 15 | Merge terms link | Button | Static: Merge terms options & policies | No | Not applicable — display only |
-| 16 | Standard option heading | Header | Static: Standard - No Merge | No | Not applicable — display only |
-| 17 | Standard production description | Text | Dedicated run | No | Not applicable — display only |
-| 18 | Standard price | Text | Static example: $2,199.00 | No | Not applicable — display only |
-| 19 | Standard lead time | Text | Static example: Faster (5-7 Days) | No | Not applicable — display only |
-| 20 | Standard flexibility | Text | High flexibility | No | Not applicable — display only |
-| 21 | Standard ideal use | Text | Urgent Deadlines | No | Not applicable — display only |
-| 22 | Standard Select Option button | Button | Static: Select Option | No | Not applicable — display only |
-| 23 | Merge option heading | Header | Static: Merge Order | No | Not applicable — display only |
-| 24 | Merge production description | Text | Batched run | No | Not applicable — display only |
-| 25 | Merge price | Text | Static example: $1,869.00, save $300 - 15%; [NEEDS CLARIFICATION: pricing source] | No | Not applicable — display only |
-| 26 | Merge lead time | Text | Static example: Longer (12-15 Days) | No | Not applicable — display only |
-| 27 | Merge flexibility | Text | Locked specifications | No | Not applicable — display only |
-| 28 | Merge ideal use | Text | Maximum Savings | No | Not applicable — display only |
-| 29 | Merge Option Selected button | Button | Static: Option Selected | No | Not applicable — display only |
-| 30 | Continue button | Button | Static: Continue | No | Not applicable — display only |
-| 31 | Zalo contact button | Button | Static: Zalo | No | Not applicable — display only |
-| 32 | Telephone contact button | Button | Static: Tel | No | Not applicable — display only |
-| 33 | Footer contact heading | Text | Static: Contact Information | No | Not applicable — display only |
-| 34 | Company name | Text | Static: DONY Garment Manufacturing Co., Ltd. | No | Not applicable — display only |
-| 35 | Tax code | Text | Static: 0315676786 | No | Not applicable — display only |
-| 36 | Factory and office address | Text | Static address printed in mockup | No | Not applicable — display only |
-| 37 | Phone numbers | Text | Static phone numbers printed in mockup | No | Not applicable — display only |
-| 38 | Email addresses | Text | Static email addresses printed in mockup | No | Not applicable — display only |
-| 39 | Footer DONY logo | Image | Static DONY logo | No | Not applicable — display only |
-| 40 | Footer Facebook icon | Button | Facebook icon | No | Not applicable — display only |
-| 41 | Footer X icon | Button | X icon | No | Not applicable — display only |
-| 42 | Footer LinkedIn icon | Button | LinkedIn icon | No | Not applicable — display only |
-| 43 | Footer YouTube icon | Button | YouTube icon | No | Not applicable — display only |
-| 44 | Footer TikTok icon | Button | TikTok icon | No | Not applicable — display only |
-| 45 | Footer certification badge | Image | Green certification badge | No | Not applicable — display only |
-| 46 | Footer policy heading | Text | Static: Information - Policies | No | Not applicable — display only |
-| 47 | Company profile link | Button | Static: DONY Garment Manufacturing Company Profile | No | Not applicable — display only |
-| 48 | Quality policy link | Button | Static: Quality Policy | No | Not applicable — display only |
-| 49 | Warranty policy link | Button | Static: Warranty Policy | No | Not applicable — display only |
-| 50 | Delivery and return policy link | Button | Static: Delivery & Return Policy | No | Not applicable — display only |
-| 51 | Second warranty policy link | Button | Static: Warranty Policy (repeated in mockup) | No | Not applicable — display only |
-| 52 | Shipping policy link | Button | Static: Shipping Policy | No | Not applicable — display only |
-| 53 | Payment methods link | Button | Static: Payment Methods | No | Not applicable — display only |
-| 54 | Business areas link | Button | Static: Business Areas | No | Not applicable — display only |
-| 55 | FAQ link | Button | Static: Frequently Asked Questions (FAQ) | No | Not applicable — display only |
-
-## 4. States
-
-| State | What the user sees | Trigger |
+| Field | Type / requirement | Validation / source |
 |---|---|---|
-| Default | Merge Order visually selected. | Open S23 |
-| Empty (no data) | Not applicable — comparison content is static in the mockup. | No relevant records or input |
-| Loading | [NEEDS CLARIFICATION: preference save loading treatment] | Data request or submit in progress |
-| Error | [NEEDS CLARIFICATION: preference save error treatment] | Data request or submit fails |
-| Success / confirmation | Selected preference retained; next screen S25. | Successful relevant action |
+| merge_opt_in |  explicit boolean | merge_opt_in: explicit boolean; default false; acceptance stores merge policy_version. |
+| merge_eligible | server-derived boolean | Enable opt-in only for an eligible design/product; otherwise show the reason and keep the standard route available. |
+| merge_discount_vnd |  server floor(subtotal_vnd*5/100) | merge_discount_vnd: server floor(subtotal_vnd*5/100); max 3 extra calendar days; company honors promise without batch. |
+| checkout_effect | read-only explanation | Saving preference issues a replacement quote; it creates no batch and applies no merge fee. |
+| API errors | D02 envelope | 400 malformed; 422 invalid fields; 409 stale/duplicate; 429 rate limit; 503 dependency failure |
 
-## 5. Interactions and navigation
+## Actions and navigation
 
-| # | Element | User action | System response | Goes to screen |
-|---|---|---|---|---|
-| 1 | Header logo | tap | Open home page | S01 |
-| 2 | Catalog navigation | tap | Open product catalog | S08 |
-| 3 | About Dony navigation | tap | [NEEDS CLARIFICATION: destination not in Screen List] | stays |
-| 4 | My Design navigation | tap | Open saved designs | S17 |
-| 5 | My Order navigation | tap | Open customer orders | S26 |
-| 6 | Contact Us navigation | tap | [NEEDS CLARIFICATION: destination not in Screen List] | stays |
-| 7 | Notification bell | tap | Open notification panel | S38 |
-| 8 | Account icon | tap | Open user profile | S06 |
-| 9 | Back link | tap | Return to order creation | S22 |
-| 10 | Merge terms link | tap | Open merge terms | S24 |
-| 11 | Standard Select Option button | tap | Set merge_preference false (F-MER-003) | stays |
-| 12 | Merge Option Selected button | tap | Set merge_preference true (F-MER-003) | stays |
-| 13 | Continue button | tap | Save merge_preference and review order | S25 |
-| 14 | Zalo contact button | tap | [NEEDS CLARIFICATION: contact destination] | stays |
-| 15 | Telephone contact button | tap | [NEEDS CLARIFICATION: dial behavior] | stays |
-| 16 | Footer Facebook icon | tap | [NEEDS CLARIFICATION: external or in-system destination] | stays |
-| 17 | Footer X icon | tap | [NEEDS CLARIFICATION: external or in-system destination] | stays |
-| 18 | Footer LinkedIn icon | tap | [NEEDS CLARIFICATION: external or in-system destination] | stays |
-| 19 | Footer YouTube icon | tap | [NEEDS CLARIFICATION: external or in-system destination] | stays |
-| 20 | Footer TikTok icon | tap | [NEEDS CLARIFICATION: external or in-system destination] | stays |
-| 21 | Company profile link | tap | [NEEDS CLARIFICATION: external or in-system destination] | stays |
-| 22 | Quality policy link | tap | [NEEDS CLARIFICATION: external or in-system destination] | stays |
-| 23 | Warranty policy link | tap | [NEEDS CLARIFICATION: external or in-system destination] | stays |
-| 24 | Delivery and return policy link | tap | [NEEDS CLARIFICATION: external or in-system destination] | stays |
-| 25 | Second warranty policy link | tap | [NEEDS CLARIFICATION: external or in-system destination] | stays |
-| 26 | Shipping policy link | tap | [NEEDS CLARIFICATION: external or in-system destination] | stays |
-| 27 | Payment methods link | tap | [NEEDS CLARIFICATION: external or in-system destination] | stays |
-| 28 | Business areas link | tap | [NEEDS CLARIFICATION: external or in-system destination] | stays |
-| 29 | FAQ link | tap | [NEEDS CLARIFICATION: external or in-system destination] | stays |
-
-## 6. Screen-level rules
-
-| Rule ID | Rule | Source |
+| Action | Result | Destination |
 |---|---|---|
-| SR-001 | The mockup compares standard and merged production and shows Merge Order selected. | Mockup |
+| Accept merge policy | Persist explicit opt-in/version then request server quote. | S25 |
+| Decline | Persist false and request standard quote. | S25 |
+| Read terms | Show versioned conditions without silently accepting. | S24 |
+### Global navigation access
 
-## 7. Linked requirements
+Home and public catalog are available to Guest and authenticated users. Customer designs, orders, profile and notifications require the customer’s authenticated session. Company Admin routes are S10, S18, S28, S30, S36, S42 and S43; Sales Consultants use S20 and assigned-only S28/S29/S21 access; System Admin routes are S39, S40 and S41. The server rechecks company, membership, ownership and assignment for every route and notification target.
+Functions: MFG-10/F-MER-001, MFG-10/F-MER-002, MFG-10/F-MER-003. Global navigation and back behavior follow D11. Auth return paths must be internal allowlisted routes.
 
-| FR ID (from the module spec) | What this screen does for it |
-|---|---|
-| F-MER-001 [NEEDS CLARIFICATION: module spec unavailable] | Display a dialog suggesting order merging to save on manufacturing costs, comparing with standard order. |
-| F-MER-002 [NEEDS CLARIFICATION: module spec unavailable] | Display detailed terms and conditions regarding the order merging policy. |
-| F-MER-003 [NEEDS CLARIFICATION: module spec unavailable] | Save the choice to accept or decline merging into the order record. |
+## Workflow transitions
 
-## 8. Responsive and accessibility notes
+Accept/decline saved → S25 with quote; read terms → S24; back → S22.
 
-- Smallest supported width: [NEEDS CLARIFICATION: not specified in sources.]
+## States
 
-- What collapses or stacks on a narrow screen: [NEEDS CLARIFICATION: no narrow-screen mockup or rule provided.]
+| State | Behavior | Trigger |
+|---|---|---|
+| Loading | Labelled progress/skeleton; disable duplicate submit. | Request starts |
+| Empty | Render the screen-specific form/detail state; if a required route object is absent, show safe not-found and return to the authorized parent route. | Empty initial form or missing detail payload |
+| Forbidden/not found | Safe message without revealing inaccessible identifiers. | 401/403/404 |
+| Error | Show code, message, field_errors, request_id; preserve entered values. | Request failure |
+| Retry | Retry reads on transient failure; reuse the same idempotency key only for mutations that require one under D02. | Recoverable failure |
+| Success | Show committed state and next valid action; announce via aria-live. | Mutation commits |
+| Conflict | Explain stale state; reload; never silently overwrite. | 409 |
 
-- Text that must remain readable (contrast, minimum size): [NEEDS CLARIFICATION: no numeric accessibility criteria provided.]
+## Acceptance scenarios
 
-## 9. Open questions
+1. Explicit opt-in stores policy version and server applies floor(subtotal*5/100), without creating a batch.
+2. Decline sets no discount; displayed promise still honored if no batch forms.
 
-| # | Question | Blocking? | Status |
-|---|---|---|---|
-| 1 | [NEEDS CLARIFICATION: Screen List does not provide Must / Should / Could priority.] | [NEEDS CLARIFICATION: impact not assessed] | Open |
-| 2 | [NEEDS CLARIFICATION: module spec spec-MFG-10.md is not present in project.] | [NEEDS CLARIFICATION: impact not assessed] | Open |
-| 3 | [NEEDS CLARIFICATION: smallest supported width, narrow layout, and accessibility minimums are not specified.] | [NEEDS CLARIFICATION: impact not assessed] | Open |
-| 4 | [NEEDS CLARIFICATION: Are displayed prices and lead times illustrative or calculated for the active order?] | [NEEDS CLARIFICATION: impact not assessed] | Open |
-| 5 | [NEEDS CLARIFICATION: How should the merge price be reconciled? $2,199 minus $300 is $1,899, while the mockup shows $1,869.] | [NEEDS CLARIFICATION: impact not assessed] | Open |
-| 6 | [NEEDS CLARIFICATION: mockup file uses a descriptive suffix; template assumes img/<SCREEN-ID>.png.] | [NEEDS CLARIFICATION: impact not assessed] | Open |
+## Responsive and accessibility
 
----
+Follow D11: 360px through desktop; stack columns and use labelled horizontal-scroll tables on narrow screens; keyboard-operable controls, visible focus, logical headings, associated form labels, aria-live status/error announcements, contrast >=4.5:1 (large text >=3:1), pointer targets >=24px. Preserve form data after recoverable failures; confirm destructive actions; disable duplicate submit while pending and enforce D02 idempotency server-side.
 
-## Completion checklist
+## Source documents
 
-- [ ] The mockup is a separate cropped image file, named with the Screen ID. [NEEDS CLARIFICATION: actual image filenames include descriptive suffixes.]
-
-- [x] Every visible element in the mockup appears in the element inventory.
-
-- [x] Every input element has a validation rule or an explicit clarification.
-
-- [x] All five states are filled in, or marked not applicable with a reason.
-
-- [x] Every navigation target is an existing Screen ID or "stays".
-
-- [ ] Every element that displays data names the field it displays, matching the module spec. [NEEDS CLARIFICATION: module specs and several field schemas unavailable.]
-
----
-
-Template source: DBIZ3, VJCBI College - FTU, Session 4. Built on the DBIZ2 Screen Design structure (Screen List and Screen Layout), per DBIZ3 Syllabus v3.
+- [MFG-10 specification](../specs/spec-MFG-10.md)
+- [Canonical decisions D01-D12](../docs/system-decisions.md)
+- [Human factual input register](../docs/user-input-needed.md)

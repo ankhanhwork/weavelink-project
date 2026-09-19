@@ -1,157 +1,187 @@
-# Function List
+# Function catalogue
 
-This file contains 12 MFG sections, 49 UC, and 94 Function.
+The complete-system target contains 12 modules and 94 source function entries. All are included; implementation phases are ordering, not exclusions. The module specification linked in each section defines typed input/output contracts, validation, permissions, failures and acceptance criteria. This catalogue is the traceability index, avoiding duplicate schemas that can drift. [Shared decisions](system-decisions.md) apply to every function. Historical High/Medium/Low priorities below are retained for provenance; current phases use D12.
+
+**Identity rule:** F-ORD IDs overlap between MFG-07 and MFG-08. Use the composite module/function key shown below. FR and US IDs are module-local. System event processors execute with verified service authority on behalf of the listed initiating actor; a customer never posts a trusted payment result.
 
 ## I. MFG-01: Identity & Access
 
-| No | Use Case ID | Function name | Subfunction ID | Subfunction name | Function overview | Category | Actor | Input | Output | Priority |
-|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | UC-G03 | Register Account | F-USER-001 | Registration Screen | Display the registration form for new users to enter their personal account details. | Screen | Guest | [NEEDS CLARIFICATION: no field specified] | registration_form_ui ([NEEDS CLARIFICATION: UI representation type]; Required) | High |
-| 2 | UC-G03 | Register Account | F-USER-002 | Registration Logic | Validate input data and create a new user account record in the database. | Process | Guest | full_name (String; Required), email (String; Required), password (String; Required) | success_message (String; Required), new_user_record (Object; Required) | High |
-| 3 | UC-G03 | Register Account | F-USER-003 | Send Verification | Send an OTP code or verification link via Email/SMS to activate the account. | Process | Guest | user_email_address_or_phone_number (String; Required), generated_otp_code (String; Required) | email_sms_dispatched_via_smtp_gateway (String; Required) | High |
-| 4 | UC-M01 | Log In | F-USER-004 | Login Screen | Display the login interface requiring users to enter their username and password. | Screen | Guest | [NEEDS CLARIFICATION: no field specified] | login_ui ([NEEDS CLARIFICATION: UI representation type]; Required) | High |
-| 5 | UC-M01 | Log In | F-USER-005 | Authentication Logic | Verify login credentials and generate a secure session token for the user. | Process | Guest | username_email (String; Required), password (String; Required) | jwt_session_token (String; Required), user_role_permissions (String; Required), redirect_url (URL; Required) | High |
-| 6 | UC-M04 | Log Out | F-USER-006 | Logout Logic | Invalidate the current session token, revoke user access permissions, redirect to the login screen | Process | Member | active_session_token (String; Required) | session_invalidated ([NEEDS CLARIFICATION: data type]; Required), clearance_of_local_storage ([NEEDS CLARIFICATION: data type]; Required) | Low |
-| 7 | UC-M02 | Forgot Password | F-USER-007 | Forgot Password Screen | Display a form requesting the registered email or phone number for password recovery. | Screen | Member | [NEEDS CLARIFICATION: no field specified] | password_recovery_form_ui ([NEEDS CLARIFICATION: UI representation type]; Required) | High |
-| 8 | UC-M02 | Forgot Password | F-USER-008 | Identity Validation | Verify if the provided email or phone number exists in the system. | Process | Member | email_address_or_phone_number (String; Required) | validation_status (String; Required) | High |
-| 9 | UC-M02 | Forgot Password | F-USER-009 |  Send Reset Link | Send a password reset link or code to the registered email. | Process | System | user_id (String; Required), contact_method (String; Required) | reset_token_url_sent_via_email_sms (URL; Required) | High |
-| 10 | UC-M03 | Reset Password | F-USER-010 | Verify Token Logic | Validate the password recovery token when the user clicks the reset link. | Process | Member | reset_token (String; Required) | token_validity_status (String; Required) | High |
-| 11 | UC-M03 | Reset Password | F-USER-011 | Update Password Logic | Check the new password strength and update it in the database. | Process | Member | new_password (String; Required), confirm_password (String; Required) | password_update_confirmation (String; Required), db_record_updated (Object; Required) | High |
+[Canonical specification](../specs/spec-MFG-01.md) · Phase P1
+
+| No | Use case | Canonical function key | Function | Implementation action | Category | Initiating actor | Source priority |
+|---|---|---|---|---|---|---|---|
+| 1 | UC-G03 | MFG-01/F-USER-001 | Register Account | Registration Screen | Screen | Guest | High |
+| 2 | UC-G03 | MFG-01/F-USER-002 | Register Account | Registration Logic | Process | Guest | High |
+| 3 | UC-G03 | MFG-01/F-USER-003 | Register Account | Send email verification link | Process | Guest | High |
+| 4 | UC-M01 | MFG-01/F-USER-004 | Log In | Login Screen | Screen | Guest | High |
+| 5 | UC-M01 | MFG-01/F-USER-005 | Log In | Authentication Logic | Process | Guest | High |
+| 6 | UC-M04 | MFG-01/F-USER-006 | Log Out | Logout Logic | Process | Member | Low |
+| 7 | UC-M02 | MFG-01/F-USER-007 | Forgot Password | Forgot Password Screen | Screen | Guest | High |
+| 8 | UC-M02 | MFG-01/F-USER-008 | Forgot Password | Identity Validation | Process | Guest | High |
+| 9 | UC-M02 | MFG-01/F-USER-009 | Forgot Password | Send password-reset email | Process | System (recovery request) | High |
+| 10 | UC-M03 | MFG-01/F-USER-010 | Reset Password | Verify Token Logic | Process | Guest | High |
+| 11 | UC-M03 | MFG-01/F-USER-011 | Reset Password | Update Password Logic | Process | Guest | High |
 
 ## II. MFG-02: Profile & Settings
 
-| No | Use Case ID | Function name | Subfunction ID | Subfunction name | Function overview | Category | Actor | Input | Output | Priority |
-|---|---|---|---|---|---|---|---|---|---|---|
-| 12 | UC-M05 | View Profile | F-PROF-001 | Profile View | Retrieve and display the current user's personal profile details. | Screen | Member | user_id (UUID; Required) | user_profile_object (Object; Required) | Medium |
-| 13 | UC-M07 | Edit Profile | F-PROF-002 | Edit Profile Form | Display a form allowing the user to modify their personal contact information. | Screen | Member | user_id (String; Required), current_profile_data (Object; Required) | editable_form_ui_with_pre_filled_data ([NEEDS CLARIFICATION: UI representation type]; Required) | Medium |
-| 14 | UC-M07 | Edit Profile | F-PROF-003 | Save Profile Logic | Save the changes made to the user's personal information into the system. | Process | Member | updated_fields (Object; Required), user_id (String; Required) | database_update_status (String; Required), success_notification ([NEEDS CLARIFICATION: data type]; Required) | Medium |
-| 15 | UC-M08 | Change Password | F-PROF-004 | Change Password Form | Display an interface requiring entry of the old password and the new password. | Screen | Member | [NEEDS CLARIFICATION: no field specified] | change_password_form_ui ([NEEDS CLARIFICATION: UI representation type]; Required) | Low |
-| 16 | UC-M08 | Change Password | F-PROF-005 | Save Password Logic | Validate the old password and overwrite it with the encrypted new password. | Process | Member | old_password (String; Required), new_password (String; Required) | password_changed_event (String; Required), success_alert ([NEEDS CLARIFICATION: data type]; Required) | Low |
+[Canonical specification](../specs/spec-MFG-02.md) · Phase P2
+
+| No | Use case | Canonical function key | Function | Implementation action | Category | Initiating actor | Source priority |
+|---|---|---|---|---|---|---|---|
+| 12 | UC-M05 | MFG-02/F-PROF-001 | View Profile | Profile View | Screen | Member | Medium |
+| 13 | UC-M07 | MFG-02/F-PROF-002 | Edit Profile | Edit Profile Form | Screen | Member | Medium |
+| 14 | UC-M07 | MFG-02/F-PROF-003 | Edit Profile | Save Profile Logic | Process | Member | Medium |
+| 15 | UC-M08 | MFG-02/F-PROF-004 | Change Password | Change Password Form | Screen | Member | Low |
+| 16 | UC-M08 | MFG-02/F-PROF-005 | Change Password | Save Password Logic | Process | Member | Low |
 
 ## III. MFG-03: Company Accounts
 
-| No | Use Case ID | Function name | Subfunction ID | Subfunction name | Function overview | Category | Actor | Input | Output | Priority |
-|---|---|---|---|---|---|---|---|---|---|---|
-| 17 | UC-S06 | Add Account | F-ACC-001 | Account List View | Display a list of existing subsidiary accounts with search filter capabilities. | Screen | System Admin | filter_criteria (Object; Optional), pagination_index (Integer; Optional) | list_of_company_accounts (Array<Object>; Required) | High |
-| 18 | UC-S06 | Add Account | F-ACC-002 | Add Account Form | Display an input form to add a new company account or employee. | Screen | System Admin | [NEEDS CLARIFICATION: no field specified] | account_creation_form_ui ([NEEDS CLARIFICATION: UI representation type]; Required) | High |
-| 19 | UC-S06 | Add Account | F-ACC-003 | Credential Generation | Automatically generate a temporary password or invitation token for the new account. | Process | System Admin | new_user_email (String; Required), role_id (String; Required) | temporary_password_string_invite_url (URL; Required) | High |
-| 20 | UC-S06 | Add Account | F-ACC-004 | Save Account Logic | Store the new company account information into the system database. | Process | System Admin | company_name (String; Required), tax_id (String; Required), address (String; Required), admin_contact_info (Object; Required) | new_account_record_id (Object; Required), creation_timestamp (DateTime; Required) | High |
-| 21 | UC-S07 | Update Account | F-ACC-005 | Account Detail View | Display detailed information of a specific company account for viewing or editing. | Screen | System Admin | company_account_id (String; Required) | detailed_account_data_object (Object; Required) | Medium |
-| 22 | UC-S07 | Update Account | F-ACC-006 | Update Account Logic | Update changes regarding the company account information or assigned roles. | Process | System Admin | account_id (String; Required), modified_fields (Object; Required) | updated_record (Object; Required), change_log_entry ([NEEDS CLARIFICATION: data type]; Required) | Medium |
-| 23 | UC-S08 | Delete Account | F-ACC-007 | Confirm Delete UI | Display a confirmation prompt and basic info before deleting the account. | Screen | System Admin | account_id_to_be_deleted (String; Required) | confirmation_modal ([NEEDS CLARIFICATION: UI representation type]; Required) | Low |
-| 24 | UC-S08 | Delete Account | F-ACC-008 | Delete Account Logic | Perform a soft delete or permanent removal of the account record. | Process | System Admin | confirmed_account_id (String; Required) | record_marked_as_deleted_removed (Object; Required) | Low |
+[Canonical specification](../specs/spec-MFG-03.md) · Phase P2
+
+| No | Use case | Canonical function key | Function | Implementation action | Category | Initiating actor | Source priority |
+|---|---|---|---|---|---|---|---|
+| 17 | UC-S06 | MFG-03/F-ACC-001 | Add Account | Account List View | Screen | System Admin | High |
+| 18 | UC-S06 | MFG-03/F-ACC-002 | Add Account | Add Account Form | Screen | System Admin | High |
+| 19 | UC-S06 | MFG-03/F-ACC-003 | Add Account | Generate staff invitation | Process | System Admin | High |
+| 20 | UC-S06 | MFG-03/F-ACC-004 | Add Account | Save Account Logic | Process | System Admin | High |
+| 21 | UC-S07 | MFG-03/F-ACC-005 | Update Account | Account Detail View | Screen | System Admin | Medium |
+| 22 | UC-S07 | MFG-03/F-ACC-006 | Update Account | Update Account Logic | Process | System Admin | Medium |
+| 23 | UC-S08 | MFG-03/F-ACC-007 | Delete Account | Confirm Delete UI | Screen | System Admin | Low |
+| 24 | UC-S08 | MFG-03/F-ACC-008 | Delete Account | Soft-delete company or staff membership | Process | System Admin | Low |
 
 ## IV. MFG-04: Product Catalog
 
-| No | Use Case ID | Function name | Subfunction ID | Subfunction name | Function overview | Category | Actor | Input | Output | Priority |
-|---|---|---|---|---|---|---|---|---|---|---|
-| 25 | UC-G01 | View Catalog | F-PROD-001 | Catalog Grid View | Display the product list in a grid layout with images and basic pricing. | Screen | Guest | category_filter ([NEEDS CLARIFICATION: data type]; Optional), page_number (Integer; Required), sorting_option ([NEEDS CLARIFICATION: data type]; Optional) | product_grid_ui ([NEEDS CLARIFICATION: UI representation type]; Required), pagination_controls ([NEEDS CLARIFICATION: data type]; Required) | High |
-| 26 | UC-G01 | View Catalog | F-PROD-002 | Product Detail View | Display detailed product information, technical specifications, and available options. | Screen | Guest | product_sku_id (String; Required) | full_product_details ([NEEDS CLARIFICATION: UI representation type]; Required) | High |
-| 27 | UC-G02 | Search Product | F-PROD-003 | Search Result View | Display a list of products matching the user's search keywords. | Screen | Guest | search_keyword (String; Optional), filter_attributes (Object; Optional) | filtered_product_list ([NEEDS CLARIFICATION: data type]; Required) | Medium |
-| 28 | UC-C24 | Add Product | F-PROD-004 | Management Dashboard | Display the product management interface specifically for administrators. | Screen | Company Admin | admin_credentials (Object; Required), view_permissions ([NEEDS CLARIFICATION: UI representation type]; Required) | product_inventory_dashboard_ui ([NEEDS CLARIFICATION: UI representation type]; Required) | Medium |
-| 29 | UC-C24 | Add Product | F-PROD-005 | Add Product Form | Display a form for the admin to enter info and upload images for new products. | Screen | Company Admin | [NEEDS CLARIFICATION: no field specified] | new_product_input_form ([NEEDS CLARIFICATION: UI representation type]; Required) | High |
-| 30 | UC-C24 | Add Product | F-PROD-006 | Save Product Logic | Create a new product record in the database with full specifications. | Process | Company Admin | name (String; Required), sku (String; Required), price (Decimal; Required), stock ([NEEDS CLARIFICATION: data type]; Required), category ([NEEDS CLARIFICATION: data type]; Required), image_files (Array<File>; Required) | new_product_id (String; Required), saved_status (String; Required) | High |
-| 31 | UC-C25 | Update Product | F-PROD-007 | Edit Product Form | Display a form containing current product information for editing purposes. | Screen | Company Admin | product_id (String; Required) | edit_form_with_existing_values ([NEEDS CLARIFICATION: UI representation type]; Required) | Medium |
-| 32 | UC-C25 | Update Product | F-PROD-008 | Update Product Logic | Save changes regarding price, description, or product images to the system. | Process | Company Admin | product_id (String; Required), changed_attributes (Object; Required) | updated_database_record (Object; Required) | Medium |
-| 33 | UC-C26 | Delete Product | F-PROD-009 | Delete Prompt UI | Display a popup window requesting confirmation before deleting a product. | Screen | Company Admin | product_id (String; Required) | delete_confirmation_dialog ([NEEDS CLARIFICATION: UI representation type]; Required) | Low |
-| 34 | UC-C26 | Delete Product | F-PROD-010 | Delete Product Logic | Remove the product record from the catalog display in the system. | Process | Company Admin | confirmed_product_id (String; Required) | product_status_set_to_archived_deleted (String; Required) | Low |
-| 35 | UC-C27 | Publish Product | F-PROD-011 | Toggle Status Logic | Toggle the product status between "Published" and "Hidden" on the storefront. | Screen | Company Admin | trigger_refresh_event ([NEEDS CLARIFICATION: data type]; Required) | updated_dashboard_view ([NEEDS CLARIFICATION: UI representation type]; Required) | Low |
+[Canonical specification](../specs/spec-MFG-04.md) · Phase P1
+
+| No | Use case | Canonical function key | Function | Implementation action | Category | Initiating actor | Source priority |
+|---|---|---|---|---|---|---|---|
+| 25 | UC-G01 | MFG-04/F-PROD-001 | View Catalog | Catalog Grid View | Screen | Guest | High |
+| 26 | UC-G01 | MFG-04/F-PROD-002 | View Catalog | Product Detail View | Screen | Guest | High |
+| 27 | UC-G02 | MFG-04/F-PROD-003 | Search Product | Search Result View | Screen | Guest | Medium |
+| 28 | UC-C24 | MFG-04/F-PROD-004 | Add Product | Management Dashboard | Screen | Company Admin | Medium |
+| 29 | UC-C24 | MFG-04/F-PROD-005 | Add Product | Add Product Form | Screen | Company Admin | High |
+| 30 | UC-C24 | MFG-04/F-PROD-006 | Add Product | Save Product Logic | Process | Company Admin | High |
+| 31 | UC-C25 | MFG-04/F-PROD-007 | Update Product | Edit Product Form | Screen | Company Admin | Medium |
+| 32 | UC-C25 | MFG-04/F-PROD-008 | Update Product | Update Product Logic | Process | Company Admin | Medium |
+| 33 | UC-C26 | MFG-04/F-PROD-009 | Delete Product | Delete Prompt UI | Screen | Company Admin | Low |
+| 34 | UC-C26 | MFG-04/F-PROD-010 | Delete Product | Archive product | Process | Company Admin | Low |
+| 35 | UC-C27 | MFG-04/F-PROD-011 | Publish Product | Publish or hide product | Screen | Company Admin | Low |
 
 ## V. MFG-05: Product Design
 
-| No | Use Case ID | Function name | Subfunction ID | Subfunction name | Function overview | Category | Actor | Input | Output | Priority |
-|---|---|---|---|---|---|---|---|---|---|---|
-| 36 | UC-C02 | Design Product | F-DES-001 | Design Workspace | Display a visual design interface allowing customization of colors and materials. | Screen | Customer | base_product_id (String; Required) | interactive_canvas_3d_configurator_ui ([NEEDS CLARIFICATION: UI representation type]; Required) | High |
-| 37 | UC-C02 | Design Product | F-DES-002 | Preview Logic | Check compatibility rules and generate a real-time preview image of the product. | Process | Customer | selected_options ([NEEDS CLARIFICATION: data type]; Required) | rendered_image_model (File; Required), validation ([NEEDS CLARIFICATION: data type]; Required) | High |
-| 38 | UC-C02 | Design Product | F-DES-003 | Save Design Logic | Save the customer's custom design configuration into the database. | Process | Customer | configuration_json (JSON; Required), customer_id (String; Required) | saved_design_id (String; Required), storage_url (URL; Required) | High |
-| 39 | UC-C03 | View Designs | F-DES-004 | Saved Designs List | Display a list of design templates the user has previously saved. | Screen | Customer | customer_id (String; Required) | gallery_of_saved_designs ([NEEDS CLARIFICATION: UI representation type]; Required) | Medium |
-| 40 | UC-C04 | Request Service | F-DES-005 | Request Form | Display a form for customers to enter special design service requirements. | Screen | Customer | [NEEDS CLARIFICATION: no field specified] | service_request_form_ui ([NEEDS CLARIFICATION: UI representation type]; Required) | Medium |
-| 41 | UC-C04 | Request Service | F-DES-006 | Create Request Logic | Create a new design service request record and await payment processing. | Process | Customer | requirement_text (String; Required), attached_ref_images (Array<File>; Optional), deadline (DateTime; Required) | new_request_record (Object; Required) | Medium |
-| 42 | UC-C04 | Request Service | F-DES-007 | Update Payment Status | Update the design request status to "Paid" upon successful transaction. | Process | Customer | payment_transaction_id (String; Required), request_id (String; Required) | status_update:_paid (String; Required), trigger_notification ([NEEDS CLARIFICATION: data type]; Required) | High |
-| 43 | UC-C04 | Request Service | F-DES-008 | Notify Admin Logic | Send an email notification to the Admin when a new design request is created. | Process | Customer | request_details_object (Object; Required) | email_to_admin_group (String; Required) | Medium |
-| 44 | UC-S03 | Send Design | F-DES-009 | Customer Select View | Display a list of customers waiting to receive completed designs from the Admin. | Screen | Sales Consultant | filter (String; Optional) | list_of_customers_requests (Array<Object>; Required) | Medium |
-| 45 | UC-S03 | Send Design | F-DES-010 | Push Design Logic | Save and assign the finished design file to the customer's workspace. | Process | Sales Consultant | design_file (File; Required), customer_id (String; Required), request_id (String; Required) | file_stored (File; Required), link_generated ([NEEDS CLARIFICATION: data type]; Required), request_closed ([NEEDS CLARIFICATION: data type]; Required) | High |
-| 46 | UC-S03 | Send Design | F-DES-011 | Notify Customer Logic | Send a notification informing the customer that the design is ready for viewing. | Process | Sales Consultant | customer_email (String; Required), design_link ([NEEDS CLARIFICATION: data type]; Required) | notification_sent (String; Required) | Medium |
+[Canonical specification](../specs/spec-MFG-05.md) · Phase P1
+
+| No | Use case | Canonical function key | Function | Implementation action | Category | Initiating actor | Source priority |
+|---|---|---|---|---|---|---|---|
+| 36 | UC-C02 | MFG-05/F-DES-001 | Design Product | Design Workspace | Screen | Customer | High |
+| 37 | UC-C02 | MFG-05/F-DES-002 | Design Product | Preview Logic | Process | Customer | High |
+| 38 | UC-C02 | MFG-05/F-DES-003 | Design Product | Save Design Logic | Process | Customer | High |
+| 39 | UC-C03 | MFG-05/F-DES-004 | View Designs | Saved Designs List | Screen | Customer | Medium |
+| 40 | UC-C04 | MFG-05/F-DES-005 | Request Service | Request Form | Screen | Customer | Medium |
+| 41 | UC-C04 | MFG-05/F-DES-006 | Request Service | Create Request Logic | Process | Customer | Medium |
+| 42 | UC-C04 | MFG-05/F-DES-007 | Request Service | Apply verified SERVICE payment result | Process | Customer | High |
+| 43 | UC-C04 | MFG-05/F-DES-008 | Request Service | Notify admin of paid design request | Process | Customer | Medium |
+| 44 | UC-S03 | MFG-05/F-DES-009 | Send Design | Customer Select View | Screen | Sales Consultant | Medium |
+| 45 | UC-S03 | MFG-05/F-DES-010 | Send Design | Push Design Logic | Process | Sales Consultant | High |
+| 46 | UC-S03 | MFG-05/F-DES-011 | Send Design | Notify Customer Logic | Process | Sales Consultant | Medium |
 
 ## VI. MFG-06: Order & Payment
 
-| No | Use Case ID | Function name | Subfunction ID | Subfunction name | Function overview | Category | Actor | Input | Output | Priority |
-|---|---|---|---|---|---|---|---|---|---|---|
-| 47 | UC-C05 | Finalize Order | F-PAY-001 | Checkout View | Display shopping cart information and the shipping address entry form. | Screen | Customer | cart_session_data (Object; Required) | checkout_ui ([NEEDS CLARIFICATION: UI representation type]; Required) | High |
-| 48 | UC-C05 | Finalize Order | F-PAY-002 | Order Summary View | Display the order overview including shipping costs and taxes before payment. | Screen | Customer | shipping_address (String; Required), shipping_method (String; Required) | calculated_total_cost (Decimal; Required), tax_amount (Decimal; Required) | High |
-| 49 | UC-C05 | Finalize Order | F-PAY-003 | Create Order Logic | Create a new order in the system with an initial status of "Pending". | Process | Customer | cart_items ([NEEDS CLARIFICATION: data type]; Required), shipping_info (Object; Required), billing_info (Object; Required) | new_order_id (String; Required), stock_reserved ([NEEDS CLARIFICATION: data type]; Required) | High |
-| 50 | UC-C12 | Make Payment | F-PAY-004 | Payment Request Gen | Generate a secure hash string and redirect the user to the VNPay gateway. | Process | Customer | order_amount (Decimal; Required), order_info (Object; Required), merchant_key (String; Required) | redirect_url_with_secure_hash (URL; Required) | High |
-| 51 | UC-C12 | Make Payment | F-PAY-005 | IPN Handler Logic | Process the automatic response from VNPay to update the order payment status. | Process | Customer | vnpay_response_data (Object; Required) | payment_status_update (String; Required) | High |
-| 52 | UC-C12 | Make Payment | F-PAY-006 | Receipt View | Display the electronic receipt or transaction result (Success/Fail) to the user. | Screen | Customer | payment_status (String; Required), order_details (Object; Required) | receipt_page_error_message (String; Required) | Medium |
+[Canonical specification](../specs/spec-MFG-06.md) · Phase P1
+
+| No | Use case | Canonical function key | Function | Implementation action | Category | Initiating actor | Source priority |
+|---|---|---|---|---|---|---|---|
+| 47 | UC-C05 | MFG-06/F-PAY-001 | Finalize Order | Checkout View | Screen | Customer | High |
+| 48 | UC-C05 | MFG-06/F-PAY-002 | Finalize Order | Order Summary View | Screen | Customer | High |
+| 49 | UC-C05 | MFG-06/F-PAY-003 | Finalize Order | Create Order Logic | Process | Customer | High |
+| 50 | UC-C12 | MFG-06/F-PAY-004 | Make Payment | Payment Request Gen | Process | Customer | High |
+| 51 | UC-C12 | MFG-06/F-PAY-005 | Make Payment | IPN Handler Logic | Process | Customer | High |
+| 52 | UC-C12 | MFG-06/F-PAY-006 | Make Payment | Receipt View | Screen | Customer | Medium |
 
 ## VII. MFG-07: Order Management
 
-| No | Use Case ID | Function name | Subfunction ID | Subfunction name | Function overview | Category | Actor | Input | Output | Priority |
-|---|---|---|---|---|---|---|---|---|---|---|
-| 53 | UC-C08 | Track Order | F-ORD-001 | Order List View | Display the user's order history along with current tracking statuses. | Screen | Customer | user_id (String; Required) | list_of_orders ([NEEDS CLARIFICATION: UI representation type]; Required) | Medium |
-| 54 | UC-C08 | Track Order | F-ORD-002 | Order Detail View | Display details of a specific order including items, shipping, and payment info. | Screen | Customer | order_id (String; Required) | full_order_object (Object; Required), tracking_timeline ([NEEDS CLARIFICATION: data type]; Required) | Medium |
-| 55 | UC-C07 | Cancel Order | F-ORD-003 | Cancel Exec Logic | Execute order cancellation and restock the product inventory quantity. | Process | Customer | order_id (String; Required), reason_for_cancellation (String; Required) | status:_cancelled (String; Required), inventory_count_increment (Integer; Required) | Medium |
-| 56 | UC-C07 | Cancel Order | F-ORD-004 | Cancel Notify Logic | Send an order cancellation confirmation notification to the customer and management. | Process | Customer | order_id (String; Required), user_email (String; Required) | cancellation_email_sent (String; Required) | Medium |
-| 57 | UC-S04 | Update Status | F-ORD-005 | Admin Order Dashboard | Display a list of all orders for Admin to manage and filter by status. | Screen | Company Admin | filter (DateTime; Optional), search_query (String; Optional) | admin_order_table_view ([NEEDS CLARIFICATION: UI representation type]; Required) | Medium |
-| 58 | UC-S04 | Update Status | F-ORD-006 | Status Update Logic | Update the new processing status for the order (e.g., Shipping, Completed). | Process | Company Admin | order_id (String; Required), new_status_code (String; Required) | database_update ([NEEDS CLARIFICATION: data type]; Required), change_log ([NEEDS CLARIFICATION: data type]; Required) | High |
-| 59 | UC-S04 | Update Status | F-ORD-007 | Status Notify Logic | Automatically send an email notification to the customer when order status changes. | Process | Company Admin | order_id (String; Required), new_status (String; Required) | status_update_email (String; Required) | Medium |
+[Canonical specification](../specs/spec-MFG-07.md) · Phase P1
+
+| No | Use case | Canonical function key | Function | Implementation action | Category | Initiating actor | Source priority |
+|---|---|---|---|---|---|---|---|
+| 53 | UC-C08 | MFG-07/F-ORD-001 | Track Order | Order List View | Screen | Customer | Medium |
+| 54 | UC-C08 | MFG-07/F-ORD-002 | Track Order | Order Detail View | Screen | Customer | Medium |
+| 55 | UC-C07 | MFG-07/F-ORD-003 | Cancel Order | Cancel eligible order and request refund if paid | Process | Customer | Medium |
+| 56 | UC-C07 | MFG-07/F-ORD-004 | Cancel Order | Cancel Notify Logic | Process | Customer | Medium |
+| 57 | UC-S04 | MFG-07/F-ORD-005 | Update Status | Admin Order Dashboard | Screen | Company Admin | Medium |
+| 58 | UC-S04 | MFG-07/F-ORD-006 | Update Status | Status Update Logic | Process | Company Admin | High |
+| 59 | UC-S04 | MFG-07/F-ORD-007 | Update Status | Status Notify Logic | Process | Company Admin | Medium |
 
 ## VIII. MFG-08: Sales Consultant
 
-| No | Use Case ID | Function name | Subfunction ID | Subfunction name | Function overview | Category | Actor | Input | Output | Priority |
-|---|---|---|---|---|---|---|---|---|---|---|
-| 60 | UC-C19 | Assign Consultant | F-ORD-001 | Unassigned Cust View | Display a list of potential customers who have not been assigned a consultant. | Screen | Company Admin | filter (String; Optional) | list_of_leads_customers (Array<Object>; Required) | Medium |
-| 61 | UC-C19 | Assign Consultant | F-ORD-002 | Customer Detail View | View customer details and request history for categorization purposes. | Screen | Company Admin | customer_id (String; Required) | customer_360_view ([NEEDS CLARIFICATION: UI representation type]; Required) | Medium |
-| 62 | UC-C19 | Assign Consultant | F-ORD-003 | Assign Sales Logic | Update the customer record to assign a specific sales consultant. | Process | Company Admin | customer_id (String; Required), consultant_user_id (String; Required) | record_updated_with_assignee (Object; Required) | Medium |
-| 63 | UC-C19 | Assign Consultant | F-ORD-004 | Assign Notify Logic | Send a notification to the consultant regarding the assignment of a new customer. | Process | Company Admin | consultant_email (String; Required), customer_info (Object; Required) | assignment_notification ([NEEDS CLARIFICATION: data type]; Required) | Low |
-| 64 | UC-S01 | View Assignment | F-ORD-005 | Assigned Cust View | Display a list of customers currently managed by the consultant. | Screen | Sales Consultant | consultant_id (String; Required) | list_of_assigned_customers (Array<Object>; Required) | Medium |
-| 65 | UC-S01 | View Assignment | F-ORD-006 | Context View | Display the full consultation context including interested products and chat history. | Screen | Sales Consultant | customer_id (String; Required) | interaction_history_logs (Array<Object>; Required) | Medium |
-| 66 | UC-S02 | Update Consult | F-ORD-007 | Consultation Detail | Display details of the consultation record for the staff to update progress. | Screen | Sales Consultant | consultation_record_id (Object; Required) | detailed_view_with_notes_field ([NEEDS CLARIFICATION: UI representation type]; Required) | Medium |
-| 67 | UC-S02 | Update Consult | F-ORD-008 | Update Status Logic | Update the customer care status (e.g., Contacted, Closed Deal). | Process | Sales Consultant | record_id (Object; Required), new_status (String; Required), notes ([NEEDS CLARIFICATION: data type]; Required) | updated_crm_record (Object; Required) | Medium |
+[Canonical specification](../specs/spec-MFG-08.md) · Phase P2
+
+| No | Use case | Canonical function key | Function | Implementation action | Category | Initiating actor | Source priority |
+|---|---|---|---|---|---|---|---|
+| 60 | UC-C19 | MFG-08/F-ORD-001 | Assign Consultant | Unassigned Cust View | Screen | Company Admin | Medium |
+| 61 | UC-C19 | MFG-08/F-ORD-002 | Assign Consultant | Customer Detail View | Screen | Company Admin | Medium |
+| 62 | UC-C19 | MFG-08/F-ORD-003 | Assign Consultant | Assign Sales Logic | Process | Company Admin | Medium |
+| 63 | UC-C19 | MFG-08/F-ORD-004 | Assign Consultant | Assign Notify Logic | Process | Company Admin | Low |
+| 64 | UC-S01 | MFG-08/F-ORD-005 | View Assignment | Assigned Cust View | Screen | Sales Consultant | Medium |
+| 65 | UC-S01 | MFG-08/F-ORD-006 | View Assignment | Context View | Screen | Sales Consultant | Medium |
+| 66 | UC-S02 | MFG-08/F-ORD-007 | Update Consult | Consultation Detail | Screen | Sales Consultant | Medium |
+| 67 | UC-S02 | MFG-08/F-ORD-008 | Update Consult | Update Status Logic | Process | Sales Consultant | Medium |
 
 ## IX. MFG-09: Contract Management
 
-| No | Use Case ID | Function name | Subfunction ID | Subfunction name | Function overview | Category | Actor | Input | Output | Priority |
-|---|---|---|---|---|---|---|---|---|---|---|
-| 68 | UC-C14 | Generate Contract | F-CONTR-001 | Template Select View | Display a list of available contract templates suitable for the order type. | Screen | Company Admin | order_type (String; Required) | list_of_contract_templates (Array<Object>; Required) | High |
-| 69 | UC-C14 | Generate Contract | F-CONTR-002 | Template Detail View | Preview the detailed content of the selected contract template. | Screen | Company Admin | template_id (String; Required) | preview_ui ([NEEDS CLARIFICATION: UI representation type]; Required) | High |
-| 70 | UC-C14 | Generate Contract | F-CONTR-003 | Fill Contract Logic | Automatically populate terms and pricing information into the contract template. | Process | Company Admin | order_data (Object; Required), customer_data (Object; Required), template_id (String; Required) | draft_contract_data_object (Object; Required) | High |
-| 71 | UC-C14 | Generate Contract | F-CONTR-004 | Render PDF Logic | Create a contract record and export it to a PDF file for signing. | Process | Company Admin | contract_data (Object; Required) | pdf_file_url (URL; Required), contract_id (String; Required) | High |
-| 72 | UC-C14 | Generate Contract | F-CONTR-005 | Ready Notify Logic | Notify the customer that the contract is ready for review and signing. | Process | Company Admin | contract_id (String; Required), customer_email (String; Required) | notification_with_contract_link ([NEEDS CLARIFICATION: data type]; Required) | High |
-| 73 | UC-C15 | Update Contract | F-CONTR-006 | Contract List View | Display a list of existing contracts with filtering and sorting functions. | Screen | Company Admin | filter_params ([NEEDS CLARIFICATION: data type]; Optional) | contract_list_table ([NEEDS CLARIFICATION: UI representation type]; Required) | Medium |
-| 74 | UC-C15 | Update Contract | F-CONTR-007 | Contract Update Noitfy Logic | Notify the customer that the contract is updated | Process | Company Admin | contract_id (String; Required), customer_email (String; Required) | notification_with_contract_link ([NEEDS CLARIFICATION: data type]; Required) | High |
-| 75 | UC-C11 | Sign Contract | F-CONTR-008 | E-Sign Logic | Capture the user's electronic signature and update contract status to "Signed". | Process | Customer | digital_signature_token (String; Required), ip_address (String; Required) | status:_signed (String; Required), timestamp_logged (DateTime; Required) | High |
-| 76 | UC-C11 | Sign Contract | F-CONTR-009 | Signed Notify Logic | Send a notification and copy of the signed contract to both related parties. | Process | Customer | signed_contract_document (File; Required) | emails_with_pdf_attachment ([NEEDS CLARIFICATION: data type]; Required) | High |
+[Canonical specification](../specs/spec-MFG-09.md) · Phase P1
+
+| No | Use case | Canonical function key | Function | Implementation action | Category | Initiating actor | Source priority |
+|---|---|---|---|---|---|---|---|
+| 68 | UC-C14 | MFG-09/F-CONTR-001 | Generate Contract | Template Select View | Screen | Company Admin | High |
+| 69 | UC-C14 | MFG-09/F-CONTR-002 | Generate Contract | Template Detail View | Screen | Company Admin | High |
+| 70 | UC-C14 | MFG-09/F-CONTR-003 | Generate Contract | Fill Contract Logic | Process | Company Admin | High |
+| 71 | UC-C14 | MFG-09/F-CONTR-004 | Generate Contract | Render PDF Logic | Process | Company Admin | High |
+| 72 | UC-C14 | MFG-09/F-CONTR-005 | Generate Contract | Ready Notify Logic | Process | Company Admin | High |
+| 73 | UC-C15 | MFG-09/F-CONTR-006 | Update Contract | List contracts and manage versioned templates | Screen | Company Admin | Medium |
+| 74 | UC-C15 | MFG-09/F-CONTR-007 | Update Contract | Replace unsigned contract and notify customer | Process | Company Admin | High |
+| 75 | UC-C11 | MFG-09/F-CONTR-008 | Sign Contract | Record authenticated contract acknowledgement | Process | Customer | High |
+| 76 | UC-C11 | MFG-09/F-CONTR-009 | Sign Contract | Signed Notify Logic | Process | Customer | High |
 
 ## X. MFG-10: Order Optimization (Merge)
 
-| No | Use Case ID | Function name | Subfunction ID | Subfunction name | Function overview | Category | Actor | Input | Output | Priority |
-|---|---|---|---|---|---|---|---|---|---|---|
-| 77 | UC-C06 | Select Merge | F-MER-001 | Merge Option View | Display a dialog suggesting order merging to save on manufacturing costs, comparing with standard order. | Screen | Customer | [NEEDS CLARIFICATION: no field specified] | standard_vs_merge_order_ui ([NEEDS CLARIFICATION: UI representation type]; Required) | Medium |
-| 78 | UC-C06 | Select Merge | F-MER-002 | Merge Terms View | Display detailed terms and conditions regarding the order merging policy. | Screen | Customer | [NEEDS CLARIFICATION: no field specified] | static_text_terms_ui ([NEEDS CLARIFICATION: UI representation type]; Required) | Low |
-| 79 | UC-C06 | Select Merge | F-MER-003 | Save Preference Logic | Save the choice to accept or decline merging into the order record. | Process | Customer | order_id (String; Required), merge_preference (Boolean; Required) | preference_saved_in_db ([NEEDS CLARIFICATION: data type]; Required) | Medium |
-| 80 | UC-C17 | View Eligible | F-MER-004 | Merge Console View | Display a list of orders eligible for merging into a production batch. | Screen | Company Admin | production_criteria (Object; Required) | list_of_merge_candidates (Array<Object>; Required) | High |
-| 81 | UC-C17 | View Eligible | F-MER-005 | Estimate Logic | Calculate and display estimated cost savings and production time reduction. | Process | Company Admin | selected_orders_list (Array<Object>; Required) | estimated_savings (Decimal; Required) | High |
-| 82 | UC-C18 | Confirm Merge | F-MER-006 | Batch Exec Logic | Execute the merging of selected orders into a single production batch. | Process | Company Admin | list_of_order_ids_to_merge (Array<Object>; Required) | new_batch_id_created (String; Required), orders_linked (Array<Object>; Required) | High |
-| 83 | UC-C18 | Confirm Merge | F-MER-007 | Merge Notify Logic | Notify customers and production planning about the successfully merged orders. | Process | Company Admin | batch_id (String; Required), customer_ids ([NEEDS CLARIFICATION: data type]; Required) | batch_confirmation_emails ([NEEDS CLARIFICATION: data type]; Required) | Medium |
+[Canonical specification](../specs/spec-MFG-10.md) · Phase P2
+
+| No | Use case | Canonical function key | Function | Implementation action | Category | Initiating actor | Source priority |
+|---|---|---|---|---|---|---|---|
+| 77 | UC-C06 | MFG-10/F-MER-001 | Select Merge | Merge Option View | Screen | Customer | Medium |
+| 78 | UC-C06 | MFG-10/F-MER-002 | Select Merge | Merge Terms View | Screen | Customer | Low |
+| 79 | UC-C06 | MFG-10/F-MER-003 | Select Merge | Save Preference Logic | Process | Customer | Medium |
+| 80 | UC-C17 | MFG-10/F-MER-004 | View Eligible | Merge Console View | Screen | Company Admin | High |
+| 81 | UC-C17 | MFG-10/F-MER-005 | View Eligible | Estimate setup savings and setup time saved | Process | Company Admin | High |
+| 82 | UC-C18 | MFG-10/F-MER-006 | Confirm Merge | Batch Exec Logic | Process | Company Admin | High |
+| 83 | UC-C18 | MFG-10/F-MER-007 | Confirm Merge | Merge Notify Logic | Process | Company Admin | Medium |
 
 ## XI. MFG-11: Data Analytics
 
-| No | Use Case ID | Function name | Subfunction ID | Subfunction name | Function overview | Category | Actor | Input | Output | Priority |
-|---|---|---|---|---|---|---|---|---|---|---|
-| 84 | UC-C21 | View Dashboard | F-DA-001 | Charts View | Display statistical charts regarding revenue, orders, and customer growth. | Screen | Company Admin | date_range (DateTime; Optional), metric_type (String; Optional) | visual_charts ([NEEDS CLARIFICATION: data type]; Required) | Medium |
-| 85 | UC-C21 | View Dashboard | F-DA-002 | Filter Logic | Apply time or product filters to update the chart data accordingly. | Process | Company Admin | filter_parameters (Object; Optional) | refreshed_dataset_for_charts ([NEEDS CLARIFICATION: data type]; Required) | Medium |
-| 86 | UC-C22 | Export Data | F-DA-003 | Export Exec Logic | Process data and generate a downloadable report file in Excel or CSV format. | Process | Company Admin | dataset_selection ([NEEDS CLARIFICATION: data type]; Required), file_format (File; Required) | downloadable_file_url (URL; Required) | Medium |
+[Canonical specification](../specs/spec-MFG-11.md) · Phase P3
+
+| No | Use case | Canonical function key | Function | Implementation action | Category | Initiating actor | Source priority |
+|---|---|---|---|---|---|---|---|
+| 84 | UC-C21 | MFG-11/F-DA-001 | View Dashboard | Charts View | Screen | Company Admin | Medium |
+| 85 | UC-C21 | MFG-11/F-DA-002 | View Dashboard | Filter Logic | Process | Company Admin | Medium |
+| 86 | UC-C22 | MFG-11/F-DA-003 | Export Data | Export Exec Logic | Process | Company Admin | Medium |
 
 ## XII. MFG-12: System Operations
 
-| No | Use Case ID | Function name | Subfunction ID | Subfunction name | Function overview | Category | Actor | Input | Output | Priority |
-|---|---|---|---|---|---|---|---|---|---|---|
-| 87 | UC-S09 | System Logs | F-SYS-001 | Log List View | Display a list of system activity logs and user behaviors. | Screen | System Admin | log_level (Object; Required), date (DateTime; Required) | logs_table_view ([NEEDS CLARIFICATION: UI representation type]; Required) | Low |
-| 88 | UC-S09 | System Logs | F-SYS-002 | Search Log View | Provide a search interface to filter logs by keywords or date range. | Screen | System Admin | search_query_string (String; Optional) | filtered_log_results ([NEEDS CLARIFICATION: data type]; Required) | Low |
-| 89 | UC-S10 | Backup Data | F-SYS-003 | Backup Option View | Display options for manual or scheduled database backups. | Screen | System Admin | admin_privileges ([NEEDS CLARIFICATION: data type]; Required) | backup_controls_ui ([NEEDS CLARIFICATION: UI representation type]; Required) | Medium |
-| 90 | UC-S10 | Backup Data | F-SYS-004 | Backup Exec Logic | Execute a full database backup and generate a confirmation record. | Process | System Admin | backup_command_trigger ([NEEDS CLARIFICATION: data type]; Required) | backup_file (File; Required), status (String; Required) | High |
-| 91 | UC-S10 | Restore Data | F-SYS-005 | Restore Exec Logic | Restore the system to the state of a previously saved backup version. | Process | System Admin | selected_backup_file_id (String; Required) | system_restoration_status (String; Required) | High |
-| 92 | UC-S11 | Config System | F-SYS-006 | Settings Form | Display system configuration parameters (SMTP, API Key) for editing. | Screen | System Admin | [NEEDS CLARIFICATION: no field specified] | configuration_form_ui ([NEEDS CLARIFICATION: UI representation type]; Required) | Medium |
-| 93 | UC-S11 | Config System | F-SYS-007 | Save Config Logic | Validate validity and save configuration changes into the system. | Process | System Admin | key_value_pairs_of_config (Object; Required) | system_config_updated ([NEEDS CLARIFICATION: data type]; Required) | High |
-| 94 | UC-S11 | Config System | F-SYS-008 | Config Notify Logic | Send an alert to the Admin group regarding recent system configuration changes. | Process | System Admin | change_log ([NEEDS CLARIFICATION: data type]; Required), admin_group_id (String; Required) | security_alert_email (String; Required) | Low |
+[Canonical specification](../specs/spec-MFG-12.md) · Phase P3
+
+| No | Use case | Canonical function key | Function | Implementation action | Category | Initiating actor | Source priority |
+|---|---|---|---|---|---|---|---|
+| 87 | UC-S09 | MFG-12/F-SYS-001 | System Logs | Log List View | Screen | System Admin | Low |
+| 88 | UC-S09 | MFG-12/F-SYS-002 | System Logs | Search Log View | Screen | System Admin | Low |
+| 89 | UC-S10 | MFG-12/F-SYS-003 | Backup Data | Backup Option View | Screen | System Admin | Medium |
+| 90 | UC-S10 | MFG-12/F-SYS-004 | Backup Data | Backup Exec Logic | Process | System Admin | High |
+| 91 | UC-S10 | MFG-12/F-SYS-005 | Restore Data | Restore Exec Logic | Process | System Admin | High |
+| 92 | UC-S11 | MFG-12/F-SYS-006 | Config System | Settings Form | Screen | System Admin | Medium |
+| 93 | UC-S11 | MFG-12/F-SYS-007 | Config System | Save Config Logic | Process | System Admin | High |
+| 94 | UC-S11 | MFG-12/F-SYS-008 | Config System | Config Notify Logic | Process | System Admin | Low |
+
+## Cross-cutting extensions
+
+Email verification consumption belongs to MFG-01/F-USER-003; design-rule editing to MFG-04/F-PROD-007 and F-PROD-008; payment reconciliation/refunds to MFG-06/F-PAY-005 and MFG-07/F-ORD-003; notification inbox/read state to the existing notification-producing functions plus the shared outbox (S38); account invitations and company/staff lifecycle to MFG-03/F-ACC-001..008 (S41); batch dissolve/start/fallback to MFG-10/F-MER-006 (S42). These complete source functions without inventing colliding IDs.

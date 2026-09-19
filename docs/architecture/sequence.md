@@ -1,309 +1,243 @@
-# UC-G01: View product catalog — SD-01: Browse Product Catalog (Guest)
+# Sequence catalogue
+
+The ten inherited sequence IDs are retained and corrected for [shared contracts](../system-decisions.md). D01 authorization, D02 validation/version/idempotency and D03 outbox behavior apply to every call. Error responses never commit partial business state. Internal participants are logical modules in one transactional backend, not a mandate for distributed transactions.
+
+## SD-01 — UC-G01: Browse catalog
 
 ```mermaid
 sequenceDiagram
-    actor Guest
-    participant ProductUI
-    participant ProductController
-    participant ProductService
-    participant ProductCatalogDatabase
-
-    Guest->>ProductUI: access website
-    ProductUI->>ProductController: request product catalog
-    ProductController->>ProductService: get product list
-    ProductService->>ProductCatalogDatabase: retrieve products
-    ProductCatalogDatabase-->>ProductService: product list
-    ProductService-->>ProductController: return products
-    ProductController-->>ProductUI: send catalog data
-    ProductUI-->>Guest: display product catalog
+    actor G as Guest
+    participant UI as S08
+    participant API as Catalog API
+    participant DB as Database
+    G->>UI: Open catalog
+    UI->>API: Validated page, filters and sort
+    API->>DB: Published products in active companies
+    DB-->>API: Page plus total
+    API-->>UI: Public product view models
+    UI-->>G: Grid or empty state; retry on outage
 ```
 
-# UC-G03: Register account — SD-02: Sign Up
+## SD-02 — UC-G03: Register and verify
 
 ```mermaid
 sequenceDiagram
-    actor Guest
-    participant AuthUI
-    participant AuthController
-    participant AuthService
-    participant UserAccountDatabase
-
-    Guest->>AuthUI: enter registration information
-    AuthUI->>AuthController: submit registration
-    AuthController->>AuthService: register user
-    AuthService->>UserAccountDatabase: create user account
-    alt [user already exists]
-        UserAccountDatabase-->>AuthService: duplicate user
-        AuthService-->>AuthController: registration failed
-        AuthController-->>AuthUI: return error
-        AuthUI-->>Guest: display error message
-    else [registration successful]
-        UserAccountDatabase-->>AuthService: user created
-        AuthService-->>AuthController: registration success
-        AuthController-->>AuthUI: return success
-        AuthUI-->>Guest: display success message
+    actor G as Guest
+    participant UI as S02
+    participant A as Identity
+    participant DB as Database
+    participant W as Outbox worker
+    G->>UI: Name, email, password, confirmation
+    UI->>A: Register Customer
+    A->>DB: Transaction: unique user, token hash, email outbox
+    alt Validation or unique conflict
+        A-->>UI: Field errors or conflict, no second account
+    else Persisted
+        A-->>UI: Verification instructions
+        W->>DB: Consume outbox
+        W-->>G: Email link
+        G->>A: Follow verification link
+        A->>DB: Consume unexpired token and activate once
+        A-->>G: S03 login
     end
 ```
 
-# UC-M01: Log in — SD-03: Log In
+Delivery failure is an outbox failure, not a failed account creation. Verification-link consumption uses S02's verification state, not a new undocumented screen.
+
+## SD-03 — UC-M01: Log in
 
 ```mermaid
 sequenceDiagram
-    actor Customer
-    participant AuthUI
-    participant AuthController
-    participant AuthService
-    participant UserAccountDatabase
+    actor U as Unauthenticated user
+    participant UI as S03
+    participant A as Identity
+    participant DB as Database
+    U->>UI: Email and password
+    UI->>A: Credentials and safe intended route
+    A->>DB: Check rate limit, account, hash, verification
+    alt Invalid, inactive or rate limited
+        A-->>UI: Generic error or resend guidance
+    else Active and verified
+        A->>DB: Create revocable session
+        A-->>UI: Secure HttpOnly cookie and permissions
+        UI-->>U: Allowlisted destination or role home
+    end
+```
 
-    Customer->>AuthUI: enter login credentials
-    AuthUI->>AuthController: submit login request
-    AuthController->>AuthService: authenticate user
-    AuthService->>UserAccountDatabase: find user
-    alt [user not found]
-        UserAccountDatabase-->>AuthService: not found
-        AuthService-->>AuthController: authentication failed
-        AuthController-->>AuthUI: return error
-        AuthUI-->>Customer: display error message
-    else [user found]
-        UserAccountDatabase-->>AuthService: found user
-        alt [invalid credentials]
-            AuthService-->>AuthController: invalid credentials
-            AuthController-->>AuthUI: return error
-            AuthUI-->>Customer: display login failed
-        else [valid credentials]
-            AuthService-->>AuthController: authentication success
-            AuthController-->>AuthUI: return success
-            AuthUI-->>Customer: display login success
+## SD-04 — UC-G02: Search and product details
+
+```mermaid
+sequenceDiagram
+    actor U as Guest or customer
+    participant UI as S08 and S09
+    participant P as Product API
+    U->>UI: Search and filters
+    UI->>P: Validated search query
+    P-->>UI: Published matches or empty list
+    U->>UI: Select product UUID
+    UI->>P: Get public product and rules
+    alt Hidden, archived or inactive company
+        P-->>UI: 404; back to S08
+    else Available
+        P-->>UI: Current product version and design options
+    end
+```
+
+## SD-05A — UC-C01 / UC-C02: Self design
+
+```mermaid
+sequenceDiagram
+    actor C as Customer
+    participant UI as S13
+    participant D as Design module
+    participant DB as Database and private assets
+    C->>UI: Choose options and upload artwork
+    UI->>D: Preview against product version
+    D->>D: Validate MIME, asset access, options and bounds
+    D-->>UI: 2D preview or field errors
+    C->>UI: Save
+    UI->>D: Configuration, expected version and key
+    D->>DB: Atomic immutable design version
+    D-->>UI: Saved design reference for S17
+```
+
+## SD-05B — UC-C04: Paid design service
+
+```mermaid
+sequenceDiagram
+    actor C as Customer
+    participant D as Design module
+    participant P as Payment module
+    participant A as Company Admin
+    participant S as Assigned consultant
+    C->>D: S15 valid requirements and deadline
+    D->>D: Persist AwaitingPayment and fee snapshot
+    D-->>C: Request ID for S16
+    C->>P: Initiate SERVICE attempt
+    P->>P: Verify gateway event and lock request
+    alt Verified success before cancellation or expiry
+        P->>D: Atomic Paid state and outbox
+        D-->>A: Paid request notice
+        A->>D: Assign consultant and committed due date
+        S->>D: Start InProgress then deliver validated design
+        D-->>C: Delivered version visible in S17
+    else Failed attempt
+        P-->>C: Retry while request active
+    else Late funds for cancelled or expired request
+        P->>P: Record received funds and full refund obligation
+        P-->>C: Request unchanged; refund status
+    end
+```
+
+## SD-06 — UC-C03: Saved designs
+
+```mermaid
+sequenceDiagram
+    actor C as Customer
+    participant UI as S17
+    participant D as Design module
+    C->>UI: Open designs
+    UI->>D: Session-scoped list
+    D-->>UI: Own Saved and Delivered versions
+    C->>UI: Select order action
+    UI->>D: Revalidate design and current product availability
+    alt Orderable
+        D-->>UI: S22 with design ID and version
+    else Unavailable or changed rules
+        D-->>UI: Explain and return to S13 for reviewed copy
+    end
+```
+
+## SD-07 — UC-C05 / UC-C06: Quote and create order
+
+```mermaid
+sequenceDiagram
+    actor C as Customer
+    participant UI as S22 to S25
+    participant O as MFG-06 Checkout
+    participant DB as Database
+    C->>UI: Quantities, address, merge preference and policy consent
+    UI->>O: Request server quote
+    O->>O: Validate product, design, capacity and exact VND formula
+    O->>DB: Immutable quote with 30-minute expiry
+    O-->>UI: Complete price breakdown and policy snapshot
+    C->>UI: Review and submit
+    UI->>O: Quote ID, expected version, idempotency key
+    O->>DB: Lock quote and revalidate expiry, ownership and versions
+    alt Valid and unconsumed
+        O->>DB: Atomic PendingContract order, snapshots and preference
+        O-->>UI: Order ID; S27 waiting for contract
+    else Replayed same submission
+        O-->>UI: Existing order
+    else Stale or changed
+        O-->>UI: 409; requote and explicit review
+    end
+```
+
+Checkout never creates a batch. Changing inputs creates a replacement quote; old quote is invalidated and never changes an already submitted order.
+
+## SD-08 — UC-C09 / UC-C10 / UC-C11 / UC-C14: Contract and signature
+
+```mermaid
+sequenceDiagram
+    actor A as Company Admin
+    actor C as Customer
+    participant K as Contract module
+    participant DB as Database and assets
+    A->>K: Generate from order and template version
+    K->>DB: Persist Draft and immutable source snapshot
+    K->>K: Render and hash private PDF
+    K->>DB: Ready only after PDF succeeds; ready outbox
+    K-->>C: S34 notice
+    C->>K: View current PDF, password reauthenticate
+    K-->>C: One-time challenge bound to contract hash and version
+    C->>K: Typed name, consent, challenge, expected version and key
+    K->>DB: Lock current contract and order; consume challenge
+    alt Valid current Ready version
+        K->>DB: Atomic Signed evidence and AwaitingPayment order
+        K-->>C: Signed receipt and S35 action
+    else Stale, expired or invalid
+        K-->>C: Error; preserve unsigned state
+    end
+```
+
+Signed-notification dispatch happens after commit. Old unsigned versions may be Superseded; eligible cancellation makes the current contract Voided. A signed version is never revised in place.
+
+## SD-09 — UC-C12: Order payment, retry and reconciliation
+
+```mermaid
+sequenceDiagram
+    actor C as Customer
+    participant UI as S35
+    participant P as MFG-06 Payment
+    participant V as VNPay
+    participant DB as Database and durable journal
+    C->>UI: Pay signed AwaitingPayment order
+    UI->>P: Resource ID and idempotency key
+    P->>DB: Validate snapshot; create or reuse Pending attempt
+    P-->>UI: Hosted redirect URL
+    UI->>V: Hosted payment
+    par Server notification
+        V->>P: Signed provider event
+        P->>P: Verify merchant, reference, amount and signature
+        P->>DB: Lock and deduplicate
+        alt First valid success for active resource
+            P->>DB: Succeeded payment, Confirmed order, outbox
+        else Failed attempt
+            P->>DB: Failed payment; order remains AwaitingPayment
+        else Late or duplicate funds
+            P->>DB: Record payment and refund obligation; no resurrection
         end
+        P-->>V: Acknowledge only durable processing
+    and Browser return
+        V-->>UI: Return URL
+        UI->>P: Fetch own persisted payment state
+        P-->>UI: Processing, result or retry action
     end
 ```
 
-# UC-G02: Search products — SD-04 – Search and View Product Detail
+A repeated callback for the same transaction has no second effect. Timeout triggers provider query and redacted audit; query-response success alone is not settlement. The [adapter contract](../integrations/vnpay.md) defines protocol encoding and required sandbox cases. Both ORDER and SERVICE use this shared payment engine.
 
-```mermaid
-sequenceDiagram
-    actor Customer
-    participant ProductUI
-    participant ProductController
-    participant ProductService
-    participant ProductCatalogDatabase
+## Additional flow coverage
 
-    Customer->>ProductUI: enter search keyword
-    ProductUI->>ProductController: submit query
-    ProductController->>ProductService: search product
-    ProductService->>ProductCatalogDatabase: retrieve product information
-    ProductCatalogDatabase-->>ProductService: search result
-    alt [Product not found]
-        ProductService-->>ProductController: empty result
-        ProductController-->>ProductUI: empty result
-        ProductUI-->>Customer: display "No product found"
-    else [Product found]
-        ProductService-->>ProductController: product list
-        ProductController-->>ProductUI: product list
-        ProductUI-->>Customer: display product list
-        Customer->>ProductUI: select product
-        ProductUI->>ProductController: request product detail
-        ProductController->>ProductService: get product detail
-        ProductService->>ProductCatalogDatabase: retrieve product detail
-        ProductCatalogDatabase-->>ProductService: product detail
-        ProductService-->>ProductController: return detail
-        ProductController-->>ProductUI: send product detail
-        ProductUI-->>Customer: display product detail
-    end
-```
-
-# UC-C02: Design product — SD-05A: Self Design Product
-
-```mermaid
-sequenceDiagram
-    actor Customer
-    participant DesignUI
-    participant DesignController
-    participant DesignService
-    participant CustomerDesignDatabase
-
-    Customer->>DesignUI: customize product design
-    DesignUI->>DesignController: submit design
-    DesignController->>DesignService: process design
-    alt [save success]
-        DesignService->>CustomerDesignDatabase: save design
-        CustomerDesignDatabase-->>DesignService: saved
-        DesignService-->>DesignController: save success
-    else [save failed]
-        DesignService-->>DesignController: save failed
-    end
-    DesignController-->>DesignUI: display save result
-    DesignUI-->>Customer: display save confirmation
-```
-
-# UC-C04: Request design service — SD-05B: Request Design Service
-
-```mermaid
-sequenceDiagram
-    actor Customer
-    participant DesignServiceUI
-    participant DesignServiceController
-    participant DesignServiceService
-    participant PaymentUI
-    participant PaymentController
-    participant PaymentService
-    participant PaymentGateway
-    participant ConsultationRequestDatabase
-
-    Customer->>DesignServiceUI: submit design service request
-    DesignServiceUI->>DesignServiceController: submit request information
-    DesignServiceController->>DesignServiceService: validate request information
-    DesignServiceService-->>DesignServiceController: request valid
-    DesignServiceController-->>DesignServiceUI: display request summary
-    Customer->>DesignServiceUI: click proceed to payment
-    DesignServiceUI->>PaymentUI: navigate to payment page
-    Customer->>PaymentUI: confirm payment
-    PaymentUI->>PaymentController: submit payment
-    PaymentController->>PaymentService: create payment request
-    PaymentService->>PaymentGateway: redirect payment
-    alt [payment successful]
-        PaymentGateway-->>PaymentController: payment success
-        PaymentController-->>DesignServiceService: confirm payment success
-        DesignServiceService->>ConsultationRequestDatabase: save design service request
-        ConsultationRequestDatabase-->>DesignServiceService: save success
-        DesignServiceService->>PaymentController: request created
-        PaymentController-->>PaymentUI: display payment success
-        PaymentUI-->>Customer: display confirmation
-    else [payment failed]
-        PaymentGateway-->>PaymentController: payment failed
-        PaymentController-->>PaymentUI: display payment failure
-        PaymentUI-->>Customer: display payment error
-    end
-```
-
-# UC-C03: View saved design — SD-06: View Saved Design
-
-```mermaid
-sequenceDiagram
-    actor Customer
-    participant SavedDesignUI
-    participant SavedDesignController
-    participant SavedDesignService
-    participant SavedDesignDatabase
-
-    Customer->>SavedDesignUI: view saved design
-    SavedDesignUI->>SavedDesignController: request design
-    SavedDesignController->>SavedDesignService: get design
-    SavedDesignService->>SavedDesignDatabase: retrieve design
-    SavedDesignDatabase-->>SavedDesignService: design data
-    SavedDesignService-->>SavedDesignController: return design
-    SavedDesignController-->>SavedDesignUI: send design
-    SavedDesignUI-->>Customer: display design
-```
-
-# UC-C05: Finalize order — SD-07: Create Order
-
-```mermaid
-sequenceDiagram
-    actor Customer
-    participant OrderUI
-    participant OrderController
-    participant OrderService
-    participant OrderDatabase
-    participant MergedOrderBatchDatabase
-
-    Customer->>OrderUI: submit order information (size, quantity, shipping info)
-    OrderUI->>OrderController: submit order
-    OrderController->>OrderService: validate order data
-    alt [merge selected]
-        Customer->>OrderUI: accept merge terms
-        OrderUI->>OrderController: confirm merge
-        OrderController->>OrderService: add to merge batch
-        OrderService->>MergedOrderBatchDatabase: save order reference
-    else [no merge]
-        OrderService->>OrderService: skip merge
-    end
-    OrderService->>OrderDatabase: save order (status = Pending Contract)
-    OrderDatabase-->>OrderService: order saved
-    OrderService-->>OrderController: order created
-    OrderController-->>OrderUI: return order summary
-    OrderUI-->>Customer: display order summary
-```
-
-# UC-C09: View/Sign contract — SD-08: View and Sign Digital Contract
-
-```mermaid
-sequenceDiagram
-    actor Customer
-    participant ContractUI
-    participant ContractController
-    participant ContractService
-    participant ContractDatabase
-
-    Customer->>ContractUI: view contract
-    ContractUI->>ContractController: request contract
-    ContractController->>ContractService: retrieve contract
-    ContractService->>ContractDatabase: get contract data
-    ContractDatabase-->>ContractService: contract data
-    ContractService-->>ContractController: contract data
-    ContractController-->>ContractUI: display contract
-    ContractUI-->>Customer: display contract
-    Customer->>ContractUI: click sign contract
-    ContractUI->>ContractController: submit signing action
-    ContractController->>ContractService: process signing
-    alt [signing successful]
-        ContractService->>ContractDatabase: update contract status = Signed
-        ContractDatabase-->>ContractService: update success
-        ContractService-->>ContractController: signing success
-        ContractController-->>ContractUI: return signed contract
-        ContractUI-->>Customer: display signed contract
-    else [signing failed]
-        ContractService-->>ContractController: signing failed
-        ContractController-->>ContractUI: return signing error
-        ContractUI-->>Customer: display error message
-    end
-```
-
-# UC-C12: Make payment — SD-09: Make Order Payment
-
-```mermaid
-sequenceDiagram
-    actor Customer
-    participant PaymentUI
-    participant PaymentController
-    participant PaymentService
-    participant PaymentTransactionDatabase
-    participant OrderDatabase
-    participant PaymentGateway
-
-    Customer->>PaymentUI: click "Pay Order"
-    PaymentUI->>PaymentController: initiate payment
-    PaymentController->>PaymentService: create payment transaction
-    PaymentService->>PaymentTransactionDatabase: save payment (status = Pending)
-    PaymentService->>PaymentGateway: create payment request (API)
-    PaymentGateway-->>PaymentService: return payment URL
-    PaymentService-->>PaymentController: payment URL
-    PaymentController-->>PaymentUI: return payment URL
-    PaymentUI->>PaymentGateway: redirect user to payment page
-    alt [payment success]
-        PaymentGateway-->>PaymentService:
-        PaymentService->>PaymentTransactionDatabase: update status = Success
-        PaymentService->>OrderDatabase: update order status = Ordered
-    else [payment failed]
-        PaymentGateway-->>PaymentService: payment failed callback
-        PaymentService->>PaymentTransactionDatabase: update status = Failed
-        PaymentService->>OrderDatabase: update status = Failed
-    end
-    PaymentService-->>PaymentUI: notify payment result
-    PaymentUI-->>Customer: display payment result
-```
-
-| Diagram | Participants | Arrows | Unreadable text |
-|---|---:|---:|---|
-| SD-01 | 5 | 8 | None |
-| SD-02 | 5 | 12 | None |
-| SD-03 | 5 | 15 | None |
-| SD-04 | 5 | 19 | None |
-| SD-05A | 5 | 9 | None |
-| SD-05B | 9 | 21 | None |
-| SD-06 | 5 | 8 | None |
-| SD-07 | 6 | 13 | None |
-| SD-08 | 5 | 19 | None |
-| SD-09 | 7 | 17 | None |
-
-The first return arrow in the `[payment success]` branch of SD-09 has no visible label in the source image.
+Company/staff provisioning, profile edits, product publishing, consultation updates, batch confirmation/dissolution, analytics/export and backup/restore are specified by the respective module flows and acceptance scenarios. They do not reuse legacy sequence IDs misleadingly. Traceability: [function catalogue](../function-list.md), [49 use cases](use-case.md), [43 screens](../screen-list.md).

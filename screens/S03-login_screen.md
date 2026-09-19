@@ -1,131 +1,69 @@
-# Screen Spec: S03 Login Screen
+# S03 — Log In
 
-<!--
-
-DBIZ3 Session 4 template. One file per screen. Keep the DBIZ2 Screen ID unchanged.
-
-The mockup image stays an image; everything around it becomes text.
-
--->
-
-| Field | Value |
+| Property | Value |
 |---|---|
-| Screen ID | `S03` |
-| Screen name | Login Screen |
-| Actor | Guest |
-| Priority | [NEEDS CLARIFICATION: Must / Should / Could not given in Screen List] |
-| Belongs to module | `spec-MFG-01.md` [NEEDS CLARIFICATION: file unavailable] |
-| Mockup image | `img/S03-login_screen.png` |
-| Status | Draft |
+| Route | `/login` |
+| Module | MFG-01 |
+| Roles and ownership | Guest; invitation acceptance resolves invited staff role and company membership on the server. |
+| Priority | P1 |
+| Mockup | Historical mockup: [img/S03-login_screen.png](img/S03-login_screen.png); written rules supersede sample text. |
 
-## 1. Purpose
+## Purpose and data
 
-**Shown when:** Allow users to log in to the system.
+The form has two explicit modes: email/password authentication and staff invitation acceptance. Invitation acceptance follows the existing-account or new-account path in D02. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
 
-**The user leaves this screen when:** [NEEDS CLARIFICATION: all exit paths are not specified; documented interactions appear in section 5.]
+## Fields and validation
 
-## 2. Mockup
-
-![S03](img/S03-login_screen.png)
-
-<!-- The image is the visual contract: spacing, grouping, and hierarchy. The tables below are the behavioural contract. -->
-
-## 3. Element inventory
-
-<!-- Walk the mockup top to bottom, left to right. Every visible element gets a stable name. -->
-
-| # | Element | Type | Content / data source | Required | Validation |
-|---|---|---|---|---|---|
-| 1 | Brand panel logo | Image | Static LOGO placeholder | No | Not applicable — display only |
-| 2 | Brand welcome heading | Header | Static: Welcome to Dony! | No | Not applicable — display only |
-| 3 | Brand description | Text | Static welcome copy | No | Not applicable — display only |
-| 4 | Brand image | Image | Placeholder | No | Not applicable — display only |
-| 5 | Welcome back heading | Header | Static: Welcome back! | No | Not applicable — display only |
-| 6 | Login subtitle | Text | Static: Meet the good taste today | No | Not applicable — display only |
-| 7 | Email or phone label | Text | Static: E-mail or phone number | No | Not applicable — display only |
-| 8 | Email or phone input | Input | [NEEDS CLARIFICATION: screenshot accepts email or phone, F-USER-005 names username_email] | Yes | [NEEDS CLARIFICATION: validation rule not specified] |
-| 9 | Password label | Text | Static: Password | No | Not applicable — display only |
-| 10 | Password input | Input | password (F-USER-005) | Yes | [NEEDS CLARIFICATION: validation rule not specified] |
-| 11 | Forgot Password link | Button | Static: Forgot Password? | No | Not applicable — display only |
-| 12 | Sign In submit button | Button | Static: Sign In | No | Not applicable — display only |
-| 13 | Other accounts divider | Text | Static: or do it via other accounts | No | Not applicable — display only |
-| 14 | Google sign-in | Button | Google icon | No | Not applicable — display only |
-| 15 | Apple sign-in | Button | Apple icon | No | Not applicable — display only |
-| 16 | Facebook sign-in | Button | Facebook icon | No | Not applicable — display only |
-| 17 | New account prompt | Text | Static: Don’t have an account? | No | Not applicable — display only |
-| 18 | Sign Up link | Button | Static: Sign Up | No | Not applicable — display only |
-
-## 4. States
-
-| State | What the user sees | Trigger |
+| Field | Type / required | Validation and source |
 |---|---|---|
-| Default | Blank login form. | Open S03 |
-| Empty (no data) | Blank credentials as shown; submit availability [NEEDS CLARIFICATION]. | No relevant records or input |
-| Loading | [NEEDS CLARIFICATION: authentication loading treatment] | Data request or submit in progress |
-| Error | [NEEDS CLARIFICATION: invalid credential display] | Data request or submit fails |
-| Success / confirmation | Authenticated session; destination determined by redirect_url [NEEDS CLARIFICATION]. | Successful relevant action |
+| mode | enum, required | Login or staff invitation acceptance. D03 refinement |
+| email | string, required | Trim and case-normalize; global uniqueness. D03 |
+| password | secret, required for login | Verify hash; never log or echo. D03 |
+| return_to | internal URL, optional | Allowlisted route only; reject external redirects. D03 |
+| invitation_token | secret, required in invitation mode | Hashed, single use, 48-hour expiry. D03 |
+| full_name / new_password | string/secret, required for invited new staff | full_name 1..100; password 12..128; existing account authenticates then accepts invite. D01/D03 |
+| failed attempts | server counter | Limit 5 per account/IP within 15 minutes; return 429. D03 |
+## Actions and navigation
 
-## 5. Interactions and navigation
-
-| # | Element | User action | System response | Goes to screen |
-|---|---|---|---|---|
-| 1 | Email or phone input | type | Update login identifier | stays |
-| 2 | Password input | type | Update password | stays |
-| 3 | Forgot Password link | tap | Open password recovery | S04 |
-| 4 | Sign In submit button | tap | F-USER-005 verifies credentials and creates session; redirect_url destination [NEEDS CLARIFICATION] | stays |
-| 5 | Google sign-in | tap | [NEEDS CLARIFICATION: social sign-in behavior] | stays |
-| 6 | Apple sign-in | tap | [NEEDS CLARIFICATION: social sign-in behavior] | stays |
-| 7 | Facebook sign-in | tap | [NEEDS CLARIFICATION: social sign-in behavior] | stays |
-| 8 | Sign Up link | tap | Open registration | S02 |
-
-## 6. Screen-level rules
-
-| Rule ID | Rule | Source |
+| Action | Result | Destination |
 |---|---|---|
-| SR-001 | [NEEDS CLARIFICATION: no additional screen-level rule documented] | Unspecified |
+| Authenticate | Verify hash/rate limit, set secure session cookie, redirect to allowlisted return_to or authenticated role D11 default. | return_to or role default |
+| Accept invitation | Existing identity authenticates then accepts; new invitee supplies full_name/password; consume invite and activate membership atomically. | S41 completion, then role default |
+| Forgot password | Open recovery. | S04 |
+| Register | Open registration. | S02 |
+### Global navigation access
 
-## 7. Linked requirements
+Home and public catalog are available to Guest and authenticated users. Customer designs, orders, profile and notifications require the customer’s authenticated session. Company Admin routes are S10, S18, S28, S30, S36, S42 and S43; Sales Consultants use S20 and assigned-only S28/S29/S21 access; System Admin routes are S39, S40 and S41. The server rechecks company, membership, ownership and assignment for every route and notification target.
+Functions: MFG-01/F-USER-004, MFG-01/F-USER-005. Global navigation and back behavior follow D11. Auth return paths must be internal allowlisted routes.
 
-| FR ID (from the module spec) | What this screen does for it |
-|---|---|
-| F-USER-004 [NEEDS CLARIFICATION: module spec unavailable] | Display the login interface requiring users to enter their username and password. |
-| F-USER-005 [NEEDS CLARIFICATION: module spec unavailable] | Verify login credentials and generate a secure session token for the user. |
+## Workflow transitions
 
-## 8. Responsive and accessibility notes
+Valid session → validated return_to, else Customer S26, Company Admin S28, Sales Consultant S20 or System Admin S41; invitation link opens invitation mode; forgot password → S04; register → S02.
 
-- Smallest supported width: [NEEDS CLARIFICATION: not specified in sources.]
+## States
 
-- What collapses or stacks on a narrow screen: [NEEDS CLARIFICATION: no narrow-screen mockup or rule provided.]
+| State | Behavior | Trigger |
+|---|---|---|
+| Loading | Labelled progress/skeleton; disable duplicate submit. | Request starts |
+| Empty | Render the screen-specific form/detail state; if a required route object is absent, show safe not-found and return to the authorized parent route. | Empty initial form or missing detail payload |
+| Forbidden/not found | Safe message without revealing inaccessible identifiers. | 401/403/404 |
+| Error | Show code, message, field_errors, request_id; preserve entered values. | Request failure |
+| Retry | Retry reads on transient failure; reuse the same idempotency key only for mutations that require one under D02. | Recoverable failure |
+| Success | Show committed state and next valid action; announce via aria-live. | Mutation commits |
+| Conflict | Explain stale state; reload; never silently overwrite. | 409 |
 
-- Text that must remain readable (contrast, minimum size): [NEEDS CLARIFICATION: no numeric accessibility criteria provided.]
+## Acceptance scenarios
 
-## 9. Open questions
+1. With valid credentials, establish secure HttpOnly SameSite=Lax session and use only internal return route.
+2. After five failed attempts per account/IP in 15m, reject further login attempts with 429.
+3. Given a valid staff invitation, an existing identity must authenticate before atomic membership activation; a new invitee supplies name/password, consumes the invite once, and reaches the invited role's default route.
 
-| # | Question | Blocking? | Status |
-|---|---|---|---|
-| 1 | [NEEDS CLARIFICATION: Screen List does not provide Must / Should / Could priority.] | [NEEDS CLARIFICATION: impact not assessed] | Open |
-| 2 | [NEEDS CLARIFICATION: module spec spec-MFG-01.md is not present in project.] | [NEEDS CLARIFICATION: impact not assessed] | Open |
-| 3 | [NEEDS CLARIFICATION: smallest supported width, narrow layout, and accessibility minimums are not specified.] | [NEEDS CLARIFICATION: impact not assessed] | Open |
-| 4 | [NEEDS CLARIFICATION: Can users log in by phone, given function list names username_email?] | [NEEDS CLARIFICATION: impact not assessed] | Open |
-| 5 | [NEEDS CLARIFICATION: Where does a successful login navigate?] | [NEEDS CLARIFICATION: impact not assessed] | Open |
-| 6 | [NEEDS CLARIFICATION: mockup file uses a descriptive suffix; template assumes img/<SCREEN-ID>.png.] | [NEEDS CLARIFICATION: impact not assessed] | Open |
+## Responsive and accessibility
 
----
+Follow D11: 360px through desktop; stack columns and use labelled horizontal-scroll tables on narrow screens; keyboard-operable controls, visible focus, logical headings, associated form labels, aria-live status/error announcements, contrast >=4.5:1 (large text >=3:1), pointer targets >=24px. Preserve form data after recoverable failures; confirm destructive actions; disable duplicate submit while pending and enforce D02 idempotency server-side.
 
-## Completion checklist
+## Source documents
 
-- [ ] The mockup is a separate cropped image file, named with the Screen ID. [NEEDS CLARIFICATION: actual image filenames include descriptive suffixes.]
-
-- [x] Every visible element in the mockup appears in the element inventory.
-
-- [x] Every input element has a validation rule or an explicit clarification.
-
-- [x] All five states are filled in, or marked not applicable with a reason.
-
-- [x] Every navigation target is an existing Screen ID or "stays".
-
-- [ ] Every element that displays data names the field it displays, matching the module spec. [NEEDS CLARIFICATION: module specs and several field schemas unavailable.]
-
----
-
-Template source: DBIZ3, VJCBI College - FTU, Session 4. Built on the DBIZ2 Screen Design structure (Screen List and Screen Layout), per DBIZ3 Syllabus v3.
+- [MFG-01 specification](../specs/spec-MFG-01.md)
+- [Canonical decisions D01-D12](../docs/system-decisions.md)
+- [Human factual input register](../docs/user-input-needed.md)

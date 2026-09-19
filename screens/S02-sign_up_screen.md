@@ -1,141 +1,66 @@
-# Screen Spec: S02 Sign Up Screen
+# S02 — Sign Up
 
-<!--
-
-DBIZ3 Session 4 template. One file per screen. Keep the DBIZ2 Screen ID unchanged.
-
-The mockup image stays an image; everything around it becomes text.
-
--->
-
-| Field | Value |
+| Property | Value |
 |---|---|
-| Screen ID | `S02` |
-| Screen name | Sign Up Screen |
-| Actor | Guest |
-| Priority | [NEEDS CLARIFICATION: Must / Should / Could not given in Screen List] |
-| Belongs to module | `spec-MFG-01.md` [NEEDS CLARIFICATION: file unavailable] |
-| Mockup image | `img/S02-sign_up_screen.png` |
-| Status | Draft |
+| Route | `/sign-up` |
+| Module | MFG-01 |
+| Roles and ownership | Guest; server enforces role, company, assignment and ownership per D01. |
+| Priority | P1 |
+| Mockup | Historical mockup: [img/S02-sign_up_screen.png](img/S02-sign_up_screen.png); written rules supersede sample text. |
 
-## 1. Purpose
+## Purpose and data
 
-**Shown when:** Allow guest users to register a new account.
+Registration creates a Customer identity in pending-verification state; staff memberships are never created through this form. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
 
-**The user leaves this screen when:** [NEEDS CLARIFICATION: all exit paths are not specified; documented interactions appear in section 5.]
+## Fields and validation
 
-## 2. Mockup
-
-![S02](img/S02-sign_up_screen.png)
-
-<!-- The image is the visual contract: spacing, grouping, and hierarchy. The tables below are the behavioural contract. -->
-
-## 3. Element inventory
-
-<!-- Walk the mockup top to bottom, left to right. Every visible element gets a stable name. -->
-
-| # | Element | Type | Content / data source | Required | Validation |
-|---|---|---|---|---|---|
-| 1 | Brand panel logo | Image | Static LOGO placeholder | No | Not applicable — display only |
-| 2 | Brand welcome heading | Header | Static: Welcome to Dony! | No | Not applicable — display only |
-| 3 | Brand description | Text | Static welcome copy | No | Not applicable — display only |
-| 4 | Brand image | Image | Placeholder | No | Not applicable — display only |
-| 5 | Create account heading | Header | Static: Create your account | No | Not applicable — display only |
-| 6 | Free and easy subtitle | Text | Static: It’s free and easy | No | Not applicable — display only |
-| 7 | Full name label | Text | Static: Full name | No | Not applicable — display only |
-| 8 | Full name input | Input | full_name (F-USER-002) | Yes | [NEEDS CLARIFICATION: validation rule not specified] |
-| 9 | Email or phone label | Text | Static: E-mail or phone number | No | Not applicable — display only |
-| 10 | Email or phone input | Input | [NEEDS CLARIFICATION: screenshot allows email or phone; F-USER-002 requires email, F-USER-003 uses email or phone] | [NEEDS CLARIFICATION: required phone alternative] | [NEEDS CLARIFICATION: validation rule not specified] |
-| 11 | Password label | Text | Static: Password | No | Not applicable — display only |
-| 12 | Password input | Input | password (F-USER-002) | Yes | At least 8 characters, as printed below input |
-| 13 | Password helper | Text | Static: Must be 8 characters at least | No | Not applicable — display only |
-| 14 | Terms checkbox | Toggle | Agreement to Terms and Conditions and Privacy Policy | [NEEDS CLARIFICATION: whether mandatory] | [NEEDS CLARIFICATION: validation rule not specified] |
-| 15 | Terms and Conditions link | Button | Static: Terms and Conditions | No | Not applicable — display only |
-| 16 | Privacy Policy link | Button | Static: Privacy Policy | No | Not applicable — display only |
-| 17 | Sign Up submit button | Button | Static: Sign Up | No | Not applicable — display only |
-| 18 | Other accounts divider | Text | Static: or do it via other accounts | No | Not applicable — display only |
-| 19 | Google sign-up | Button | Google icon | No | Not applicable — display only |
-| 20 | Apple sign-up | Button | Apple icon | No | Not applicable — display only |
-| 21 | Facebook sign-up | Button | Facebook icon | No | Not applicable — display only |
-| 22 | Existing account prompt | Text | Static: Already have an account? | No | Not applicable — display only |
-| 23 | Sign In link | Button | Static: Sign In | No | Not applicable — display only |
-
-## 4. States
-
-| State | What the user sees | Trigger |
+| Field | Type / requirement | Validation / source |
 |---|---|---|
-| Default | Blank registration form. | Open S02 |
-| Empty (no data) | Blank fields as shown; submit availability [NEEDS CLARIFICATION]. | No relevant records or input |
-| Loading | [NEEDS CLARIFICATION: loading treatment while creating account] | Data request or submit in progress |
-| Error | [NEEDS CLARIFICATION: field and server error display] | Data request or submit fails |
-| Success / confirmation | success_message from F-USER-002; placement and next screen [NEEDS CLARIFICATION]. | Successful relevant action |
+| full_name |  string, required, trim, 1..100 characters. | full_name: string, required, trim, 1..100 characters. |
+| email |  string, required, normalize case, globally unique | email: string, required, normalize case, globally unique; valid email format. |
+| password |  string, required, 12..128 characters, spaces allowed | password: string, required, 12..128 characters, spaces allowed; never echoed or logged. |
+| Verification link |  cryptographically random, hashed at rest, single-use, 24h expiry. | Verification link: cryptographically random, hashed at rest, single-use, 24h expiry. |
+| API errors | D02 envelope | 400 malformed; 422 invalid fields; 409 stale/duplicate; 429 rate limit; 503 dependency failure |
 
-## 5. Interactions and navigation
+## Actions and navigation
 
-| # | Element | User action | System response | Goes to screen |
-|---|---|---|---|---|
-| 1 | Full name input | type | Update full_name | stays |
-| 2 | Email or phone input | type | Update entered contact value | stays |
-| 3 | Password input | type | Update password | stays |
-| 4 | Terms checkbox | tap | Toggle agreement | stays |
-| 5 | Terms and Conditions link | tap | [NEEDS CLARIFICATION: destination] | stays |
-| 6 | Privacy Policy link | tap | [NEEDS CLARIFICATION: destination] | stays |
-| 7 | Sign Up submit button | tap | F-USER-002 validates input and creates account; F-USER-003 sends verification; exact next screen unspecified | stays |
-| 8 | Google sign-up | tap | [NEEDS CLARIFICATION: social sign-up behavior] | stays |
-| 9 | Apple sign-up | tap | [NEEDS CLARIFICATION: social sign-up behavior] | stays |
-| 10 | Facebook sign-up | tap | [NEEDS CLARIFICATION: social sign-up behavior] | stays |
-| 11 | Sign In link | tap | Open login | S03 |
-
-## 6. Screen-level rules
-
-| Rule ID | Rule | Source |
+| Action | Result | Destination |
 |---|---|---|
-| SR-001 | Password helper states a minimum of 8 characters. | Mockup |
+| Create account | Validate fields, create Guest-registered Customer pending verification, queue 24h link; neutral success. | S03 |
+| Resend verification | Rate-limit; invalidate prior token; report generic queued state. | S02 |
+| Sign in | Navigate to login. | S03 |
+### Global navigation access
 
-## 7. Linked requirements
+Home and public catalog are available to Guest and authenticated users. Customer designs, orders, profile and notifications require the customer’s authenticated session. Company Admin routes are S10, S18, S28, S30, S36, S42 and S43; Sales Consultants use S20 and assigned-only S28/S29/S21 access; System Admin routes are S39, S40 and S41. The server rechecks company, membership, ownership and assignment for every route and notification target.
+Functions: MFG-01/F-USER-001, MFG-01/F-USER-002, MFG-01/F-USER-003. Global navigation and back behavior follow D11. Auth return paths must be internal allowlisted routes.
 
-| FR ID (from the module spec) | What this screen does for it |
-|---|---|
-| F-USER-001 [NEEDS CLARIFICATION: module spec unavailable] | Display the registration form for new users to enter their personal account details. |
-| F-USER-002 [NEEDS CLARIFICATION: module spec unavailable] | Validate input data and create a new user account record in the database. |
-| F-USER-003 [NEEDS CLARIFICATION: module spec unavailable] | Send an OTP code or verification link via Email/SMS to activate the account. |
+## Workflow transitions
 
-## 8. Responsive and accessibility notes
+Verification email sent → S03 login after verification; sign in link → S03; home → S01.
 
-- Smallest supported width: [NEEDS CLARIFICATION: not specified in sources.]
+## States
 
-- What collapses or stacks on a narrow screen: [NEEDS CLARIFICATION: no narrow-screen mockup or rule provided.]
+| State | Behavior | Trigger |
+|---|---|---|
+| Loading | Labelled progress/skeleton; disable duplicate submit. | Request starts |
+| Empty | Render the screen-specific form/detail state; if a required route object is absent, show safe not-found and return to the authorized parent route. | Empty initial form or missing detail payload |
+| Forbidden/not found | Safe message without revealing inaccessible identifiers. | 401/403/404 |
+| Error | Show code, message, field_errors, request_id; preserve entered values. | Request failure |
+| Retry | Retry reads on transient failure; reuse the same idempotency key only for mutations that require one under D02. | Recoverable failure |
+| Success | Show committed state and next valid action; announce via aria-live. | Mutation commits |
+| Conflict | Explain stale state; reload; never silently overwrite. | 409 |
 
-- Text that must remain readable (contrast, minimum size): [NEEDS CLARIFICATION: no numeric accessibility criteria provided.]
+## Acceptance scenarios
 
-## 9. Open questions
+1. With valid fields, create only a Customer account and queue a single-use verification link expiring in 24h.
+2. With duplicate email or delivery failure, return a non-enumerating response and preserve safe form values.
 
-| # | Question | Blocking? | Status |
-|---|---|---|---|
-| 1 | [NEEDS CLARIFICATION: Screen List does not provide Must / Should / Could priority.] | [NEEDS CLARIFICATION: impact not assessed] | Open |
-| 2 | [NEEDS CLARIFICATION: module spec spec-MFG-01.md is not present in project.] | [NEEDS CLARIFICATION: impact not assessed] | Open |
-| 3 | [NEEDS CLARIFICATION: smallest supported width, narrow layout, and accessibility minimums are not specified.] | [NEEDS CLARIFICATION: impact not assessed] | Open |
-| 4 | [NEEDS CLARIFICATION: Does phone replace email for registration?] | [NEEDS CLARIFICATION: impact not assessed] | Open |
-| 5 | [NEEDS CLARIFICATION: Is the terms checkbox required?] | [NEEDS CLARIFICATION: impact not assessed] | Open |
-| 6 | [NEEDS CLARIFICATION: What screen follows successful registration or verification?] | [NEEDS CLARIFICATION: impact not assessed] | Open |
-| 7 | [NEEDS CLARIFICATION: mockup file uses a descriptive suffix; template assumes img/<SCREEN-ID>.png.] | [NEEDS CLARIFICATION: impact not assessed] | Open |
+## Responsive and accessibility
 
----
+Follow D11: 360px through desktop; stack columns and use labelled horizontal-scroll tables on narrow screens; keyboard-operable controls, visible focus, logical headings, associated form labels, aria-live status/error announcements, contrast >=4.5:1 (large text >=3:1), pointer targets >=24px. Preserve form data after recoverable failures; confirm destructive actions; disable duplicate submit while pending and enforce D02 idempotency server-side.
 
-## Completion checklist
+## Source documents
 
-- [ ] The mockup is a separate cropped image file, named with the Screen ID. [NEEDS CLARIFICATION: actual image filenames include descriptive suffixes.]
-
-- [x] Every visible element in the mockup appears in the element inventory.
-
-- [x] Every input element has a validation rule or an explicit clarification.
-
-- [x] All five states are filled in, or marked not applicable with a reason.
-
-- [x] Every navigation target is an existing Screen ID or "stays".
-
-- [ ] Every element that displays data names the field it displays, matching the module spec. [NEEDS CLARIFICATION: module specs and several field schemas unavailable.]
-
----
-
-Template source: DBIZ3, VJCBI College - FTU, Session 4. Built on the DBIZ2 Screen Design structure (Screen List and Screen Layout), per DBIZ3 Syllabus v3.
+- [MFG-01 specification](../specs/spec-MFG-01.md)
+- [Canonical decisions D01-D12](../docs/system-decisions.md)
+- [Human factual input register](../docs/user-input-needed.md)
