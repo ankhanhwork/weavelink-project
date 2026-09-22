@@ -64,21 +64,59 @@ At least two eligible orders can be atomically placed in a Planned batch. Admin 
 
 ### 4.1 Usage flow
 
-Customer opts in and accepts policy → quote snapshots fixed discount/deadline → order submitted PendingContract → contract signed and payment verified → Admin confirms eligible batch within three days and starts production; otherwise eligible orders enter individual production at the same terms. Admin may dissolve a Planned batch before start.
+```mermaid
+flowchart LR
+  OptIn[Customer accepts merge policy] --> Quote[Quote snapshots discount and due date]
+  Quote --> Order[Submit PendingContract order]
+  Order --> Paid[Contract signed and payment verified]
+  Paid --> Window{Eligible batch within three days?}
+  Window -->|Yes| Candidates[Admin reviews candidates and estimate]
+  Candidates --> Planned[Create Planned batch]
+  Planned --> Start[Start batch; orders InProduction]
+  Planned -->|Admin dissolves| Dissolve[Clear active links; retain history]
+  Window -->|No| Fallback[Scheduler starts individual production]
+  Fallback --> SameTerms[Keep discounted price and promised due date]
+```
 
 ### 4.2 Sequence for the main flow
 
+
 ```mermaid
-flowchart TD
-  A[Customer opts in and accepts policy] --> B[Quote snapshots 5% discount and merge deadline]
-  B --> C[Order submitted PendingContract]
-  C --> D[Contract signed and payment verified]
-  D --> E{Admin batch within 3 days?}
-  E -->|At least 2 eligible orders| F[Atomic Planned batch]
-  F --> G[Admin starts batch; all orders InProduction]
-  F -->|Admin dissolves before start| H[Clear active links; retain history]
-  E -->|No batch forms| I[Individual production with same discount and promise]
+sequenceDiagram
+    actor Customer as Customer
+    actor CompanyAdmin as Company Admin
+    actor Scheduler as Trusted scheduler
+    participant CheckoutModule as MFG-06 Checkout
+    participant MergeModule as Merge module
+    participant Database as Database
+    participant OrderModule as MFG-07 Order module
+    participant OutboxWorker as Outbox worker
+    Customer->>MergeModule: Review versioned policy and opt in on quote
+    MergeModule->>CheckoutModule: Save preference and accepted policy version
+    CheckoutModule->>Database: Recompute discount and issue replacement quote
+    Customer->>CheckoutModule: Submit current quote
+    CheckoutModule->>Database: Create PendingContract order and immutable snapshots
+    Note over OrderModule,MergeModule: Signing and verified payment make eligible order Confirmed
+    CompanyAdmin->>MergeModule: View candidates and request estimate
+    MergeModule->>Database: Recompute compatibility, limits and savings
+    MergeModule-->>CompanyAdmin: Candidates, exclusions and estimate
+    CompanyAdmin->>MergeModule: Create batch with acknowledgement, versions and key
+    MergeModule->>Database: Lock and create Planned batch with immutable membership
+    CompanyAdmin->>MergeModule: Start batch
+    MergeModule->>Database: Commit start and membership state
+    MergeModule->>OrderModule: Advance eligible orders to InProduction
+    OutboxWorker-->>Customer: Notify committed batch/status event
+    alt No batch after three calendar days
+        Scheduler->>MergeModule: Process fallback
+        MergeModule->>Database: Lock eligible unbatched opted-in orders
+        MergeModule->>OrderModule: Advance to InProduction, retain price and due date
+        OutboxWorker-->>Customer: Notify individual production fallback
+    else Admin dissolves before start
+        CompanyAdmin->>MergeModule: Dissolve planned batch
+        MergeModule->>Database: Clear active links and retain membership history
+    end
 ```
+
 
 ## 5. Functional requirements (mandatory)
 

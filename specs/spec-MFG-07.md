@@ -67,22 +67,57 @@ Company Admin or the consultant actively assigned to the customer in the same co
 
 ### 4.1 Usage flow
 
-Customer opens order history → selects an order → server checks ownership → renders stored order snapshot and timeline. For cancellation, server checks actor, state, batch membership and expected version → commits Cancelled → emits refund request when paid and a notification event. For fulfillment, authorized staff advance one valid state at a time; Shipped requires carrier and tracking number.
+```mermaid
+flowchart LR
+  Customer[Customer] --> History[S26 Order List]
+  Staff[Authorized staff] --> Dashboard[S28 Admin Orders]
+  History --> Detail[S27 Order Detail]
+  Dashboard --> Detail
+  Detail --> Scope{Owner or same-company staff?}
+  Scope -->|No| Denied[404 or 403]
+  Scope -->|Yes| Snapshot[Show immutable order snapshot and timeline]
+  Snapshot --> Cancel{Cancel eligible?}
+  Cancel -->|Yes| Cancelled[Commit Cancelled]
+  Cancelled --> Refund{Paid order?}
+  Refund -->|Yes| RequestRefund[Request full refund from MFG-06]
+  Refund -->|No| Notify[Write notification event]
+  RequestRefund --> Notify
+  Snapshot --> Advance{Authorized status update?}
+  Advance -->|Yes| Next[Advance one valid fulfillment state]
+  Next --> Notify
+```
 
 ### 4.2 Sequence for the main flow
 
+
 ```mermaid
-stateDiagram-v2
-  [*] --> PendingContract
-  PendingContract --> AwaitingPayment: current contract signed
-  AwaitingPayment --> Confirmed: verified full payment
-  Confirmed --> InProduction
-  InProduction --> Shipped
-  Shipped --> Delivered
-  PendingContract --> Cancelled
-  AwaitingPayment --> Cancelled
-  Confirmed --> Cancelled: eligible and unbatched
+sequenceDiagram
+    actor OrderActor as Customer or authorized staff
+    participant OrderUI as S26-S29
+    participant OrderModule as Order module
+    participant Database as Database
+    participant PaymentModule as MFG-06 Payment
+    participant OutboxWorker as Outbox worker
+    OrderActor->>OrderUI: Request own or authorized order view
+    OrderUI->>OrderModule: Order ID and session
+    OrderModule->>Database: Enforce ownership/company scope, load snapshot and timeline
+    Database-->>OrderModule: Authorized order history
+    OrderModule-->>OrderUI: Snapshot, status and payment/refund summary
+    alt Eligible cancellation
+        OrderActor->>OrderModule: Reason, expected version and idempotency key
+        OrderModule->>Database: Lock order, validate transition and persist cancellation
+        opt Paid order
+            OrderModule->>PaymentModule: Request full refund after commit
+        end
+        OrderModule->>Database: Write notification outbox event
+        OutboxWorker-->>OrderActor: Notify cancellation and refund status
+    else Fulfillment status update
+        OrderActor->>OrderModule: Next status and expected version
+        OrderModule->>Database: Validate role, transition and tracking data, commit
+        OutboxWorker-->>OrderActor: Notify status and safe tracking link
+    end
 ```
+
 
 ## 5. Functional requirements (mandatory)
 

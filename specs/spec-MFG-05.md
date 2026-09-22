@@ -78,21 +78,90 @@ flowchart LR
 
 ### 4.2 Sequence for the main flow
 
+# UC-C02: Design product — SD-05A: Self Design Product
+
 ```mermaid
 sequenceDiagram
-  actor C as Customer
-  participant D as Design Service
-  participant P as Payment Service
-  participant A as Company Admin
-  participant S as Sales Consultant
-  C->>D: create request
-  D-->>C: AwaitingPayment + fee snapshot
-  P->>D: verified SERVICE settlement
-  D-->>A: durable paid-request notification
-  A->>D: assign consultant + committed due date
-  S->>D: deliver validated immutable design
-  D-->>C: in-app notification + authorized link
+    actor Customer
+    participant DesignUI
+    participant DesignController
+    participant DesignService
+    participant CustomerDesignDatabase
+
+    Customer->>DesignUI: customize product design
+    DesignUI->>DesignController: submit design
+    DesignController->>DesignService: process design
+    alt [save success]
+        DesignService->>CustomerDesignDatabase: save design
+        CustomerDesignDatabase-->>DesignService: saved
+        DesignService-->>DesignController: save success
+    else [save failed]
+        DesignService-->>DesignController: save failed
+    end
+    DesignController-->>DesignUI: display save result
+    DesignUI-->>Customer: display save confirmation
 ```
+
+# UC-C04: Request design service — SD-05B: Request Design Service
+
+```mermaid
+sequenceDiagram
+    actor Customer
+    participant DesignServiceUI
+    participant DesignServiceController
+    participant DesignServiceService
+    participant PaymentUI
+    participant PaymentController
+    participant PaymentService
+    participant PaymentGateway
+    participant ConsultationRequestDatabase
+
+    Customer->>DesignServiceUI: submit design service request
+    DesignServiceUI->>DesignServiceController: submit request information
+    DesignServiceController->>DesignServiceService: validate request information
+    DesignServiceService-->>DesignServiceController: request valid
+    DesignServiceController-->>DesignServiceUI: display request summary
+    Customer->>DesignServiceUI: click proceed to payment
+    DesignServiceUI->>PaymentUI: navigate to payment page
+    Customer->>PaymentUI: confirm payment
+    PaymentUI->>PaymentController: submit payment
+    PaymentController->>PaymentService: create payment request
+    PaymentService->>PaymentGateway: redirect payment
+    alt [payment successful]
+        PaymentGateway-->>PaymentController: payment success
+        PaymentController-->>DesignServiceService: confirm payment success
+        DesignServiceService->>ConsultationRequestDatabase: save design service request
+        ConsultationRequestDatabase-->>DesignServiceService: save success
+        DesignServiceService->>PaymentController: request created
+        PaymentController-->>PaymentUI: display payment success
+        PaymentUI-->>Customer: display confirmation
+    else [payment failed]
+        PaymentGateway-->>PaymentController: payment failed
+        PaymentController-->>PaymentUI: display payment failure
+        PaymentUI-->>Customer: display payment error
+    end
+```
+
+# UC-C03: View saved design — SD-06: View Saved Design
+
+```mermaid
+sequenceDiagram
+    actor Customer
+    participant SavedDesignUI
+    participant SavedDesignController
+    participant SavedDesignService
+    participant SavedDesignDatabase
+
+    Customer->>SavedDesignUI: view saved design
+    SavedDesignUI->>SavedDesignController: request design
+    SavedDesignController->>SavedDesignService: get design
+    SavedDesignService->>SavedDesignDatabase: retrieve design
+    SavedDesignDatabase-->>SavedDesignService: design data
+    SavedDesignService-->>SavedDesignController: return design
+    SavedDesignController-->>SavedDesignUI: send design
+    SavedDesignUI-->>Customer: display design
+```
+
 
 ## 5. Functional requirements (mandatory)
 

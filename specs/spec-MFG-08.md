@@ -64,20 +64,45 @@ An assigned consultant records notes and advances consultation status. A Company
 
 ### 4.1 Usage flow
 
-Company Admin reviews unassigned same-company customers → assigns an active consultant → transaction updates customer assignment and any affected paid design requests → notification is persisted → consultant opens authorized context → consultant records interaction summaries and advances consultation status.
+```mermaid
+flowchart LR
+  Admin[Company Admin] --> Review[Review same-company customers]
+  Review --> Assign[Assign active same-company consultant]
+  Assign --> Transfer[Atomically transfer affected paid requests]
+  Transfer --> Notify[Persist assignment notification]
+  Notify --> Context[Consultant opens authorized context]
+  Context --> Interactions[Read permitted history]
+  Interactions --> Update[Record interaction and advance consultation]
+```
 
 ### 4.2 Sequence for the main flow
 
+
 ```mermaid
 sequenceDiagram
-  actor A as Company Admin
-  actor S as Sales Consultant
-  A->>A: Review unassigned customer in company
-  A->>A: Assign active same-company consultant
-  A-->>S: Persisted assignment notification
-  S->>S: Open assigned customer context
-  S->>S: Update consultation status and notes
+    actor CompanyAdmin as Company Admin
+    actor Consultant as Sales Consultant
+    participant ConsultationUI as S18-S21
+    participant ConsultationModule as Consultation module
+    participant Database as Database
+    participant OutboxWorker as Outbox worker
+    CompanyAdmin->>ConsultationUI: Select same-company customer and consultant
+    ConsultationUI->>ConsultationModule: Assignment change with expected version and key
+    ConsultationModule->>Database: Validate active membership and lock assignment
+    Database-->>ConsultationModule: Current assignment and active requests
+    ConsultationModule->>Database: Atomically change assignment and transfer active request ownership
+    ConsultationModule->>Database: Append assignment history and outbox event
+    OutboxWorker-->>Consultant: Notify new assignment
+    Consultant->>ConsultationUI: Open assigned customer
+    ConsultationUI->>ConsultationModule: Request customer context
+    ConsultationModule->>Database: Check active assignment and load permitted summaries
+    Database-->>ConsultationModule: Company-scoped context
+    ConsultationModule-->>ConsultationUI: Context and consultation timeline
+    Consultant->>ConsultationModule: Update consultation status/notes with expected version
+    ConsultationModule->>Database: Validate transition and append interaction event
+    ConsultationModule-->>ConsultationUI: Updated consultation and timeline
 ```
+
 
 ## 5. Functional requirements (mandatory)
 

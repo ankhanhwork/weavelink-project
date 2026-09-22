@@ -70,24 +70,69 @@ flowchart LR
 
 ### 4.2 Sequence for the main flow
 
+# UC-C05: Finalize order — SD-07: Create Order
+
 ```mermaid
 sequenceDiagram
-  actor C as Customer
-  participant W as Checkout/Payment
-  participant K as Contract Service
-  participant V as VNPay
-  C->>W: request quote and review breakdown
-  C->>W: submit quote + idempotency key
-  W->>W: revalidate and create PendingContract
-  K-->>C: contract ready
-  C->>K: sign
-  K->>W: order AwaitingPayment
-  C->>W: initiate payment
-  W-->>C: hosted VNPay redirect
-  V->>W: signed server notification
-  W->>W: verify, deduplicate, settle + outbox
-  C->>W: browser return/poll (read only)
+    actor Customer
+    participant OrderUI
+    participant OrderController
+    participant OrderService
+    participant OrderDatabase
+    participant MergedOrderBatchDatabase
+
+    Customer->>OrderUI: submit order information (size, quantity, shipping info)
+    OrderUI->>OrderController: submit order
+    OrderController->>OrderService: validate order data
+    alt [merge selected]
+        Customer->>OrderUI: accept merge terms
+        OrderUI->>OrderController: confirm merge
+        OrderController->>OrderService: add to merge batch
+        OrderService->>MergedOrderBatchDatabase: save order reference
+    else [no merge]
+        OrderService->>OrderService: skip merge
+    end
+    OrderService->>OrderDatabase: save order (status = Pending Contract)
+    OrderDatabase-->>OrderService: order saved
+    OrderService-->>OrderController: order created
+    OrderController-->>OrderUI: return order summary
+    OrderUI-->>Customer: display order summary
 ```
+
+# UC-C12: Make payment — SD-09: Make Order Payment
+
+```mermaid
+sequenceDiagram
+    actor Customer
+    participant PaymentUI
+    participant PaymentController
+    participant PaymentService
+    participant PaymentTransactionDatabase
+    participant OrderDatabase
+    participant PaymentGateway
+
+    Customer->>PaymentUI: click "Pay Order"
+    PaymentUI->>PaymentController: initiate payment
+    PaymentController->>PaymentService: create payment transaction
+    PaymentService->>PaymentTransactionDatabase: save payment (status = Pending)
+    PaymentService->>PaymentGateway: create payment request (API)
+    PaymentGateway-->>PaymentService: return payment URL
+    PaymentService-->>PaymentController: payment URL
+    PaymentController-->>PaymentUI: return payment URL
+    PaymentUI->>PaymentGateway: redirect user to payment page
+    alt [payment success]
+        PaymentGateway-->>PaymentService: payment callback received
+        PaymentService->>PaymentTransactionDatabase: update status = Success
+        PaymentService->>OrderDatabase: update order status = Ordered
+    else [payment failed]
+        PaymentGateway-->>PaymentService: payment failed callback
+        PaymentService->>PaymentTransactionDatabase: update status = Failed
+        PaymentService->>OrderDatabase: update status = Failed
+    end
+    PaymentService-->>PaymentUI: notify payment result
+    PaymentUI-->>Customer: display payment result
+```
+
 
 ## 5. Functional requirements (mandatory)
 

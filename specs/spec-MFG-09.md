@@ -63,25 +63,56 @@ Before signing, Admin may regenerate from the immutable order snapshot. The prio
 
 ### 4.1 Usage flow
 
-MFG-06 creates PendingContract order with immutable snapshots → Admin selects/publishes a compatible template → system renders PDF/hash and marks current contract Ready → customer reviews and submits consent, typed name, reauthentication and challenge → contract is locked and evidence saved → signed event advances order to AwaitingPayment → both parties receive authorized signed-copy links.
+```mermaid
+flowchart LR
+  Order[MFG-06 PendingContract order] --> Template[Admin selects compatible template]
+  Template --> Render[Render PDF and content hash]
+  Render --> Ready[Persist current contract as Ready]
+  Ready --> Review[Customer reviews contract]
+  Review --> Evidence[Submit consent, typed name, reauthentication and challenge]
+  Evidence --> Valid{Evidence and version valid?}
+  Valid -->|No| Error[Reject without state change]
+  Valid -->|Yes| Signed[Lock contract and save signed evidence]
+  Signed --> Payment[Advance order to AwaitingPayment]
+  Payment --> Notice[Notify parties with authorized links]
+```
 
 ### 4.2 Sequence for the main flow
 
+# UC-C09: View/Sign contract — SD-08: View and Sign Digital Contract
+
 ```mermaid
 sequenceDiagram
-  actor C as Customer
-  participant O as Order service
-  participant K as Contract service
-  C->>O: Submit valid quote
-  O-->>K: PendingContract + immutable snapshots
-  K->>K: Render PDF and content hash
-  K-->>C: Ready notice and review link
-  C->>K: Consent + typed name + password reauth + challenge
-  K->>K: Lock current version, verify, persist evidence
-  K->>O: Signed event
-  O->>O: PendingContract → AwaitingPayment
-  K-->>C: Signed copy notice
+    actor Customer
+    participant ContractUI
+    participant ContractController
+    participant ContractService
+    participant ContractDatabase
+
+    Customer->>ContractUI: view contract
+    ContractUI->>ContractController: request contract
+    ContractController->>ContractService: retrieve contract
+    ContractService->>ContractDatabase: get contract data
+    ContractDatabase-->>ContractService: contract data
+    ContractService-->>ContractController: contract data
+    ContractController-->>ContractUI: display contract
+    ContractUI-->>Customer: display contract
+    Customer->>ContractUI: click sign contract
+    ContractUI->>ContractController: submit signing action
+    ContractController->>ContractService: process signing
+    alt [signing successful]
+        ContractService->>ContractDatabase: update contract status = Signed
+        ContractDatabase-->>ContractService: update success
+        ContractService-->>ContractController: signing success
+        ContractController-->>ContractUI: return signed contract
+        ContractUI-->>Customer: display signed contract
+    else [signing failed]
+        ContractService-->>ContractController: signing failed
+        ContractController-->>ContractUI: return signing error
+        ContractUI-->>Customer: display error message
+    end
 ```
+
 
 ## 5. Functional requirements (mandatory)
 

@@ -85,21 +85,60 @@ flowchart LR
 
 ### 4.2 Sequence for the main flow
 
+# UC-G01: View product catalog — SD-01: Browse Product Catalog (Guest)
+
 ```mermaid
 sequenceDiagram
-  actor Guest
-  participant UI as Catalog UI
-  participant Service as Product Service
-  participant DB as Product Store
-  Guest->>UI: page, filters, search
-  UI->>Service: allowlisted query
-  Service->>DB: Published products of Active companies
-  DB-->>Service: page + total
-  Service-->>UI: catalog model
-  Guest->>UI: open product UUID
-  UI->>Service: detail request
-  Service-->>UI: current product/options/rules
+    actor Guest
+    participant ProductUI
+    participant ProductController
+    participant ProductService
+    participant ProductCatalogDatabase
+
+    Guest->>ProductUI: access website
+    ProductUI->>ProductController: request product catalog
+    ProductController->>ProductService: get product list
+    ProductService->>ProductCatalogDatabase: retrieve products
+    ProductCatalogDatabase-->>ProductService: product list
+    ProductService-->>ProductController: return products
+    ProductController-->>ProductUI: send catalog data
+    ProductUI-->>Guest: display product catalog
 ```
+
+# UC-G02: Search products — SD-04 – Search and View Product Detail
+
+```mermaid
+sequenceDiagram
+    actor Customer
+    participant ProductUI
+    participant ProductController
+    participant ProductService
+    participant ProductCatalogDatabase
+
+    Customer->>ProductUI: enter search keyword
+    ProductUI->>ProductController: submit query
+    ProductController->>ProductService: search product
+    ProductService->>ProductCatalogDatabase: retrieve product information
+    ProductCatalogDatabase-->>ProductService: search result
+    alt [Product not found]
+        ProductService-->>ProductController: empty result
+        ProductController-->>ProductUI: empty result
+        ProductUI-->>Customer: display "No product found"
+    else [Product found]
+        ProductService-->>ProductController: product list
+        ProductController-->>ProductUI: product list
+        ProductUI-->>Customer: display product list
+        Customer->>ProductUI: select product
+        ProductUI->>ProductController: request product detail
+        ProductController->>ProductService: get product detail
+        ProductService->>ProductCatalogDatabase: retrieve product detail
+        ProductCatalogDatabase-->>ProductService: product detail
+        ProductService-->>ProductController: return detail
+        ProductController-->>ProductUI: send product detail
+        ProductUI-->>Customer: display product detail
+    end
+```
+
 
 ## 5. Functional requirements (mandatory)
 

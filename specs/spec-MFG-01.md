@@ -86,23 +86,66 @@ flowchart LR
 
 ### 4.2 Sequence for the main flow
 
+# UC-G03: Register account — SD-02: Sign Up
+
 ```mermaid
 sequenceDiagram
-  actor Guest
-  participant UI as Auth UI
-  participant Auth as Auth Service
-  participant DB as User Store
-  participant Mail as Email Outbox
-  Guest->>UI: submit registration
-  UI->>Auth: validated fields
-  Auth->>DB: create pending Customer and token
-  Auth->>Mail: enqueue verification
-  Auth-->>UI: generic success
-  Guest->>UI: verify and sign in
-  UI->>Auth: credentials
-  Auth->>DB: resolve user and capabilities
-  Auth-->>UI: secure session and safe route
+    actor Guest
+    participant AuthUI
+    participant AuthController
+    participant AuthService
+    participant UserAccountDatabase
+
+    Guest->>AuthUI: enter registration information
+    AuthUI->>AuthController: submit registration
+    AuthController->>AuthService: register user
+    AuthService->>UserAccountDatabase: create user account
+    alt [user already exists]
+        UserAccountDatabase-->>AuthService: duplicate user
+        AuthService-->>AuthController: registration failed
+        AuthController-->>AuthUI: return error
+        AuthUI-->>Guest: display error message
+    else [registration successful]
+        UserAccountDatabase-->>AuthService: user created
+        AuthService-->>AuthController: registration success
+        AuthController-->>AuthUI: return success
+        AuthUI-->>Guest: display success message
+    end
 ```
+
+# UC-M01: Log in — SD-03: Log In
+
+```mermaid
+sequenceDiagram
+    actor Customer
+    participant AuthUI
+    participant AuthController
+    participant AuthService
+    participant UserAccountDatabase
+
+    Customer->>AuthUI: enter login credentials
+    AuthUI->>AuthController: submit login request
+    AuthController->>AuthService: authenticate user
+    AuthService->>UserAccountDatabase: find user
+    alt [user not found]
+        UserAccountDatabase-->>AuthService: not found
+        AuthService-->>AuthController: authentication failed
+        AuthController-->>AuthUI: return error
+        AuthUI-->>Customer: display error message
+    else [user found]
+        UserAccountDatabase-->>AuthService: found user
+        alt [invalid credentials]
+            AuthService-->>AuthController: invalid credentials
+            AuthController-->>AuthUI: return error
+            AuthUI-->>Customer: display login failed
+        else [valid credentials]
+            AuthService-->>AuthController: authentication success
+            AuthController-->>AuthUI: return success
+            AuthUI-->>Customer: display login success
+        end
+    end
+```
+
 
 ## 5. Functional requirements (mandatory)
 

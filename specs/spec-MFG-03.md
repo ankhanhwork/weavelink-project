@@ -96,6 +96,7 @@ sequenceDiagram
   Service-->>Invitee: company-scoped access
 ```
 
+
 ## 5. Functional requirements (mandatory)
 
 | FR ID | DBIZ2 Subfunction ID | Requirement (system MUST ...) | Actor | Priority |

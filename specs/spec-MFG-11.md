@@ -60,14 +60,49 @@ Company Admin requests CSV/XLSX for allowed datasets and filters. The export is 
 
 ### 4.1 Usage flow
 
-Company Admin opens S43 → server reads company-scoped authoritative facts → charts render with range/timezone/watermark → filters reload the same metric definitions → export request queues a private snapshot → authorized user polls job and downloads a successful file through an expiring link.
+```mermaid
+flowchart LR
+  Admin[Company Admin] --> Filters[Select range, timezone and filters]
+  Filters --> Aggregate[Aggregate company-scoped authoritative records]
+  Aggregate --> Charts[Render typed charts and watermark]
+  Charts --> Refresh[Reload with same metric definitions]
+  Admin --> Export[Request CSV/XLSX export]
+  Export --> Queue[Snapshot filters and queue private job]
+  Queue --> Poll[Poll export status]
+  Poll --> Result{Succeeded?}
+  Result -->|Yes| Download[Download expiring private link]
+  Result -->|No| Retry[Show actionable failure and retry]
+```
 
 ### 4.2 Sequence for the main flow
 
-1. Authenticate Company Admin and derive company_id from the session.
-2. Validate date range and optional product ownership; aggregate metrics on the server.
-3. Return typed chart data and refresh watermark.
-4. For export, snapshot filters/watermark, queue job, enforce row/column allowlist, escape spreadsheet formulas, and publish a private expiring asset only on success.
+
+```mermaid
+sequenceDiagram
+    actor CompanyAdmin as Company Admin
+    participant AnalyticsUI as S43
+    participant AnalyticsModule as Analytics module
+    participant AuthoritativeDB as Authoritative records
+    participant ExportWorker as Export worker
+    participant PrivateAssetStore as Private asset store
+    CompanyAdmin->>AnalyticsUI: Select date range and metric
+    AnalyticsUI->>AnalyticsModule: Request dashboard data
+    AnalyticsModule->>AuthoritativeDB: Validate company scope and date range
+    AnalyticsModule->>AuthoritativeDB: Aggregate scoped orders and accepted payments/refunds
+    AuthoritativeDB-->>AnalyticsModule: Source rows and refresh watermark
+    AnalyticsModule-->>AnalyticsUI: Typed chart series, totals and refreshed_at
+    CompanyAdmin->>AnalyticsUI: Request CSV/XLSX export
+    AnalyticsUI->>AnalyticsModule: Dataset, filters, format and idempotency key
+    AnalyticsModule->>AuthoritativeDB: Snapshot filters/watermark and queue job
+    AnalyticsModule-->>AnalyticsUI: Export ID and queued status
+    ExportWorker->>AuthoritativeDB: Read snapshot, enforce columns/row limit and escape formulas
+    ExportWorker->>PrivateAssetStore: Store private export
+    ExportWorker->>AuthoritativeDB: Mark success and persist asset reference
+    CompanyAdmin->>AnalyticsUI: Poll export status
+    AnalyticsUI->>AnalyticsModule: Export ID
+    AnalyticsModule-->>AnalyticsUI: Success and short-lived authorized link
+```
+
 
 ## 5. Functional requirements (mandatory)
 

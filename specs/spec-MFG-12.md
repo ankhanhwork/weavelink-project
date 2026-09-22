@@ -69,14 +69,61 @@ Admin edits only allowlisted typed settings. The whole proposed configuration is
 
 ### 4.1 Usage flow
 
-Logs: Admin filters S40 → server returns redacted page. Backup: manual/scheduled trigger → encrypted base/assets and verified manifest/checksums/schema/log watermark → Succeeded or Failed. Restore: confirm selected base and reauthenticate → create pre-restore base → lock maintenance → verify continuous log chain → restore and replay through watermark → reconcile queued provider events → revoke sessions and exit maintenance after validation. Configuration: edit typed fields → validate whole version → activate atomically and audit → enqueue notice.
+```mermaid
+flowchart LR
+  Admin[System Admin] --> Logs[Filter redacted audit logs]
+  Admin --> Backup[Trigger or schedule backup]
+  Backup --> VerifyBackup[Encrypt and verify base, assets and manifest]
+  VerifyBackup --> BackupState[Succeeded or Failed]
+  Admin --> Restore[Select backup and reauthenticate]
+  Restore --> VerifyChain[Verify checksums and continuous log chain]
+  VerifyChain --> Replay[Restore and replay to committed watermark]
+  Replay --> Reconcile[Reconcile queued provider events and revoke sessions]
+  Admin --> Config[Edit typed configuration]
+  Config --> Validate[Validate complete version]
+  Validate --> Activate[Activate atomically and audit]
+  Activate --> Notice[Notify changed keys]
+```
 
 ### 4.2 Sequence for the main flow
 
-1. Derive System Admin privilege from authenticated session; never accept client role flags.
-2. For restore/configuration, verify recent reauthentication and expected system version.
-3. Queue operation, record audit event and execute with serialized locks and idempotency.
-4. Activate only after integrity/validation succeeds; publish notification after commit.
+
+```mermaid
+sequenceDiagram
+    actor SystemAdmin as System Admin
+    actor Scheduler as Trusted scheduler
+    participant OperationsUI as S39-S40
+    participant OperationsModule as System operations module
+    participant OperationalDB as Database and external journal
+    participant JobWorker as Job worker
+    participant BackupStore as Backup/asset store
+    participant OutboxWorker as Outbox worker
+    SystemAdmin->>OperationsUI: Request audit, backup status or configuration
+    OperationsUI->>OperationsModule: Authorized request with filters
+    OperationsModule->>OperationalDB: Derive admin privilege; read redacted logs/status/config
+    OperationalDB-->>OperationsModule: Scoped operational data
+    OperationsModule-->>OperationsUI: View model with secrets masked
+    alt Backup requested or scheduled
+        SystemAdmin->>OperationsModule: Trigger backup with idempotency key
+        Scheduler->>OperationsModule: Scheduled backup trigger
+        OperationsModule->>OperationalDB: Audit and enqueue serialized job
+        JobWorker->>OperationalDB: Snapshot database and transaction watermark
+        JobWorker->>BackupStore: Store encrypted base/assets and verified manifest
+        JobWorker->>OperationalDB: Record verified completion
+    else Restore requested
+        SystemAdmin->>OperationsModule: Backup ID, confirmation, reauth and expected version
+        OperationsModule->>OperationalDB: Acquire restore lock, audit and enqueue job
+        JobWorker->>BackupStore: Verify base, assets, checksums and continuous log chain
+        JobWorker->>OperationalDB: Restore to committed pre-maintenance watermark
+        JobWorker->>OperationalDB: Reconcile external payment journal, activate only if valid
+    else Configuration changed
+        SystemAdmin->>OperationsModule: Allowlisted patch, reauth and expected version
+        OperationsModule->>OperationalDB: Validate full patch and atomically activate version
+        OperationsModule->>OperationalDB: Append audit and notification outbox event
+        OutboxWorker-->>SystemAdmin: Notify changed key names/version only
+    end
+```
+
 
 ## 5. Functional requirements (mandatory)
 
