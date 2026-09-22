@@ -45,11 +45,11 @@ Company Admin creates a Draft with validated fields/assets and idempotency. Dupl
 
 ### US-4 (Post-MVP administration): Update product info
 
-Same-company update uses allowlisted fields and expected version. Rule-affecting changes invalidate unconsumed quotes; submitted order snapshots remain unchanged.
+Same-company update uses allowlisted fields and expected version. Any update increases the product version. Rule-affecting changes lazily invalidate unconsumed quotes during checkout without editing quote records directly; submitted order snapshots remain unchanged.
 
 ### US-5 (Post-MVP administration): Delete product
 
-Archive is a soft, terminal deletion. Repeating archive succeeds; public visibility ends immediately while historical references remain.
+Archive is a soft, terminal deletion. Repeating archive succeeds; public visibility ends immediately while historical references remain. A Draft product that has never been published can be hard deleted permanently.
 
 ### US-6 (Post-MVP administration): Publish / unpublish product
 
@@ -155,7 +155,7 @@ sequenceDiagram
 | FR-007 | F-PROD-007 | Render an authorized product edit model with current version. | Company Admin | Won't |
 | FR-008 | F-PROD-008 | Update allowlisted product fields atomically with expected-version checks. | Company Admin | Won't |
 | FR-009 | F-PROD-009 | Require explicit confirmation before archiving a product. | Company Admin | Won't |
-| FR-010 | F-PROD-010 | Soft-archive a product while retaining historical references. | Company Admin | Won't |
+| FR-010 | F-PROD-010 | Soft-archive a product while retaining historical references, or hard-delete if it is a Draft that has never been published. | Company Admin | Won't |
 | FR-011 | F-PROD-011 | Change product visibility to an explicitly requested valid state. | Company Admin | Won't |
 
 ### 5.1 Input / Output contract
@@ -167,11 +167,11 @@ sequenceDiagram
 | FR-003 | keyword, filters, price range, page | String / allowlisted values | Optional | search results | Paginated object | Keyword <=100; invalid values rejected |
 | FR-004 | same-company Company Admin session | Session | Yes | S10 management list/actions | View model | Foreign-company data inaccessible |
 | FR-005 | authorized session | Session | Yes | S11 creation model | View model | Includes upload constraints |
-| FR-006 | name, SKU, price, attributes, capacity, image UUIDs, key | Fields / integer / key | Yes | Draft UUID/version | Object | Bounds specified in source contract; 422 invalid; 409 duplicate SKU |
+| FR-006 | name, SKU, volume_pricing_tiers, attributes, capacity, image UUIDs, key | Fields / array / key | Yes | Draft UUID/version | Object | Bounds specified in source contract; 422 invalid; 409 duplicate SKU |
 | FR-007 | same-company product UUID/session | UUID / session | Yes | S12 edit model/version | View model | Foreign product inaccessible |
 | FR-008 | allowlisted changes, expected version | Values / integer | Yes | updated product/version | Object | Atomic; stale 409; relevant quote invalidation |
 | FR-009 | same-company product/version | UUID / integer | Yes | confirmation/impact model | View model | Explicit confirmation |
-| FR-010 | product UUID, confirmation, version | UUID / boolean / integer | Yes | archived product | Object | Soft archive; repeated success |
+| FR-010 | product UUID, confirmation, version | UUID / boolean / integer | Yes | archived product or 204 No Content | Object or None | Soft archive; hard delete if Draft; repeated success |
 | FR-011 | product UUID, target state, version | UUID / enum / integer | Yes | visibility state | Object | Archived is terminal |
 
 ### 5.2 Business rules
@@ -180,17 +180,17 @@ sequenceDiagram
 | --- | --- | --- |
 | BR-001 | SKU is unique within company; canonical public route uses globally unique UUID. | Avoid duplicate company catalog entries and ambiguous routes. |
 | BR-002 | Amounts/surcharges are nonnegative integer VND; capacity is integer 1-10000. | Keep pricing and capacity bounded and deterministic. |
-| BR-003 | Publish requires name, SKU, price, category, safe image, sizes, colors, materials and capacity. | Prevent incomplete public products. |
+| BR-003 | Publish requires name, SKU, volume_pricing_tiers, category, safe image, sizes, colors, materials and capacity. | Prevent incomplete public products. |
 | BR-004 | Images are PNG/JPEG/WebP, actual MIME checked/scanned, <=10 MiB each and <=5/request. | Protect users and storage. |
-| BR-005 | Lifecycle is Draft → Published ↔ Hidden → Archived; archive is terminal. | Make visibility transitions explicit. |
-| BR-006 | Rule/product changes invalidate quotes; submitted orders retain immutable snapshots. | Preserve current quotes and historical order values. |
+| BR-005 | Lifecycle is Draft → Published ↔ Hidden → Archived; archive is terminal. Drafts can be hard deleted. | Make visibility transitions explicit and allow cleanup of mistakes. |
+| BR-006 | Rule/product changes increase product version, lazily invalidating unsubmitted quotes at checkout; submitted orders retain immutable snapshots. | Preserve current quotes and historical order values securely without cross-module side effects. |
 | BR-007 | S14 owns sizes, colors, materials, print methods/areas, surcharges and capacity; 2D preview required, 3D excluded. | Define supported customization scope. |
 
 ## 6. Key entities (mandatory)
 
 | Entity | Attributes (from Input/Output fields) | Relationships |
 | --- | --- | --- |
-| Product | id, company_id, name, sku, description, category, unit_price_vnd, options, design_rules, capacity, images, status, version | Company-scoped SKU; immutable ordered snapshot |
+| Product | id, company_id, name, sku, description, category, volume_pricing_tiers, options, design_rules, capacity, images, status, version | Company-scoped SKU; immutable ordered snapshot; tiers must have at least one entry starting at quantity 1 |
 | Asset | id, owner/company, MIME, scan status, storage key | Private; served by authorized expiring URL |
 | ProductVersion | product_id, version, rule/price snapshot | Quotes reference current version |
 
