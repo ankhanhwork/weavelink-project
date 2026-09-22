@@ -35,7 +35,7 @@ Written behavior below takes precedence over obsolete sample content.
 | 6 | shipping_vnd | Field / control | integer, required | As specified | 30000 VND snapshot. |
 | 7 | merge_fee_vnd | Field / control | integer, required | As specified | 0 VND. |
 | 8 | tax_vnd | Field / control | integer, required | As specified | 0 VND under classroom demo pricing assumption. |
-| 9 | total_vnd | Field / control | integer, required | As specified | subtotal - discount + shipping + fee + tax; server snapshot only. |
+| 9 | total_vnd | Field / control | integer, required | As specified | subtotal - discount + shipping + merge_fee + tax + design_fee; server snapshot only. |
 | 10 | payment_method | Field / control | enum | As specified | VNPay only in this release; external sandbox/provider route. |
 | 11 | transaction_id | Field / control | UUID | As specified | Returned browser route is lookup-only; poll status, never mark paid from browser. |
 | 12 | Idempotency-Key | Field / control | UUID, required on initiation | As specified | Same key/payload returns same attempt; changed payload conflicts. |
@@ -44,6 +44,7 @@ Written behavior below takes precedence over obsolete sample content.
 | 15 | Browser return | Action | Ignore claimed success, poll authoritative transaction. | Available when authorized | Destination: S35 |
 | 16 | Verified success | Action | Show receipt/result and order status Confirmed. | Available when authorized | Destination: S27 |
 | 17 | Failed/expired/processing | Action | Keep order AwaitingPayment; show retry/processing without false success. | Available when authorized | Destination: S35 |
+| 18 | design_fee_vnd | Read-only price line | Integer VND from immutable order snapshot | Yes | Separate from subtotal and merge fee; no quantity multiplier/discount; 0 for free/repeat orders; included in ORDER payment and full refund. |
 
 ## 4. States
 
@@ -79,7 +80,7 @@ Home and public catalog are available to Guest and authenticated users. Customer
 
 ### Acceptance scenarios
 
-1. For Signed/AwaitingPayment order, show exact subtotal/discount/shipping/fee/tax/total integer VND and initiate 15m attempt.
+1. For Signed/AwaitingPayment order, show exact subtotal/discount/shipping/merge_fee/tax/design_fee/total integer VND and initiate 15m attempt.
 2. Browser return cannot mark paid; verified callback confirms once, while failed/expired stays AwaitingPayment and enables retry.
 
 ## 7. Linked requirements

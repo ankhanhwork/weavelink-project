@@ -27,7 +27,7 @@ The MVP scope is defined by priority and mapped to the corresponding MFG (Module
 | **Should** | Order Tracking & Status Updates (customer order list/detail, admin status update) | MFG-07 | Solves the reactive customer service pain point, but early orders can still be tracked manually |
 | **Should** | Digital Contract Generation & E-signature | MFG-09 | Builds trust for business clients, but an emailed/paper contract is an acceptable stopgap at launch |
 | **Could** | Order Optimization / Merge (batch small orders into one production run) | MFG-10 | Directly targets high operational overhead, but only pays off once order volume exists |
-| **Could** | Paid Design Service Request (consultant-assisted design) | MFG-05 | Alternative to self-design for complex custom-design clients |
+| **Could** | Assessed Design Service Request (Simple free; accepted Complex fee collected with order) | MFG-05 | Alternative to self-design for complex custom-design clients |
 | **Could** | Sales Consultant Assignment & Task Dashboard | MFG-08 | Only needed once consultation volume justifies a dedicated queue |
 | **Won't** | Data Analytics Dashboard & Data Export | MFG-11 | Out of scope for MVP; revisit once there is sufficient order history to analyze |
 | **Won't** | Company Accounts & System Operations (multi-admin roles, system logs, backup/restore) | MFG-03, MFG-12 | A single admin login is sufficient at launch; defer full account/system administration |

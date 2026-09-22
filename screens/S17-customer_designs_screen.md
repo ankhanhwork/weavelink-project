@@ -13,7 +13,7 @@
 
 ## 1. Purpose
 
-**Shown when:** The customer sees only owned saved designs and consultant deliveries, with product/version context and actions valid for each design state. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
+**Shown when:** The customer sees only owned saved designs, consultant deliveries and a separate request tab, with product/version context and actions valid for each design state. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
 
 **The user leaves this screen when:** An authorized action in section 5 succeeds, the user follows a role-allowed global route, or they return to the validated originating route.
 
@@ -29,7 +29,7 @@ Written behavior below takes precedence over obsolete sample content.
 |---|---|---|---|---|---|
 | 1 | Screen heading | Heading | Customer Designs | Yes | Static route title. |
 | 2 | Route | Navigation target | /designs | Yes | Access checked on server. |
-| 3 | tab | Field / control | enum: Draft, Saved, Delivered | As specified | Filter scoped to authenticated customer_id. |
+| 3 | tab | Field / control | enum: Draft, Saved, Delivered, requests | As specified | Filter scoped to authenticated customer_id. |
 | 4 | design_id / design_version / product_id | Field / control | UUID / integer version / UUID | As specified | Show latest owned version and associated product version. |
 | 5 | status | Field / control | Draft, Saved, Delivered | As specified | Draft is editable but not orderable; Saved self-design and Delivered consultant design are orderable. |
 | 6 | preview_asset_id | Field / control | private UUID | As specified | Access-checked expiring URL; customer-owned assets only. |
@@ -38,6 +38,11 @@ Written behavior below takes precedence over obsolete sample content.
 | 9 | Edit saved design | Action | Create new design version; never alter ordered snapshot. | Available when authorized | Destination: S13 |
 | 10 | Order design | Action | Permit saved self-design or delivered consultant design only. | Available when authorized | Destination: S22 |
 | 11 | Request design service | Action | Create new request for selected product. | Available when authorized | Destination: S15 |
+| 12 | request_id / status / assessment | Read-only request detail | Owned request UUID, status, complexity, rationale/rejection reason, requested_deadline, committed_due_at | In requests tab | Submitted, UnderReview, FeeProposed, Approved, Assigned, InProgress, Delivered, Cancelled, Rejected; never expose CRM notes. |
+| 13 | proposed/accepted fee | Read-only integer VND | null before assessment, 0 for Simple, proposed/accepted amount for Complex | In requests tab | State whether fee is awaiting acceptance or accepted; collected only with the first order under MFG-06 BR-008, never now. |
+| 14 | Accept fee | Action | Explicit acceptance of displayed amount/proposal_version with expected_version and Idempotency-Key | FeeProposed only | Destination: S17; owner only; stale version/amount 409; store acceptance and Approved. |
+| 15 | Cancel request | Action | Confirm cancellation with expected_version and Idempotency-Key | Eligible unassigned state only | Submitted/UnderReview/FeeProposed/Approved; no refund; reject Assigned/InProgress/Delivered/Rejected; repeat Cancelled returns same result. |
+| 16 | Delivery / source request | Read-only link | Delivered immutable design and source_design_request_id | When delivered | Copies retain provenance; order action follows MFG-06 fee allocation; no order means no collection. |
 
 ## 4. States
 
@@ -58,6 +63,9 @@ Written behavior below takes precedence over obsolete sample content.
 | 1 | Edit saved design | Activate | Create new design version; never alter ordered snapshot. | S13 |
 | 2 | Order design | Activate | Permit saved self-design or delivered consultant design only. | S22 |
 | 3 | Request design service | Activate | Create new request for selected product. | S15 |
+| 4 | Open request | Select request or follow S15/notification link | Load owned request by request_id in requests tab. | S17 |
+| 5 | Accept fee | Explicitly confirm displayed fee | Version-check exact proposal; atomically save acceptance and Approved; notify Admin. | S17 |
+| 6 | Cancel request | Confirm | Atomically cancel only eligible unassigned state; notify owner/Admin; no refund; race/stale 409. | S17 |
 
 Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Company Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales Consultant routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks role, company, membership, ownership and assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Company Admin, S20 for Sales Consultant, S41 for System Admin, and S01 for Guest.
 
@@ -74,12 +82,17 @@ Home and public catalog are available to Guest and authenticated users. Customer
 
 1. Only own designs appear; Saved and Delivered records offer order action while Draft does not.
 2. An ordered design edit creates a new version and cannot mutate order snapshot.
+3. Submission opens the selected Submitted request; Simple approval shows free; Complex remains unassignable until exact fee acceptance.
+4. Cancellation before assignment succeeds even after acceptance; assignment winning the race makes cancellation return 409. Repeated cancellation has no duplicate effect.
+5. A Delivered request links to its immutable design; zero/no-order fee behavior follows MFG-06 BR-008.
 
 ## 7. Linked requirements
 
 | FR ID (from the module spec) | What this screen does for it |
 |---|---|
 | MFG-05/F-DES-004 | Implements this screen's validated user flow and the linked source function. |
+| MFG-05/F-DES-012 | Explicit acceptance of the current Complex fee proposal. |
+| MFG-05/F-DES-013 | Eligible preassignment cancellation without refund. |
 The rules in this screen and its linked module specifications are complete for implementation.
 
 ## 8. Responsive and accessibility notes

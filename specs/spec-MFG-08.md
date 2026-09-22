@@ -4,9 +4,9 @@
 | --- | --- |
 | Module ID | `MFG-08` |
 | Module name | Sales Consultant |
-| Spec version | v1.0 |
+| Spec version | v1.1 |
 | Author (team member) | Group B |
-| Date | 2026-09-19 |
+| Date | 2026-09-22 |
 | Status | Draft |
 | Approved by (Client role) | No approver identified |
 | DBIZ2 source | Function List MFG-08, No. 60–67, `F-ORD-001`–`F-ORD-008`; UC-S01, UC-S02, UC-C19; screens S18–S21 and S38 |
@@ -15,7 +15,7 @@
 
 ## 1. Purpose and scope (mandatory)
 
-Company Admins assign company customers to Sales Consultants. Consultants see assigned customer context and record consultation progress. Customers may see their own design request status and deliveries through MFG-05, but never internal CRM notes. Paid design requests remain MFG-05 records; when customer assignment changes, all active Assigned/InProgress requests transfer atomically with the assignment. Contract, order and payment state belongs to their owning modules.
+Company Admins assign company customers to Sales Consultants. Consultants see assigned customer context and record consultation progress. Customers may see their own design request status and deliveries through MFG-05, but never internal CRM notes. Approved/assigned design requests remain MFG-05 records; when customer assignment changes, all active Assigned/InProgress requests transfer atomically with the assignment. Contract, order and payment state belongs to their owning modules.
 
 MVP priority: **Could**. Complete-system target includes all eight functions. `F-ORD-001`–`F-ORD-007` are reused by MFG-07 for different functions; all references here mean `MFG-08/F-ORD-nnn`.
 
@@ -32,9 +32,9 @@ MVP priority: **Could**. Complete-system target includes all eight functions. `F
 
 ### US-1: Assign consultant (Could)
 
-As a Company Admin, assign an active Sales Consultant in the same company to a customer. The assignment is unique per company/customer. Paid design requests transfer with the active assignment in one transaction and retain state and committed due date.
+As a Company Admin, assign an active Sales Consultant in the same company to a customer. The assignment is unique per company/customer. Approved requests receive first assignment; reassignment transfers all active Assigned/InProgress requests in one transaction, retaining their state and committed due date.
 
-1. **Given** a same-company active consultant and eligible customer, **when** the Admin assigns them, **then** one active assignment is committed and affected paid requests are transferred atomically.
+1. **Given** a same-company active consultant and eligible customer, **when** the Admin assigns them, **then** one active assignment is committed and affected active design requests are transferred atomically.
 2. **Given** the consultant is inactive or belongs to another company, **when** assignment is submitted, **then** it is rejected; no partial changes occur.
 3. **Given** concurrent assignment or request changes, **when** versions conflict, **then** one valid transaction wins and stale writes return 409.
 4. **Given** assignment commits, **when** notification is sent, **then** the consultant receives one authorized context link; email failure leaves the in-app notice.
@@ -68,7 +68,7 @@ An assigned consultant records notes and advances consultation status. A Company
 flowchart LR
   Admin[Company Admin] --> Review[Review same-company customers]
   Review --> Assign[Assign active same-company consultant]
-  Assign --> Transfer[Atomically transfer affected paid requests]
+  Assign --> Transfer[Atomically transfer affected active design requests]
   Transfer --> Notify[Persist assignment notification]
   Notify --> Context[Consultant opens authorized context]
   Context --> Interactions[Read permitted history]
@@ -110,7 +110,7 @@ sequenceDiagram
 | --- | --- | --- | --- | --- |
 | FR-001 | F-ORD-001 | List same-company customers without active assignment, with relevant company request/order summaries and pagination. | Company Admin | Could |
 | FR-002 | F-ORD-002 | Show company-specific customer/contact data, request/order summaries and current assignment. | Company Admin | Could |
-| FR-003 | F-ORD-003 | Assign/reassign an active same-company consultant with version checks, idempotency and atomic paired assignment of affected paid design requests; `committed_due_at` is the company's commitment, not the customer's requested deadline. | Company Admin | Could |
+| FR-003 | F-ORD-003 | Assign/reassign an active same-company consultant with version checks, idempotency and atomic paired assignment of affected approved/assigned design requests; `committed_due_at` is the company's commitment, not the customer's requested deadline. | Company Admin | Could |
 | FR-004 | F-ORD-004 | Notify the newly assigned consultant with authorized customer context after commit; reassignment also notifies affected staff and customer; deduplicate and retry delivery. | System | Could |
 | FR-005 | F-ORD-005 | List only the consultant's active same-company assignments with pagination and allowlisted filters. | Sales Consultant / Company Admin | Could |
 | FR-006 | F-ORD-006 | Return authorized customer context and chronological interaction history without exposing another company's records or CRM notes to customers. | Assigned Sales Consultant | Could |
@@ -123,7 +123,7 @@ sequenceDiagram
 | --- | --- | --- | --- | --- | --- | --- |
 | FR-001 | page, page_size, filters | Integers / allowlisted values | Optional | unassigned company customers and activity summaries | Paginated object | Relevant company activity only; page_size 1–100; invalid filters 400; empty list valid |
 | FR-002 | customer_id | UUID | Yes | company customer profile, history summaries, assignment | Object | Same-company relationship required |
-| FR-003 | customer_id, consultant_user_id, expected versions, request IDs, committed_due_at, Idempotency-Key | UUIDs, versions, timestamps, key | Yes | assignment and affected request assignments/due dates | Object | Due date after now and is the company's promise; first assignment only for Paid request; delivered history unchanged |
+| FR-003 | customer_id, consultant_user_id, expected versions, request IDs, committed_due_at, Idempotency-Key | UUIDs, versions, timestamps, key | Yes | assignment and affected request assignments/due dates | Object | Due date after now and is the company's promise; first assignment only for Approved request (Simple or accepted Complex fee); delivered history unchanged |
 | FR-004 | committed assignment event | Internal event | Yes | durable notification/outbox ID | UUID | In-app inbox authoritative |
 | FR-005 | page, page_size, filters | Integers / allowlisted values | Optional | consultant assignment summaries | Paginated object | Active assigned customers only; Admin may inspect company list |
 | FR-006 | customer_id | UUID | Yes | company/customer context, product interest, customer-visible request/order summaries and interaction_history_logs | Object/chronological array | Same-company active assignment required; internal notes only through authorized consultation detail |
@@ -135,7 +135,7 @@ sequenceDiagram
 | Rule ID | Rule | Why it exists |
 | --- | --- | --- |
 | BR-001 | One active assignment exists per company/customer; assignment history is retained. | Preserve accountable ownership. |
-| BR-002 | First request assignment requires Paid status; reassignment transfers all active Assigned/InProgress requests atomically while retaining their state and committed due date. | Keep CRM and design-service ownership consistent. |
+| BR-002 | First request assignment requires Approved status (Simple or accepted Complex fee); reassignment transfers all active Assigned/InProgress requests atomically while retaining their state and committed due date. | Keep CRM and design-service ownership consistent. |
 | BR-003 | Notes are private to assigned consultant and same-company Admin; customer cannot read internal notes. | Protect internal CRM records. |
 | BR-004 | Interaction logs are append-only; corrections reference prior events and never erase audit history. | Preserve interaction history. |
 | BR-005 | Status transitions: New→Contacted/ClosedLost; Contacted→InProgress/ClosedLost; InProgress→ClosedLost/ClosedWon; Admin alone may reopen a closed consultation to InProgress. | Keep consultation lifecycle controlled. |
@@ -164,7 +164,7 @@ Interaction history uses source_channel InApp, Email, Phone or Chat and kind Not
 
 | SC ID | Criterion | How it is measured |
 | --- | --- | --- |
-| SC-001 | Assignment and paid-request ownership change atomically and remain same-company. | Verify reassignments, versions and rollback on conflicting request. |
+| SC-001 | Assignment and design-request ownership change atomically and remain same-company. | Verify reassignments, versions and rollback on conflicting request. |
 | SC-002 | Consultants see only assigned customer records and authorized interaction history. | Verify assigned, unassigned, cross-company and customer access. |
 | SC-003 | Consultation status and notes are auditable and duplicate/stale writes do not lose data. | Verify transition matrix, version conflict and append-only corrections. |
 

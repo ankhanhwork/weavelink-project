@@ -4,12 +4,12 @@
 | --- | --- |
 | Module ID | `MFG-06` |
 | Module name | Order & Payment |
-| Spec version | v1.0 |
+| Spec version | v1.1 |
 | Author (team member) | Group B |
-| Date | 2026-09-19 |
+| Date | 2026-09-22 |
 | Status | Draft |
 | Approved by (Client role) | No approver assigned |
-| DBIZ2 source | Historical IDs retained: Function List No. 47-52; `F-PAY-001` .. `F-PAY-006`; `UC-C05`, `UC-C12`; S16, S22-S25, S27, S34-S38. External DBIZ2 comparison is not required. |
+| DBIZ2 source | Historical IDs retained: Function List No. 47-52; `F-PAY-001` .. `F-PAY-006`; `UC-C05`, `UC-C12`; S16 (deprecated), S22-S25, S27, S34-S38. External DBIZ2 comparison is not required. |
 
 ---
 
@@ -17,9 +17,9 @@
 
 This MVP Must module quotes checkout, creates an order and handles VNPay payment initiation, verified settlement, reconciliation, receipt and full refund state. Customer identity/prices come from server session and immutable snapshots.
 
-**In scope:** checkout one orderable design; quote quantities/address/merge preference; idempotently create PendingContract order; initiate ORDER/SERVICE payment; validate server notification; reconcile and show receipt/refund state.
+**In scope:** checkout one orderable design; quote quantities/address/merge preference; idempotently create PendingContract order; include accepted design fee; initiate ORDER payment; validate server notification; reconcile and show receipt/refund state.
 
-**Out of scope:** post-submission tracking/cancellation/fulfillment is MFG-07; contract generation/signing is MFG-09; SERVICE request creation is MFG-05.
+**Out of scope:** post-submission tracking/cancellation/fulfillment is MFG-07; contract generation/signing is MFG-09; design request creation/assessment is MFG-05.
 
 ## 2. Actors (mandatory)
 
@@ -36,14 +36,16 @@ This MVP Must module quotes checkout, creates an order and handles VNPay payment
 
 1. Valid owned Saved/Delivered design, quantities/address and current rules produce one 30-minute quote with complete integer-VND breakdown.
 2. Submitting an unexpired quote atomically creates one PendingContract order with immutable product/design/address/price/merge snapshots; duplicate submit returns that order.
-3. Changed product/design/rules/capacity or expired quote requires requote and explicit review.
+3. Changed product/design/rules/capacity, fee allocation or expired quote requires requote and explicit review.
+4. First order from a delivered Complex request lineage claims the accepted fee atomically; additional orders wait until that order reaches InProduction or cancellation/refund releases the allocation. After InProduction, subsequent orders have design_fee_vnd 0.
+5. No order means no collection; Simple and self-design orders have design_fee_vnd 0.
 
 ### US-2 (Must): Make payment
 
-1. ORDER payment is allowed only after signed contract moves the order to AwaitingPayment; SERVICE payment requires AwaitingPayment request.
-2. A valid signed VNPay server notification with matching merchant/reference/amount/currency settles once and changes ORDER to Confirmed or SERVICE to Paid.
+1. ORDER payment is allowed only after signed contract moves the order to AwaitingPayment; its total includes the applicable accepted design fee. No standalone SERVICE transaction is supported.
+2. A valid signed VNPay server notification with matching merchant/reference/amount/currency settles once and changes the order to Confirmed.
 3. Browser return only reads/polls server state. Invalid/duplicate callbacks never double-confirm; failed attempt leaves resource payable.
-4. Late success for cancelled/expired resource records funds and starts full refund without resurrecting the resource.
+4. Late success for cancelled order records funds and starts full refund without resurrecting the resource.
 
 ### Edge cases
 
@@ -141,43 +143,48 @@ sequenceDiagram
 | FR ID | DBIZ2 Subfunction ID | Requirement (system MUST ...) | Actor | Priority |
 | --- | --- | --- | --- | --- |
 | FR-001 | F-PAY-001 | Render checkout for the customer's eligible design and same-company Published product. | Customer | Must |
-| FR-002 | F-PAY-002 | Recompute quote from validated quantities, address and merge choice with 30-minute expiry. | Customer | Must |
-| FR-003 | F-PAY-003 | Atomically create one PendingContract order from a current quote with immutable snapshots and idempotency. | Customer | Must |
-| FR-004 | F-PAY-004 | Initiate one payable ORDER or SERVICE payment attempt and return hosted-provider redirect details. | Customer | Must |
-| FR-005 | F-PAY-005 | Verify and deduplicate provider notifications; settle once and support authorized reconciliation/full refund. | VNPay / Company Admin / System | Must |
-| FR-006 | F-PAY-006 | Show the owner's payment receipt/state; browser return remains read-only. | Customer | Must |
+| FR-002 | F-PAY-002 | Recompute quote from validated quantities, address and merge choice with 30-minute expiry; derive a separate design_fee_vnd from request provenance and allocation state. | Customer | Must |
+| FR-003 | F-PAY-003 | Atomically create one PendingContract order from a current quote with immutable snapshots and idempotency; lock/revalidate and claim any design-fee allocation under BR-008. | Customer | Must |
+| FR-004 | F-PAY-004 | Initiate one payable ORDER payment attempt and return hosted-provider redirect details. | Customer | Must |
+| FR-005 | F-PAY-005 | Verify and deduplicate ORDER provider notifications; settle once and support authorized reconciliation/full refund including design fee; release eligible allocation only after resolution. | VNPay / Company Admin / System | Must |
+| FR-006 | F-PAY-006 | Show the owner's ORDER receipt/state and design-fee breakdown with S35 navigation; browser return remains read-only. | Customer | Must |
 
 ### 5.1 Input / Output contract
 
 | FR ID | Input field | Type | Required | Output field | Type | Notes / validation |
 | --- | --- | --- | --- | --- | --- | --- |
 | FR-001 | session, product/design UUID | Session / UUIDs | Yes | S22 checkout model | View model | Own Saved/Delivered design; Published same-company product |
-| FR-002 | quantities, VN address, merge choice/version | Integers / address / values | Yes | quote, breakdown, expiry | Object | Capacity checked; server recomputes; 422 invalid; 409 stale |
-| FR-003 | quote UUID/version, idempotency key, confirmation | UUID / integer / key / boolean | Yes | PendingContract order/snapshots | Object | Lock/revalidate/consume; duplicate returns original |
-| FR-004 | ORDER order_id or SERVICE request_id, purpose/key | UUID / enum / key | Yes | payment/provider reference, redirect, expiry | Object | Payable state; one pending attempt; provider failure 503 |
+| FR-002 | quantities, VN address, merge choice/version | Integers / address / values | Yes | quote, breakdown, source_design_request_id nullable, accepted_fee_version nullable, fee_allocation_version nullable, expiry | Object | Capacity/provenance checked; design fee outside subtotal; 422 invalid; 409 stale/allocation conflict |
+| FR-003 | quote UUID/version, idempotency key, confirmation | UUID / integer / key / boolean | Yes | PendingContract order/snapshots | Object | Lock request/quote; validate allocation and consume; duplicate returns original; stale allocation requires reviewed replacement quote |
+| FR-004 | order_id, purpose=ORDER, key | UUID / enum / key | Yes | payment/provider reference, redirect, expiry | Object | Payable state; one pending attempt; provider failure 503 |
 | FR-005 | signed provider query or authorized reconcile/refund request | Query / IDs / version / key | Yes | acknowledged payment/refund state | Object | Verify signature, merchant, reference, amount, currency; full refund only |
-| FR-006 | authenticated owner, payment/transaction ID | Session / UUID | Yes | receipt status/amount/purpose/next route | View model | Browser return cannot settle; ownership check; unknown 404 |
+| FR-006 | authenticated owner, payment/transaction ID | Session / UUID | Yes | ORDER receipt status/amount/design_fee_vnd/next route S35 | View model | Browser return cannot settle; ownership check; unknown 404 |
 
 ### 5.2 Business rules
 
 | Rule ID | Rule | Why it exists |
 | --- | --- | --- |
-| BR-001 | `subtotal = sum(quantity × (unit price + option surcharge))`; eligible opted-in merge discount is `floor(subtotal × 5 / 100)`; default shipping 30000 VND; merge fee and tax default 0; `total = subtotal - discount + shipping`. | Define one server-authoritative quote formula. |
+| BR-001 | `subtotal_vnd = sum(quantity × (unit_price_vnd + option_surcharge_vnd))`; eligible opted-in `merge_discount_vnd = floor(subtotal_vnd × 5 / 100)` else 0; shipping default 30000, merge fee/tax default 0; `total_vnd = subtotal_vnd - merge_discount_vnd + shipping_vnd + merge_fee_vnd + tax_vnd + design_fee_vnd`. Design fee is separate from subtotal, never quantity-multiplied or discounted. | Define one server-authoritative quote formula. |
 | BR-002 | Quote expires in 30 minutes; payment redirect expires in 15 minutes. | Bound quote and provider attempt validity. |
-| BR-003 | The same authoritative amount appears on S23, S25, S34 and S35. | Prevent inconsistent customer-visible totals. |
-| BR-004 | Order: PendingContract → AwaitingPayment only after signature → Confirmed only after verified full settlement. Failed payment does not change order state. | Enforce contract/payment gates. |
+| BR-003 | Authoritative amounts remain consistent across S23, S25, S34 and S35; full breakdowns on S25/S34/S35 explicitly include the separate design_fee_vnd line. | Prevent inconsistent customer-visible totals. |
+| BR-004 | Order: PendingContract → AwaitingPayment only after signature → Confirmed only after verified full settlement including applicable design fee; no request payment transition. Failed payment does not change order state. | Enforce contract/payment gates. |
 | BR-005 | Payment attempt: Pending → Succeeded/Failed/Expired; verified late success may promote Failed/Expired and never downgrade Succeeded. | Handle callback races and late notifications. |
-| BR-006 | Refund: None → Pending → Succeeded/Failed; only full refund supported. | Define supported refund lifecycle. |
+| BR-006 | Refund: None → Pending → Succeeded/Failed; only full refund supported, including the design-fee component; allocation release follows BR-008. | Define supported refund lifecycle. |
 | BR-007 | Provider event/transaction IDs are permanently unique; idempotency keys are retained at least seven days. | Prevent replay and duplicate effects. |
+| BR-008 | Allocate the accepted Complex fee once to the first created order from its delivered design lineage; serialize allocation, block further orders until InProduction or resolved cancellation, and require reviewed requotes on allocation changes. | Prevent duplicate charges or fee bypass while preserving immutable snapshots. |
+
+The accepted fee attaches to the first successfully created order from the delivered request design or any derived version retaining source_design_request_id. First means the allocation transaction that commits under the request lock, not the first quote. Quote stores accepted_fee_version (null for self-design/Simple) and fee_allocation_version (null when no Complex allocation applies); order creation revalidates both and atomically writes fee_order_id, increments allocation version and snapshots the fee. Concurrent contenders receive 409 DESIGN_FEE_ALLOCATION_CONFLICT and must requote/review; never silently change a reviewed total.
+
+While the fee-bearing order has not reached InProduction, further orders from that Complex request lineage are blocked with 409 DESIGN_FEE_ORDER_PENDING, including while cancellation/payment/refund resolution is pending. Once it reaches InProduction, record the retained allocation; subsequent orders carry design_fee_vnd 0. If cancelled earlier, retain its immutable fee line and release the allocation only after all payment attempts are authoritatively resolved and any full refund succeeds. A subsequent late receipt is refunded against the cancelled order and never changes the released allocation. The next newly created order after release carries the fee; never retrofit another order. Simple requests and self-designs have fee 0 and no allocation restriction. No order means no invoice, transaction, revenue or collection. Admin cannot override/add another fee. All final amounts must be positive and <=9999999999 VND.
 
 ## 6. Key entities (mandatory)
 
 | Entity | Attributes (from Input/Output fields) | Relationships |
 | --- | --- | --- |
-| Quote | company/customer/product/design IDs+versions, quantities, address, merge/policy, price breakdown, expiry, version | Server-computed, owner-scoped, one-time consumed |
-| Order | UUID, immutable product/design/address/price snapshots, status, contract/batch IDs, version | One order per consumed quote; no checkout batch creation |
-| PaymentTransaction | resource purpose/id, amount, provider reference/transaction, state, expiry, version | Exactly one ORDER or SERVICE resource; settlement exactly once |
-| Refund | payment_id, full amount, state, provider reference, version | Never resurrects cancelled/expired resource |
+| Quote | company/customer/product/design IDs+versions, quantities, address, merge/policy, price breakdown including design_fee_vnd, source_design_request_id nullable, accepted_fee_version nullable, fee_allocation_version nullable, expiry, version | Server-computed, owner-scoped, one-time consumed |
+| Order | UUID, immutable product/design/address/price snapshots, status, source_design_request_id, accepted_fee_version, design_fee_vnd in price snapshot, contract/batch IDs, version | One order per consumed quote; no checkout batch creation |
+| PaymentTransaction | resource purpose/id, amount, provider reference/transaction, state, expiry, version | Exactly one ORDER resource; settlement exactly once |
+| Refund | payment_id, full amount, state, provider reference, version | Never resurrects cancelled order |
 
 ## 7. Screens involved
 
@@ -189,7 +196,7 @@ sequenceDiagram
 | S25 | Order summary and quote review | Must | `screens/S25-order_summary_screen.md` |
 | S34 | Contract handoff | Should | `screens/S34-contract_detail_screen_customer.md` |
 | S35 | Order payment and receipt | Must | `screens/S35-order_payment_screen.md` |
-| S16 | Service payment and receipt | Could | `screens/S16-design_service_payment_screen.md` |
+| S16 | Deprecated route; redirects to S17, no payment | Could | `screens/S16-design_service_payment_screen.md` |
 | S27 | Customer refund state | Must | `screens/S27-customer_order_detail_screen.md` |
 | S36/S37 | Admin payment list/detail | Must | `screens/S36-payment_transaction_list_screen.md` |
 | S38 | Notifications | Should | `screens/S38-notification_panel_screen.md` |
@@ -205,6 +212,7 @@ sequenceDiagram
 ## 9. Assumptions
 
 - DBIZ 3 classroom demo by Group B; no approver; business/contact data are fictional samples.
+- Accepted design fees are separate from subtotal and allocated by BR-008; no historical production-data migration is needed in this documentation-only project.
 - VNPay sandbox is used; merchant secrets are environment values and never documented.
 - Order/payment is MVP Must; MFG-09 contract is Should but the documented order lifecycle retains its signing gate.
 
@@ -222,7 +230,7 @@ Historical IDs are retained; external DBIZ2 comparison is not required.
 | --- | --- | --- |
 | Scope and actors | Function List MFG-06 | Rows 47–52; IDs appear in FR table |
 | Finalize order | UC-C05; F-PAY-001..003 | S22-S25; SD-07; sections 3 and 5 |
-| Make payment | UC-C12; F-PAY-004..006 | S16/S35-S37; SD-09; sections 3 and 5 |
+| Make payment | UC-C12; F-PAY-004..006 | S35-S37; deprecated S16 redirect only; SD-09; sections 3 and 5 |
 | Contract handoff | MFG-09 signed event | S34; section 3 |
 
 ## Completion checklist

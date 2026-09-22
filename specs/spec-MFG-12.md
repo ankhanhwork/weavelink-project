@@ -4,9 +4,9 @@
 | --- | --- |
 | Module ID | `MFG-12` |
 | Module name | System Operations |
-| Spec version | v1.0 |
+| Spec version | v1.1 |
 | Author (team member) | Group B |
-| Date | 2026-09-19 |
+| Date | 2026-09-22 |
 | Status | Draft |
 | Approved by (Client role) | No approver identified |
 | DBIZ2 source | Function List MFG-12, No. 87–94, `F-SYS-001`–`F-SYS-008`; UC-S09, UC-S10, UC-S11; screens S39–S40 |
@@ -21,7 +21,7 @@ MVP priority: **Won't**; these functions remain specified for the complete syste
 
 Audit events are append-only and retained 365 days. Severity is INFO for committed success, WARN for denied/invalid actions and ERROR for dependency/job failures; DEBUG is not persisted. Nightly encrypted base snapshot runs at 02:00 Asia/Ho_Chi_Minh, with seven daily and four weekly bases retained. A continuous verified transaction-log archive permits restore through the pre-maintenance committed watermark. Payment event/restore journal remains outside the restored snapshot to avoid duplicate fulfillment/refunds.
 
-Configuration stores secret references, never secret values. Allowlisted settings are public company contacts, SMTP reference, VNPay environment/merchant secret references, design_service_fee_vnd, shipping_vnd and backup schedule/retention. Merge discount 5%, standard production seven days and merge allowance three days are read-only policy-v1 values; changing them requires a new reviewed policy version and updated specifications.
+Configuration stores secret references, never secret values. Allowlisted settings are public company contacts, SMTP reference, VNPay environment/merchant secret references, design_service_fee_vnd (suggested Complex assessment fee, default 200000 VND, integer 1..9999999999), shipping_vnd and backup schedule/retention. Merge discount 5%, standard production seven days and merge allowance three days are read-only policy-v1 values; changing them requires a new reviewed policy version and updated specifications.
 
 ## 2. Actors (mandatory)
 
@@ -100,7 +100,7 @@ sequenceDiagram
     participant OutboxWorker as Outbox worker
     SystemAdmin->>OperationsUI: Request audit, backup status or configuration
     OperationsUI->>OperationsModule: Authorized request with filters
-    OperationsModule->>OperationalDB: Derive admin privilege; read redacted logs/status/config
+    OperationsModule->>OperationalDB: Derive admin privilege, read redacted logs/status/config
     OperationalDB-->>OperationsModule: Scoped operational data
     OperationsModule-->>OperationsUI: View model with secrets masked
     alt Backup requested or scheduled
@@ -134,8 +134,8 @@ sequenceDiagram
 | FR-003 | F-SYS-003 | Show backup schedule/retention, base/log watermarks, recent jobs, operation lock and available controls. | System Admin | Won't (MVP) |
 | FR-004 | F-SYS-004 | Queue verified encrypted snapshot and return backup job state/manifest reference. | System Admin / scheduler | Won't (MVP) |
 | FR-005 | F-SYS-005 | Restore selected verified base plus continuous transaction logs through pre-maintenance watermark under one restore lock. | System Admin | Won't (MVP) |
-| FR-006 | F-SYS-006 | Show typed allowlisted settings, masked write-only secret references, active version and validation guidance; fixed policy-v1 merge values are read-only. | System Admin | Won't (MVP) |
-| FR-007 | F-SYS-007 | Validate entire typed config patch, atomically activate new version and audit; reject fixed policy edits. | System Admin | Won't (MVP) |
+| FR-006 | F-SYS-006 | Show typed allowlisted settings, masked write-only secret references, active version and validation guidance; fixed policy-v1 merge values are read-only; design_service_fee_vnd is the suggested Complex assessment fee, not a submission charge. | System Admin | Won't (MVP) |
+| FR-007 | F-SYS-007 | Validate entire typed config patch, atomically activate new version and audit; reject fixed policy edits; design_service_fee_vnd changes affect future assessments only, never existing proposals or accepted fees. | System Admin | Won't (MVP) |
 | FR-008 | F-SYS-008 | Notify active admins of committed configuration key names/version/time, excluding secret values. | System | Won't (MVP) |
 
 ### 5.1 Input / Output contract

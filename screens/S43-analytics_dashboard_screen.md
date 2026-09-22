@@ -28,8 +28,8 @@ Don't have mockup
 | 1 | Screen heading | Heading | Analytics Dashboard | Yes | Static route title. |
 | 2 | Route | Navigation target | /admin/analytics | Yes | Access checked on server. |
 | 3 | date_start / date_end | Field / control | local dates, inclusive/exclusive | As specified | Default last 30 local calendar days; maximum 366 days; reject start >= end. |
-| 4 | product_id | Field / control | optional UUID | As specified | Same-company product only; filter related orders/requests. |
-| 5 | revenue_vnd | Field / control | integer VND aggregates | As specified | Accepted ORDER settlement by paid_at less refunds by refunded_at; SERVICE separate; exclude duplicate/late receipts and their refunds. |
+| 4 | product_id | Field / control | optional UUID | As specified | Same-company product only; filter related orders. |
+| 5 | revenue_vnd | Field / control | integer VND aggregates | As specified | Accepted ORDER settlement by paid_at less refunds by refunded_at; design-fee component included; exclude duplicate/late receipts and their refunds. |
 | 6 | order_count / cancellation_count | Field / control | integer counts | As specified | Count orders by created_at in all states; cancellations shown separately. |
 | 7 | new_customers | Field / control | integer count | As specified | Distinct customers whose first submitted order in this company falls in range. |
 | 8 | refreshed_at / timezone | Field / control | UTC timestamp / Asia/Ho_Chi_Minh | As specified | Always display snapshot watermark and local range; zero-data metrics are zero. |
@@ -37,6 +37,7 @@ Don't have mockup
 | 10 | Apply date/product filters | Action | Recompute authoritative company-scoped metrics; display timezone/range/refreshed_at. | Available when authorized | Destination: S43 |
 | 11 | Export CSV/XLSX | Action | Same filters/formulas and snapshot watermark; <=100000 rows; neutralize formula injection. | Available when authorized | Destination: S43 |
 | 12 | Open order | Action | Navigate only to authorized company order detail. | Available when authorized | Destination: S29 |
+| 13 | design_fee_revenue_vnd | Read-only revenue component | Design fees included in order revenue | Yes | Sum order design_fee_vnd on accepted settlements by paid_at less the same component on full refunds by refunded_at; same filters/watermark/exclusions; no double-counting; zero/negative range values allowed. |
 
 ## 4. States
 
@@ -71,8 +72,9 @@ Home and public catalog are available to Guest and authenticated users. Customer
 
 ### Acceptance scenarios
 
-1. Revenue equals successful ORDER payments minus successful ORDER refunds by their respective timestamps; SERVICE shown separately.
+1. Revenue equals successful ORDER payments minus successful ORDER refunds by their respective timestamps; design-fee component is included and displayed separately without adding it again.
 2. Zero-data period shows zeros; export matches filter/formula/watermark and rejects >100000 rows.
+3. S43 and exports show the same design-fee revenue component; Simple/repeat orders contribute 0, and no order/payment produces no fee revenue. Full refunds subtract the original fee component.
 
 ## 7. Linked requirements
 

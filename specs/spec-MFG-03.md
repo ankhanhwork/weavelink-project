@@ -4,9 +4,9 @@
 | --- | --- |
 | Module ID | `MFG-03` |
 | Module name | Company Accounts |
-| Spec version | v1.0 |
+| Spec version | v1.1 |
 | Author (team member) | Group B |
-| Date | 2026-09-19 |
+| Date | 2026-09-22 |
 | Status | Draft |
 | Approved by (Client role) | No approver assigned |
 | DBIZ2 source | Historical IDs retained: Function List No. 17-24; `F-ACC-001` .. `F-ACC-008`; `UC-S06` .. `UC-S08`; S03 and S41. External DBIZ2 comparison is not required. |
@@ -46,7 +46,7 @@ System Admin provisions companies and company-scoped staff memberships. A Compan
 
 ### US-3 (Won't for MVP): Delete account
 
-1. Company deletion is soft and requires no open orders, paid requests, active batches or unresolved payment/refund work.
+1. Company deletion is soft and requires no open orders, active design requests (Submitted/UnderReview/FeeProposed/Approved/Assigned/InProgress), active batches or unresolved payment/refund work.
 2. Membership removal requires reassignment of open consultant work and preserves the user and other memberships.
 3. Successful deletion revokes affected sessions and preserves historical records/audit.
 

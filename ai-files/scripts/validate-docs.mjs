@@ -32,8 +32,8 @@ for (const line of functionCatalogue.split('\n')) {
   if (functionMatch && activeModule) functionKeys.push(`${activeModule}/${functionMatch[1]}`);
 }
 const knownFunctions = new Set(functionKeys);
-check(functionKeys.length === 94, `Expected 94 function rows, got ${functionKeys.length}`);
-check(knownFunctions.size === 94, 'Function keys must be unique after module qualification');
+check(functionKeys.length === 96, `Expected 96 function rows, got ${functionKeys.length}`);
+check(knownFunctions.size === 96, 'Function keys must be unique after module qualification');
 const detailedFunctionRows = functionCatalogue.split('\n').filter(line => /^\| \d+ \| UC-[A-Z]\d{2} \|/.test(line));
 for (const line of detailedFunctionRows) {
   const cells = line.slice(1, -1).split('|').map(cell => cell.trim());
@@ -47,7 +47,7 @@ const useCases = [...read('docs/architecture/use-case.md').matchAll(/^\| (UC-[A-
 const knownUseCases = new Set(useCases);
 check(useCases.length === 49 && knownUseCases.size === 49, `Expected 49 unique use cases, got ${useCases.length}`);
 
-const expectedFunctions = [['USER',11],['PROF',5],['ACC',8],['PROD',11],['DES',11],['PAY',6],['ORD',7],['ORD',8],['CONTR',9],['MER',7],['DA',3],['SYS',8]];
+const expectedFunctions = [['USER',11],['PROF',5],['ACC',8],['PROD',11],['DES',13],['PAY',6],['ORD',7],['ORD',8],['CONTR',9],['MER',7],['DA',3],['SYS',8]];
 const requiredSpecHeadings = [
   '## 1. Purpose and scope (mandatory)', '## 2. Actors (mandatory)',
   '## 3. User scenarios and acceptance criteria (mandatory)', '## 4. Flows (mandatory)',

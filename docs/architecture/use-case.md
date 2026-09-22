@@ -14,7 +14,7 @@
 | UC-C01 | Design product | Customer | UC-C02 | MFG-05/F-DES-001, MFG-05/F-DES-002, MFG-05/F-DES-003 |
 | UC-C02 | Product Customization | Customer | Includes UC-C01, UC-C03, UC-C04 | MFG-05/F-DES-001, MFG-05/F-DES-002, MFG-05/F-DES-003 |
 | UC-C03 | View saved design | Customer | None | MFG-05/F-DES-004 |
-| UC-C04 | Request design service | Customer | None | MFG-05/F-DES-005, MFG-05/F-DES-006, MFG-05/F-DES-007, MFG-05/F-DES-008 |
+| UC-C04 | Request design service | Customer | Company Admin (complexity assessment); System (notifications) | MFG-05/F-DES-005, MFG-05/F-DES-006, MFG-05/F-DES-007, MFG-05/F-DES-008, MFG-05/F-DES-012, MFG-05/F-DES-013 |
 | UC-C05 | Finalize order | Customer | None | MFG-06/F-PAY-001, MFG-06/F-PAY-002, MFG-06/F-PAY-003 |
 | UC-C06 | Choose merge option | Customer | None | MFG-10/F-MER-001, MFG-10/F-MER-002, MFG-10/F-MER-003 |
 | UC-C07 | Cancel order | Customer | None | MFG-07/F-ORD-003, MFG-07/F-ORD-004 |

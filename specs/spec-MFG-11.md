@@ -4,9 +4,9 @@
 | --- | --- |
 | Module ID | `MFG-11` |
 | Module name | Data Analytics |
-| Spec version | v1.0 |
+| Spec version | v1.1 |
 | Author (team member) | Group B |
-| Date | 2026-09-19 |
+| Date | 2026-09-22 |
 | Status | Draft |
 | Approved by (Client role) | No approver identified |
 | DBIZ2 source | Function List MFG-11, No. 84–86, `F-DA-001`–`F-DA-003`; UC-C21 View Dashboard, UC-C22 Export Data, UC-C20 Data Analytics; screen S43 |
@@ -19,7 +19,7 @@ Company Admins receive a read-only view of company performance and may export ma
 
 Inputs use `start_date` inclusive and `end_date` exclusive in Asia/Ho_Chi_Minh calendar time. Default range is the last 30 local calendar days; maximum is 366 days. Optional product filter must refer to the authorized company. Empty data returns zero totals and empty series.
 
-Revenue counts one accepted settlement per order by paid_at minus successful refunds by refunded_at. Duplicate/late receipts and their offsetting refunds are excluded together from sales revenue and shown only in reconciliation. SERVICE revenue is separately labeled using the corresponding settlement/refund treatment. Order count uses created_at and includes all states; cancellation count is separate. Customer growth counts distinct customers on their first submitted order to that company in range. Pending/failed attempts are excluded.
+Revenue counts one accepted settlement per order by paid_at minus successful refunds by refunded_at. Duplicate/late receipts and their offsetting refunds are excluded together from sales revenue and shown only in reconciliation. Design fees are included in ORDER revenue; S43 separately shows design_fee_revenue_vnd as a component, never an additional revenue total. Order count uses created_at and includes all states; cancellation count is separate. Customer growth counts distinct customers on their first submitted order to that company in range. Pending/failed attempts are excluded.
 
 ## 2. Actors (mandatory)
 
@@ -108,9 +108,9 @@ sequenceDiagram
 
 | FR ID | DBIZ2 Subfunction ID | Requirement (system MUST ...) | Actor | Priority |
 | --- | --- | --- | --- | --- |
-| FR-001 | F-DA-001 | Return company-scoped chart view model for revenue, orders and customer growth with range, timezone, refreshed_at, points and totals. | Company Admin | Won't (MVP) |
-| FR-002 | F-DA-002 | Recalculate typed dataset using the same metrics and company scope; return zero/empty values for empty data. | Company Admin | Won't (MVP) |
-| FR-003 | F-DA-003 | Queue CSV/XLSX export, report asynchronous state and expose only authorized short-lived private link on success. | Company Admin | Won't (MVP) |
+| FR-001 | F-DA-001 | Return company-scoped chart view model for revenue, orders and customer growth with range, timezone, refreshed_at, points and totals, including design_fee_revenue_vnd within ORDER revenue. | Company Admin | Won't (MVP) |
+| FR-002 | F-DA-002 | Recalculate typed dataset using the same metrics and company scope, including the design-fee component; return zero/empty values for empty data. | Company Admin | Won't (MVP) |
+| FR-003 | F-DA-003 | Queue CSV/XLSX export including the design-fee component, report asynchronous state and expose only authorized short-lived private link on success. | Company Admin | Won't (MVP) |
 
 ### 5.1 Input / Output contract
 
@@ -124,13 +124,15 @@ sequenceDiagram
 
 | Rule ID | Rule | Why it exists |
 | --- | --- | --- |
-| BR-001 | Revenue is accepted settlement less successful refund for that settlement; duplicate/late receipt and offsetting refund are both excluded from sales revenue. SERVICE revenue is separate. | Prevent duplicate or misclassified sales. |
+| BR-001 | Revenue is accepted settlement less successful refund for that settlement; duplicate/late receipt and offsetting refund are both excluded from sales revenue. Design fees are included in ORDER revenue with a visible component breakdown; never add the component again. | Prevent duplicate or misclassified sales. |
 | BR-002 | Orders use created_at and include all statuses; cancellations are separate; customer growth counts first submitted order per company. | Keep metrics definitions consistent. |
 | BR-003 | Filters and exports are company-scoped; product filter must belong to authorized company. | Prevent data disclosure across companies. |
 | BR-004 | Only allowlisted columns export; spreadsheet formula-leading cells are escaped; exports cap at 100,000 rows. | Reduce data exposure and formula injection. |
 | BR-005 | Export is asynchronous, idempotent and available through a private URL that expires in 10 minutes. | Support reliable large exports. |
 
-Export datasets are `revenue`, `orders` and `customers` (or an explicitly documented combination). Allowlisted columns are: aggregate revenue date/value/currency; orders UUID/created_at/status/product UUID/name/quantity/subtotal/discount/shipping/total/accepted-settled amount/accepted refund amount; customers UUID/first order date/order count. Duplicate/late receipts and their offsetting refunds are excluded together from sales exports. Product filters apply to related order/request product. A `File` selection means CSV/XLSX format, never a client-uploaded file.
+Export datasets are `revenue`, `orders` and `customers` (or an explicitly documented combination). Allowlisted columns are: aggregate revenue date/value/design_fee_revenue_vnd/currency; orders UUID/created_at/status/product UUID/name/quantity/subtotal/discount/shipping/design_fee_vnd/total/accepted-settled amount/accepted refund amount; customers UUID/first order date/order count. Duplicate/late receipts and their offsetting refunds are excluded together from sales exports. Product filters apply to related order product. A `File` selection means CSV/XLSX format, never a client-uploaded file.
+
+Design-fee revenue is the sum of design_fee_vnd snapshots on accepted ORDER settlements by paid_at minus that component on successful full refunds by refunded_at. Apply the same range, company/product filters, watermark and duplicate/late-receipt exclusions as total revenue. No order/payment means no fee revenue; Simple and repeat orders contribute 0. A refund-only range may show a negative component. S43 labels it "Design fees included in order revenue"; exports show the same component without double-counting.
 
 ## 6. Key entities (mandatory)
 

@@ -32,10 +32,10 @@ Written behavior below takes precedence over obsolete sample content.
 | 3 | quote_id | Field / control | UUID | As specified | quote_id: UUID; server quote lasts 30 minutes and binds product/design/policy versions. |
 | 4 | subtotal_vnd | Field / control | sum(quantity*(unit_price_vnd+option_surcharge_vnd)), integer. | As specified | subtotal_vnd: sum(quantity*(unit_price_vnd+option_surcharge_vnd)), integer. |
 | 5 | merge_discount_vnd | Field / control | floor(subtotal*5/100) when opted-in | As specified | merge_discount_vnd: floor(subtotal*5/100) when opted-in; else 0. |
-| 6 | price_breakdown | Field / control | integer VND, read-only | As specified | Show snapshotted subtotal, discount, shipping, merge fee, tax and total; default shipping is 30000, merge fee/tax are 0. |
+| 6 | price_breakdown | Field / control | integer VND, read-only | As specified | Show snapshotted subtotal, discount, shipping, merge fee, tax, separate design_fee_vnd and total; default shipping is 30000, merge fee/tax are 0; design fee is outside subtotal and never discounted or quantity-multiplied. |
 | 7 | quote_id / expected_version / Idempotency-Key | Field / control | required submission contract | As specified | Never submit a client total; an expired/superseded quote returns to requote and explicit review. |
 | 8 | API errors | Field / control | standard API error envelope | As specified | 400 malformed; 422 invalid fields; 409 stale/duplicate; 429 rate limit; 503 dependency failure |
-| 9 | Submit order | Action | Revalidate unexpired quote and versions; atomically create PendingContract order/snapshots with idempotency. | Available when authorized | Destination: S34 |
+| 9 | Submit order | Action | Revalidate quote and fee-allocation versions; atomically claim any fee allocation and create PendingContract order/snapshots with idempotency. | Available when authorized | Destination: S34 |
 | 10 | Edit quantities/address | Action | Requote and show changed breakdown before submit. | Available when authorized | Destination: S22 |
 | 11 | Change merge preference | Action | Requote with explicit preference. | Available when authorized | Destination: S23 |
 
@@ -55,7 +55,7 @@ Written behavior below takes precedence over obsolete sample content.
 
 | # | Element | User action | System response | Goes to screen |
 |---|---|---|---|---|
-| 1 | Submit order | Activate | Revalidate unexpired quote and versions; atomically create PendingContract order/snapshots with idempotency. | S34 |
+| 1 | Submit order | Activate | Revalidate quote and fee-allocation versions; atomically claim any fee allocation and create PendingContract order/snapshots with idempotency. | S34 |
 | 2 | Edit quantities/address | Activate | Requote and show changed breakdown before submit. | S22 |
 | 3 | Change merge preference | Activate | Requote with explicit preference. | S23 |
 
@@ -74,6 +74,7 @@ Home and public catalog are available to Guest and authenticated users. Customer
 
 1. Valid unexpired quote submission creates one PendingContract order and immutable address/price snapshots.
 2. Expired quote or changed product/design version requires requote and review; duplicate same key returns same order.
+3. First Complex-design order shows accepted fee separately; pending fee-bearing order blocks another order until InProduction or resolved cancellation. Stale allocation returns 409 and requires a reviewed replacement quote; repeat orders after InProduction show fee 0.
 
 ## 7. Linked requirements
 

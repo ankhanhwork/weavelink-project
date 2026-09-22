@@ -13,7 +13,7 @@
 
 ## 1. Purpose
 
-**Shown when:** The Company Admin assigns one eligible Paid, unassigned DesignRequest to an active Sales Consultant in the same company and records the committed due date. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
+**Shown when:** The Company Admin assigns one eligible Approved, unassigned DesignRequest to an active Sales Consultant in the same company and records the committed due date. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
 
 **The user leaves this screen when:** An authorized action in section 5 succeeds, the user follows a role-allowed global route, or they return to the validated originating route.
 
@@ -27,7 +27,7 @@ Don't have mockup
 |---|---|---|---|---|---|
 | 1 | Screen heading | Heading | Consultation Assignment | Yes | Static route title. |
 | 2 | Route | Navigation target | /admin/design-requests/{request_id}/assignment | Yes | Access checked on server. |
-| 3 | request_id | Field / control | UUID path parameter | As specified | Request must be Paid and unassigned, or eligible for atomic reassignment. |
+| 3 | request_id | Field / control | UUID path parameter | As specified | Request must be Approved (Simple or accepted Complex fee) and unassigned, or eligible for atomic reassignment. |
 | 4 | consultant_id | Field / control | UUID, required | As specified | Active Sales Consultant membership in same company. |
 | 5 | committed_due_at | Field / control | UTC timestamp, required | As specified | Admin commitment at assignment; requested_deadline remains customer preference. |
 | 6 | expected_version | Field / control | integer, required | As specified | Stale request returns 409; assignment and due date save atomically. |
@@ -70,6 +70,7 @@ Home and public catalog are available to Guest and authenticated users. Customer
 
 1. Assignment succeeds only for active same-company consultant and records committed_due_at atomically.
 2. Concurrent/stale assignment returns 409 and does not create duplicate notices.
+3. Assignment locks/version-checks the request with customer assignment; if cancellation wins, return 409 without assignment or partial transfer.
 
 ## 7. Linked requirements
 

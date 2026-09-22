@@ -13,7 +13,7 @@
 
 ## 1. Purpose
 
-**Shown when:** The Company Admin switches between paid design requests awaiting assignment and company-scoped consultation/customer records. Only active same-company consultants are eligible for assignment. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
+**Shown when:** The Company Admin switches between submitted requests awaiting assessment, fee proposals awaiting acceptance and Approved requests awaiting assignment and company-scoped consultation/customer records. Only active same-company consultants are eligible for assignment. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
 
 **The user leaves this screen when:** An authorized action in section 5 succeeds, the user follows a role-allowed global route, or they return to the validated originating route.
 
@@ -27,24 +27,28 @@ Don't have mockup
 |---|---|---|---|---|---|
 | 1 | Screen heading | Heading | Consultation Requests and Customers | Yes | Static route title. |
 | 2 | Route | Navigation target | /admin/consultations?tab=requests,customers | Yes | Access checked on server. |
-| 3 | tab | Field / control | enum: requests or customers; default requests | As specified | Requests show paid DesignRequest id, status, product, customer display name, requested_deadline and committed_due_at; customers show consultation id and CRM status. |
+| 3 | tab | Field / control | enum: requests or customers; default requests | As specified | Requests show DesignRequest id, status, product, customer display name, requested_deadline and committed_due_at; customers show consultation id and CRM status. |
 | 4 | status | Field / control | allowlisted request or CRM status enum | As specified | Filter applies to the selected tab lifecycle only; design request and CRM states remain distinct. |
 | 5 | product_id | Field / control | optional UUID | As specified | Same-company product filter on requests tab; inaccessible IDs return 404. |
 | 6 | requested_deadline_from/to | Field / control | optional local dates | As specified | Inclusive start and exclusive end; reject reversed range; display in Asia/Ho_Chi_Minh. |
 | 7 | page / page_size / sort | Field / control | integer / integer / enum | As specified | documented pagination bounds; sort allowlist is requested_deadline, created_at or status. |
 | 8 | customer_id / company_id | Field / control | server-derived UUIDs | As specified | Never accepted as scope input; internal notes visible to authorized staff only. |
 | 9 | API errors | Field / control | standard API error envelope | As specified | 400 malformed; 422 invalid filters; 403 prohibited action; 404 inaccessible request/customer; 429 rate limit; 503 dependency failure. |
-| 10 | Assign paid request | Action | Open assignment with active same-company consultants. | Available when authorized | Destination: S19 |
-| 11 | Open request | Action | View status/details and authorized notes. | Available when authorized | Destination: S21 |
+| 10 | Assign approved request | Action | Open assignment only for Approved request with active same-company consultants. | Available when authorized | Destination: S19 |
+| 11 | Open request | Action | View request assessment/details inline; CRM notes stay in authorized consultation context. | Available when authorized | Destination: S18 request detail |
 | 12 | Switch tab | Action | Preserve company filters and route state. | Available when authorized | Destination: S18 tab |
 | 13 | Open customer record | Action | Show staff-only company-scoped consultation context. | Available when authorized | Destination: S18 customers tab |
+| 14 | Start review | Action | Submitted → UnderReview with expected_version and Idempotency-Key | Submitted only | Same-company Admin; cancelled/stale request 409. |
+| 15 | complexity / rationale / fee_vnd | Assessment fields | Simple or Complex; rationale 1-500 chars; suggested Complex fee from design_service_fee_vnd | UnderReview only | Simple fee 0; Complex integer 1..9999999999, default 200000 at assessment; Admin confirms/overrides. |
+| 16 | Complete assessment | Action | Simple → Approved; Complex → FeeProposed; persist assessor/time/proposal version and notify owner | UnderReview only | No assignment until Approved; proposal/approval immutable; no payment. |
+| 17 | Reject request | Action | UnderReview → Rejected with customer-visible reason 1-500 chars | UnderReview only | Expected version/key; notify owner; terminal state. |
 
 ## 4. States
 
 | State | What the user sees | Trigger |
 |---|---|---|
 | Loading | Labelled progress/skeleton; disable duplicate submit. | Request starts |
-| Empty | Show no paid requests awaiting assignment or customer consultations; preserve filters where present and explain eligibility/filter conditions. | Successful query returns no rows |
+| Empty | Show no requests awaiting assessment/acceptance/assignment or customer consultations; preserve filters where present and explain eligibility/filter conditions. | Successful query returns no rows |
 | Forbidden/not found | Safe message without revealing inaccessible identifiers. | 401/403/404 |
 | Error | Show code, message, field_errors, request_id; preserve entered values. | Request failure |
 | Retry | Retry reads on transient failure; reuse the same idempotency key only for mutations that require one for the documented mutation. | Recoverable failure |
@@ -55,10 +59,13 @@ Don't have mockup
 
 | # | Element | User action | System response | Goes to screen |
 |---|---|---|---|---|
-| 1 | Assign paid request | Activate | Open assignment with active same-company consultants. | S19 |
-| 2 | Open request | Activate | View status/details and authorized notes. | S21 |
+| 1 | Assign approved request | Activate | Open assignment only for Approved request with active same-company consultants. | S19 |
+| 2 | Open request | Activate | View request assessment/details inline; CRM notes stay in authorized consultation context. | S18 request detail |
 | 3 | Switch tab | Activate | Preserve company filters and route state. | S18 tab |
 | 4 | Open customer record | Activate | Show staff-only company-scoped consultation context. | S18 customers tab |
+| 5 | Start review | Activate | Lock/version-check Submitted and persist UnderReview. | S18 |
+| 6 | Complete assessment | Submit classification, rationale and fee | Validate and persist Simple Approved or Complex FeeProposed; notify owner through outbox. | S18 |
+| 7 | Reject request | Confirm reason | Lock/version-check UnderReview, persist Rejected and notify owner. | S18 |
 
 Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Company Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales Consultant routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks role, company, membership, ownership and assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Company Admin, S20 for Sales Consultant, S41 for System Admin, and S01 for Guest.
 
@@ -73,8 +80,10 @@ Home and public catalog are available to Guest and authenticated users. Customer
 
 ### Acceptance scenarios
 
-1. Unpaid request is not assignable; Paid request appears as eligible within its company only.
+1. Submitted/UnderReview/FeeProposed requests are not assignable; Simple approval or accepted Complex fee makes Approved eligible within its company only.
 2. Customer tab excludes other companies and internal notes remain staff-only.
+3. Simple assessment sets fee 0; Complex proposes the Admin-confirmed fee and notifies the owner; cancellation racing with assessment rejects the losing write.
+4. Rejected requests show the customer-visible reason; proposals cannot be edited after publication.
 
 ## 7. Linked requirements
 
@@ -86,6 +95,9 @@ Home and public catalog are available to Guest and authenticated users. Customer
 | MFG-08/F-ORD-004 | Implements this screen's validated user flow and the linked source function. |
 Additional linked modules: [MFG-08](../specs/spec-MFG-08.md).
 
+| MFG-05/F-DES-007 | Assessment queue, committed notifications and authorized request visibility. |
+| MFG-05/F-DES-008 | Assessment queue, committed notifications and authorized request visibility. |
+| MFG-05/F-DES-009 | Assessment queue, committed notifications and authorized request visibility. |
 The rules in this screen and its linked module specifications are complete for implementation.
 
 ## 8. Responsive and accessibility notes

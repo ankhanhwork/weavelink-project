@@ -30,7 +30,7 @@ Don't have mockup
 | 3 | settings_version / expected_version | Field / control | integer, required on save | As specified | Complete allowlisted configuration validates and activates atomically. |
 | 4 | public_company_contacts | Field / control | typed nullable values | As specified | Omit unset phone/social links; never invent business identifiers. |
 | 5 | SMTP/VNPay secret references | Field / control | write-only secret-reference strings | As specified | Show configured/not configured only; never reveal secret values. |
-| 6 | design_service_fee_vnd | Field / control | integer | As specified | Range 1..9999999999 VND; default 200000. |
+| 6 | design_service_fee_vnd | Field / control | integer | As specified | Suggested Complex assessment fee: range 1..9999999999 VND; default 200000. Changes affect future assessments only; Simple uses 0 and existing proposals/accepted fees remain unchanged. |
 | 7 | shipping_vnd | Field / control | integer | As specified | Configurable nonnegative VND; default 30000. |
 | 8 | merge_discount_percent | Field / control | integer, read-only in v1 | As specified | Fixed at 5 despite broader allowlist in later configuration; fixed release rule. |
 | 9 | standard_production_days / merge_extra_days | Field / control | integer, read-only in v1 | As specified | Fixed at 7 / 3 days; customer promise is production_due_at, not carrier delivery. |

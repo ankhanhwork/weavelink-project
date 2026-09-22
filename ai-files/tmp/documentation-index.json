@@ -1,8 +1,8 @@
 {
-  "passed": true,
-  "checks": 9785,
+  "passed": false,
+  "checks": 9879,
   "markdownFiles": 68,
-  "functions": 94,
+  "functions": 96,
   "useCases": [
     "UC-G01",
     "UC-G02",
@@ -55,9 +55,11 @@
     "UC-S11"
   ],
   "screens": 43,
-  "localLinks": 147,
-  "mermaidBlocks": 29,
-  "errors": [],
+  "localLinks": 144,
+  "mermaidBlocks": 47,
+  "errors": [
+    "Sequence heading format or ID set changed"
+  ],
   "files": [
     "docs/architecture/context.md",
     "docs/architecture/sequence.md",
@@ -175,6 +177,8 @@
     "MFG-05/F-DES-009",
     "MFG-05/F-DES-010",
     "MFG-05/F-DES-011",
+    "MFG-05/F-DES-012",
+    "MFG-05/F-DES-013",
     "MFG-06/F-PAY-001",
     "MFG-06/F-PAY-002",
     "MFG-06/F-PAY-003",

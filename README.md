@@ -8,12 +8,12 @@ This repository contains the software design documentation for the DBIZ 3 Group 
 
 | Area | Contents | Location |
 |---|---|---|
-| Function list | 12 MFG modules and 94 module-qualified function entries | [`docs/function-list.md`](docs/function-list.md) |
+| Function list | 12 MFG modules and 96 module-qualified function entries | [`docs/function-list.md`](docs/function-list.md) |
 | Use cases | 49 use cases with resolved actors, relationships, and functions | [`docs/architecture/use-case.md`](docs/architecture/use-case.md) |
 | Architecture | Context diagram, system configuration, and end-to-end usage flow | [`docs/architecture/`](docs/architecture/) |
 | Sequence diagrams | 10 sequences covering SD-01 through SD-09, including SD-05A and SD-05B | [`docs/architecture/sequence.md`](docs/architecture/sequence.md) |
-| Screen catalogue | 43 documented screen entries | [`docs/screen-list.md`](docs/screen-list.md) |
-| Screen specifications | 43 detailed screen specs; 17 have supplied PNG mockups and 26 explicitly record that no mockup is available | [`screens/`](screens/) |
+| Screen catalogue | 43 documented screen entries, including deprecated S16 | [`docs/screen-list.md`](docs/screen-list.md) |
+| Screen specifications | 43 detailed screen specs (S16 retained as deprecated); 17 have supplied PNG mockups and 26 explicitly record that no mockup is available | [`screens/`](screens/) |
 | Module specifications | Scope, actors, scenarios, flows, requirements, entities, business rules, success criteria, decisions, and traceability | [`specs/`](specs/) |
 
 ## Main actors
@@ -34,7 +34,7 @@ This repository contains the software design documentation for the DBIZ 3 Group 
 | MFG-02 | Profile & Settings | 5 | 4 | [`spec-MFG-02.md`](specs/spec-MFG-02.md) |
 | MFG-03 | Company Accounts | 8 | 4 | [`spec-MFG-03.md`](specs/spec-MFG-03.md) |
 | MFG-04 | Product Catalog | 11 | 7 | [`spec-MFG-04.md`](specs/spec-MFG-04.md) |
-| MFG-05 | Product Design | 11 | 5 | [`spec-MFG-05.md`](specs/spec-MFG-05.md) |
+| MFG-05 | Product Design | 13 | 5 | [`spec-MFG-05.md`](specs/spec-MFG-05.md) |
 | MFG-06 | Order & Payment | 6 | 2 | [`spec-MFG-06.md`](specs/spec-MFG-06.md) |
 | MFG-07 | Order Management | 7 | 3 | [`spec-MFG-07.md`](specs/spec-MFG-07.md) |
 | MFG-08 | Sales Consultant | 8 | 3 | [`spec-MFG-08.md`](specs/spec-MFG-08.md) |
@@ -42,7 +42,7 @@ This repository contains the software design documentation for the DBIZ 3 Group 
 | MFG-10 | Order Optimization (Merge) | 7 | 4 | [`spec-MFG-10.md`](specs/spec-MFG-10.md) |
 | MFG-11 | Data Analytics | 3 | 3 | [`spec-MFG-11.md`](specs/spec-MFG-11.md) |
 | MFG-12 | System Operations | 8 | 3 | [`spec-MFG-12.md`](specs/spec-MFG-12.md) |
-| **Total** | | **94** | **49** | |
+| **Total** | | **96** | **49** | |
 
 ## MVP Scope
 
@@ -57,7 +57,7 @@ The MVP scope is defined by feature priority. It does not remove lower-priority 
 | **Should** | Order Tracking & Status Updates | MFG-07 | Manual tracking is an acceptable temporary launch fallback |
 | **Should** | Digital Contract Generation & E-signature acknowledgement | MFG-09 | Email or paper contract is an acceptable temporary launch fallback |
 | **Could** | Order Optimization / Merge | MFG-10 | Valuable after order volume increases |
-| **Could** | Paid Design Service Request | MFG-05 | Alternative path for customers needing consultant assistance |
+| **Could** | Assessed Design Service Request | MFG-05 | Simple work is free; accepted Complex fee is collected with the first order from the delivered design |
 | **Could** | Sales Consultant Assignment & Task Dashboard | MFG-08 | Needed when consultation volume requires a dedicated queue |
 | **Won't** | Data Analytics Dashboard & Data Export | MFG-11 | Deferred until sufficient order history exists |
 | **Won't** | Company Accounts & System Operations | MFG-03, MFG-12 | One configured admin is sufficient for the MVP |
@@ -66,7 +66,7 @@ The MVP scope is defined by feature priority. It does not remove lower-priority 
 
 - **Must:** MFG-01, MFG-04, self-design in MFG-05, and MFG-06.
 - **Should:** MFG-07 and MFG-09.
-- **Could:** paid design service in MFG-05, MFG-08, and MFG-10.
+- **Could:** assessed design service in MFG-05, MFG-08, and MFG-10.
 - **Won't:** MFG-03, MFG-11, and MFG-12 for the MVP release.
 
 ## Use Case ID convention

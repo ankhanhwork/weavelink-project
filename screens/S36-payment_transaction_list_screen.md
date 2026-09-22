@@ -27,7 +27,7 @@ Don't have mockup
 |---|---|---|---|---|---|
 | 1 | Screen heading | Heading | Payment Transaction List | Yes | Static route title. |
 | 2 | Route | Navigation target | /admin/payments | Yes | Access checked on server. |
-| 3 | purpose | Field / control | enum: ORDER or SERVICE | As specified | Filter uses active Company Admin company scope. |
+| 3 | purpose | Field / control | enum: ORDER only | As specified | Filter uses active Company Admin company scope. |
 | 4 | status / refund_status | Field / control | allowlisted transaction/refund enums | As specified | Filter Pending, Succeeded, Failed or Expired where applicable. |
 | 5 | date_from / date_to | Field / control | optional local dates | As specified | Inclusive start, exclusive end; display Asia/Ho_Chi_Minh. |
 | 6 | rows | Field / control | payment_id, resource_id, integer amount_vnd, currency, status, created_at | As specified | Mask provider references; omit card secrets and other-company data. |
@@ -68,7 +68,7 @@ Home and public catalog are available to Guest and authenticated users. Customer
 
 ### Acceptance scenarios
 
-1. List contains company-scoped ORDER/SERVICE attempts with masked provider refs and page bounds.
+1. List contains company-scoped ORDER attempts with masked provider refs and page bounds.
 2. Cross-company payment is absent; pending attempts are not represented as revenue.
 
 ## 7. Linked requirements

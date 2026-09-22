@@ -41,6 +41,7 @@ Written behavior below takes precedence over obsolete sample content.
 | 12 | Request signing challenge | Action | Require explicit consent, typed name and recent password reauth; issue contract-bound 10m one-use challenge. | Available when authorized | Destination: S34 |
 | 13 | Sign | Action | Verify challenge/hash/version and transactionally record evidence; order advances to AwaitingPayment. | Available when authorized | Destination: S35 |
 | 14 | Download/view PDF | Action | Authorized private URL; no public asset URL. | Available when authorized | Destination: S34 |
+| 15 | design_fee_vnd / source_design_request_id | Read-only price line | Integer VND and originating request reference from order snapshot | Yes | Show separately outside merchandise subtotal, including 0 for free/repeat orders; same fee/total as S25/S35 and PDF; no manual surcharge. |
 
 ## 4. States
 
@@ -77,6 +78,7 @@ Home and public catalog are available to Guest and authenticated users. Customer
 
 1. Correct consent, typed profile name, recent password and valid contract-bound challenge records evidence once and moves order to AwaitingPayment.
 2. Expired/replayed challenge, changed hash/version or missing consent rejects signing; checkbox alone never signs.
+3. Contract/PDF displays the snapshotted design fee separately before signing; it never reads current configuration or adds a second charge.
 
 ## 7. Linked requirements
 

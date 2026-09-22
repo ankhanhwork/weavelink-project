@@ -28,7 +28,7 @@ Don't have mockup
 | 1 | Screen heading | Heading | Consultant Tasks and Customers | Yes | Static route title. |
 | 2 | Route | Navigation target | /consultant/tasks?tab=assigned,customers | Yes | Access checked on server. |
 | 3 | tab | Field / control | enum: assigned or customers; default assigned | As specified | Both tabs query only the current consultant assignments and same-company customer records. |
-| 4 | design_request_status | Field / control | AwaitingPayment, Paid, Assigned, InProgress, Delivered, Cancelled, Expired | As specified | Display-only task state; only currently assigned Paid or InProgress work is actionable. |
+| 4 | design_request_status | Field / control | Submitted, UnderReview, FeeProposed, Approved, Assigned, InProgress, Delivered, Cancelled, Rejected | As specified | Display-only task state; only currently assigned Assigned or InProgress work is actionable. |
 | 5 | crm_status | Field / control | New, Contacted, InProgress, ClosedWon, ClosedLost | As specified | Applies only to CRM records; transitions follow MFG-08. |
 | 6 | customer_id / request_id / company_id | Field / control | read-only UUIDs | As specified | Derived from authorized assignment/session; another consultant's identifier returns 404. |
 | 7 | page / page_size / sort | Field / control | integer / integer / enum | As specified | documented pagination bounds; sort allowlist is updated_at, requested_deadline or status. |

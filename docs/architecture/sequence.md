@@ -141,39 +141,41 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     actor Customer
-    participant DesignServiceUI
-    participant DesignServiceController
-    participant DesignServiceService
-    participant PaymentUI
-    participant PaymentController
-    participant PaymentService
-    participant PaymentGateway
-    participant ConsultationRequestDatabase
+    actor CompanyAdmin as Company Admin
+    participant RequestUI as S15 / S17
+    participant AdminUI as S18
+    participant DesignModule
+    participant Database
+    participant Outbox
 
-    Customer->>DesignServiceUI: submit design service request
-    DesignServiceUI->>DesignServiceController: submit request information
-    DesignServiceController->>DesignServiceService: validate request information
-    DesignServiceService-->>DesignServiceController: request valid
-    DesignServiceController-->>DesignServiceUI: display request summary
-    Customer->>DesignServiceUI: click proceed to payment
-    DesignServiceUI->>PaymentUI: navigate to payment page
-    Customer->>PaymentUI: confirm payment
-    PaymentUI->>PaymentController: submit payment
-    PaymentController->>PaymentService: create payment request
-    PaymentService->>PaymentGateway: redirect payment
-    alt [payment successful]
-        PaymentGateway-->>PaymentController: payment success
-        PaymentController-->>DesignServiceService: confirm payment success
-        DesignServiceService->>ConsultationRequestDatabase: save design service request
-        ConsultationRequestDatabase-->>DesignServiceService: save success
-        DesignServiceService->>PaymentController: request created
-        PaymentController-->>PaymentUI: display payment success
-        PaymentUI-->>Customer: display confirmation
-    else [payment failed]
-        PaymentGateway-->>PaymentController: payment failed
-        PaymentController-->>PaymentUI: display payment failure
-        PaymentUI-->>Customer: display payment error
+    Customer->>RequestUI: Submit validated request on S15
+    RequestUI->>DesignModule: Create request with idempotency key
+    DesignModule->>Database: Atomically save Submitted and admin outbox event
+    DesignModule-->>RequestUI: Request ID, navigate to S17 request view
+    Outbox-->>CompanyAdmin: Notify submitted request
+    CompanyAdmin->>AdminUI: Start review with expected version
+    AdminUI->>DesignModule: Transition Submitted to UnderReview
+    CompanyAdmin->>AdminUI: Record complexity, rationale and fee or rejection reason
+    AdminUI->>DesignModule: Assess with expected version and key
+    alt Simple
+        DesignModule->>Database: Approve with fee 0 and customer outbox event
+    else Complex
+        DesignModule->>Database: Save FeeProposed, amount/version and customer outbox event
+        Outbox-->>Customer: Review proposal in S17, no payment now
+        Customer->>RequestUI: Accept exact fee and proposal version
+        RequestUI->>DesignModule: Accept with expected version and key
+        DesignModule->>Database: Atomically record acceptance and Approved, admin outbox event
+    else Rejected
+        DesignModule->>Database: Save Rejected with reason and customer outbox event
     end
+    opt Customer cancels before assignment
+        Customer->>RequestUI: Confirm cancellation in eligible state
+        RequestUI->>DesignModule: Cancel with expected version and key
+        DesignModule->>Database: Lock, cancel only unassigned eligible request, no refund
+    end
+    CompanyAdmin->>AdminUI: Open S19 for Approved request
+    AdminUI->>DesignModule: Assign through MFG-08 with expected versions
+    DesignModule->>Database: Lock, assign only if still Approved, conflicting cancellation returns 409
 ```
 
 # UC-C03: View saved design — SD-06: View Saved Design
@@ -300,7 +302,7 @@ sequenceDiagram
 | SD-03 | 5 | 15 | None |
 | SD-04 | 5 | 19 | None |
 | SD-05A | 5 | 9 | None |
-| SD-05B | 9 | 21 | None |
+| SD-05B | 7 | 22 | None |
 | SD-06 | 5 | 8 | None |
 | SD-07 | 6 | 13 | None |
 | SD-08 | 5 | 19 | None |
