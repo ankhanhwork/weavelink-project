@@ -13,7 +13,7 @@
 
 ## 1. Purpose
 
-**Shown when:** The customer edits a private 2D garment design tied to an owned product version. The existing design workflow is a 2D front/back garment canvas with product-supported size, colour, material and print-method choices; up to five uploaded artwork assets can be positioned and resized within the selected printable area. Saving creates an immutable version; ordered snapshots are never overwritten. This screen follows the existing workflow and does not reduce it to a single-side canvas or introduce a fixed revision limit.
+**Shown when:** The customer edits a private 2D garment design tied to an owned product version. The existing design workflow is a 2D front/back garment canvas with product-supported colour, material and print-method choices; size is not selected or saved here. The order screen S22 selects sizes and quantities. Up to five uploaded artwork assets can be positioned and resized within the selected printable area. Saving creates an immutable version; ordered snapshots are never overwritten. If the reference image depicts a size selector, it is obsolete; do not implement it. This screen does not reduce the workflow to a single-side canvas or introduce a fixed revision limit.
 
 **The user leaves this screen when:** An authorized action in section 5 succeeds, the user follows a role-allowed global route, or they return to the validated originating route.
 
@@ -30,8 +30,8 @@ The image documents the existing intended editor controls (front/back canvas, pr
 | 1 | Screen heading | Heading | Product Design Tool | Yes | Static route title. |
 | 2 | Route | Navigation target | /designs/new?product_id={id} | Yes | Access checked on server. |
 | 3 | product_id / product_version | Server-bound product selection | Published garment base and immutable rule version | Yes | If the product is unpublished or version changes before save, return 409 and preserve the draft for reload/revalidation. |
-| 4 | Size, colour, material, print method | Product option selectors | Allowed values and compatibility from current MFG-04 rules | Yes | A selected combination must be enabled for the product/version; invalid combinations return field-specific 422. |
-| 5 | Front / Back canvas tabs | Canvas surface selector | Independently configured printable areas for the chosen product | At least one supported surface | Switching surface preserves that surface's artwork placements; unsupported sides are disabled, not inferred. |
+| 4 | Colour, material, print method | Product option selectors | Allowed values and compatibility from current MFG-04 rules | Yes | A selected combination must be enabled for the product/version; size is selected per order on S22, not stored in the design. |
+| 5 | Front / Back canvas tabs | Canvas surface selector | Independently configured printable areas for the chosen product; seed area is 300 × 400 mm on both sides for S/M/L/XL | At least one supported surface | Switching surface preserves that surface's artwork placements; unsupported sides are disabled, not inferred. |
 | 6 | Artwork upload/list | Multi-file uploader and asset list | PNG/JPEG/WebP, max 10 MiB each, max 5 assets | Optional until user adds artwork | Validate actual MIME, scan result and ownership; reject unsupported/unsafe files without losing other draft settings. |
 | 7 | Artwork placement | Drag/resize handles and numeric X, Y, width, height (mm) | Coordinates relative to selected print area's top-left | Required for each placed asset | Entire artwork bounds must remain inside printable area; positive dimensions; invalid placement cannot preview/save. No rotation or text tool is implied. |
 | 8 | Zoom and draft indicator | Canvas controls/status | View-only zoom; unsaved changes indicator | Yes | Zoom does not change saved physical coordinates; leaving with unsaved edits prompts to save or discard. |
@@ -45,13 +45,13 @@ The image documents the existing intended editor controls (front/back canvas, pr
 
 | State | What the user sees | Trigger |
 |---|---|---|
-| Loading | Labelled progress/skeleton; disable duplicate submit. | Request starts |
-| Empty | Render the screen-specific form/detail state; if a required route object is absent, show safe not-found and return to the authorized parent route. | Empty initial form or missing detail payload |
-| Forbidden/not found | Safe message without revealing inaccessible identifiers. | 401/403/404 |
-| Error | Show code, message, field_errors, request_id; preserve entered values. | Request failure |
-| Retry | Retry reads on transient failure; reuse the same idempotency key only for mutations that require one for the documented mutation. | Recoverable failure |
-| Success | Show committed state and next valid action; announce via aria-live. | Mutation commits |
-| Conflict | Explain stale state; reload; never silently overwrite. | 409 |
+| Loading | Load the S13 Product Design Tool view model and show labelled progress; keep writes disabled until route data and authorization are resolved. | Request starts |
+| Empty | Render the defined initial/empty state for S13 Product Design Tool; if a required route object is absent, return a safe 404 and the authorized parent route. | Empty initial form or missing detail payload |
+| Forbidden/not found | Return a safe 401/403/404 for S13 Product Design Tool without revealing inaccessible record, customer, staff or payment details. | 401/403/404 |
+| Error | For S13 Product Design Tool, show the API code, message, field_errors and request_id; preserve safe user-entered values. | Request failure |
+| Retry | Retry transient reads for S13 Product Design Tool; retry a mutation only with its original idempotency key and identical payload, never as a new side effect. | Recoverable failure |
+| Success | Refresh S13 Product Design Tool from the committed server response, expose only the next role/state-allowed action and announce the result via aria-live. | Mutation commits |
+| Conflict | For a stale S13 Product Design Tool version or lifecycle state, reload authoritative data, explain the conflict and require explicit review before resubmission. | 409 |
 
 ## 5. Interactions and navigation
 
@@ -85,9 +85,9 @@ Home and public catalog are available to Guest and authenticated users. Customer
 
 | FR ID (from the module spec) | What this screen does for it |
 |---|---|
-| MFG-05/F-DES-001 | Implements this screen's validated user flow and the linked source function. |
-| MFG-05/F-DES-002 | Implements this screen's validated user flow and the linked source function. |
-| MFG-05/F-DES-003 | Implements this screen's validated user flow and the linked source function. |
+| MFG-05/F-DES-001 | UI touchpoint for **Design Workspace**; this screen defines the visible action/result, while the module spec owns server authorization, validation and persistence. |
+| MFG-05/F-DES-002 | UI touchpoint for **Preview Logic**; this screen defines the visible action/result, while the module spec owns server authorization, validation and persistence. |
+| MFG-05/F-DES-003 | UI touchpoint for **Save Design Logic**; this screen defines the visible action/result, while the module spec owns server authorization, validation and persistence. |
 The rules in this screen and its linked module specifications are complete for implementation.
 
 ## 8. Responsive and accessibility notes

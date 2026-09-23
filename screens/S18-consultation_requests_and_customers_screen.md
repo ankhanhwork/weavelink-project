@@ -49,13 +49,13 @@ Written behavior below takes precedence over obsolete sample content.
 
 | State | What the user sees | Trigger |
 |---|---|---|
-| Loading | Labelled progress/skeleton; disable duplicate submit. | Request starts |
+| Loading | Load the S18 Consultation Requests and Customers view model and show labelled progress; keep writes disabled until route data and authorization are resolved. | Request starts |
 | Empty | Show no requests awaiting assessment/acceptance/assignment or customer consultations; preserve filters where present and explain eligibility/filter conditions. | Successful query returns no rows |
-| Forbidden/not found | Safe message without revealing inaccessible identifiers. | 401/403/404 |
-| Error | Show code, message, field_errors, request_id; preserve entered values. | Request failure |
-| Retry | Retry reads on transient failure; reuse the same idempotency key only for mutations that require one for the documented mutation. | Recoverable failure |
-| Success | Show committed state and next valid action; announce via aria-live. | Mutation commits |
-| Conflict | Explain stale state; reload; never silently overwrite. | 409 |
+| Forbidden/not found | Return a safe 401/403/404 for S18 Consultation Requests and Customers without revealing inaccessible record, customer, staff or payment details. | 401/403/404 |
+| Error | For S18 Consultation Requests and Customers, show the API code, message, field_errors and request_id; preserve safe user-entered values. | Request failure |
+| Retry | Retry transient reads for S18 Consultation Requests and Customers; retry a mutation only with its original idempotency key and identical payload, never as a new side effect. | Recoverable failure |
+| Success | Refresh S18 Consultation Requests and Customers from the committed server response, expose only the next role/state-allowed action and announce the result via aria-live. | Mutation commits |
+| Conflict | For a stale S18 Consultation Requests and Customers version or lifecycle state, reload authoritative data, explain the conflict and require explicit review before resubmission. | 409 |
 
 ## 5. Interactions and navigation
 
@@ -91,10 +91,10 @@ Home and public catalog are available to Guest and authenticated users. Customer
 
 | FR ID (from the module spec) | What this screen does for it |
 |---|---|
-| MFG-08/F-ORD-001 | Implements this screen's validated user flow and the linked source function. |
-| MFG-08/F-ORD-002 | Implements this screen's validated user flow and the linked source function. |
-| MFG-08/F-ORD-003 | Implements this screen's validated user flow and the linked source function. |
-| MFG-08/F-ORD-004 | Implements this screen's validated user flow and the linked source function. |
+| MFG-08/F-ORD-001 | UI touchpoint for **Unassigned Customer View**; this screen defines the visible action/result, while the module spec owns server authorization, validation and persistence. |
+| MFG-08/F-ORD-002 | UI touchpoint for **Customer Detail View**; this screen defines the visible action/result, while the module spec owns server authorization, validation and persistence. |
+| MFG-08/F-ORD-003 | UI touchpoint for **Assign Sales Logic**; this screen defines the visible action/result, while the module spec owns server authorization, validation and persistence. |
+| MFG-08/F-ORD-004 | UI touchpoint for **Assign Notify Logic**; this screen defines the visible action/result, while the module spec owns server authorization, validation and persistence. |
 Additional linked modules: [MFG-08](../specs/spec-MFG-08.md).
 
 | MFG-05/F-DES-007 | Assessment queue, committed notifications and authorized request visibility. |

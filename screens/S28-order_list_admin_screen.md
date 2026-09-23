@@ -41,13 +41,13 @@ Written behavior below takes precedence over obsolete sample content.
 
 | State | What the user sees | Trigger |
 |---|---|---|
-| Loading | Labelled progress/skeleton; disable duplicate submit. | Request starts |
+| Loading | Load the S28 Order List (Admin) view model and show labelled progress; keep writes disabled until route data and authorization are resolved. | Request starts |
 | Empty | Show no Dony orders or no orders assigned to this Sales employee; preserve filters and explain the result. | Successful query returns no rows |
-| Forbidden/not found | Safe message without revealing inaccessible identifiers. | 401/403/404 |
-| Error | Show code, message, field_errors, request_id; preserve entered values. | Request failure |
-| Retry | Retry reads on transient failure; reuse the same idempotency key only for mutations that require one for the documented mutation. | Recoverable failure |
-| Success | Show committed state and next valid action; announce via aria-live. | Mutation commits |
-| Conflict | Explain stale state; reload; never silently overwrite. | 409 |
+| Forbidden/not found | Return a safe 401/403/404 for S28 Order List (Admin) without revealing inaccessible record, customer, staff or payment details. | 401/403/404 |
+| Error | For S28 Order List (Admin), show the API code, message, field_errors and request_id; preserve safe user-entered values. | Request failure |
+| Retry | Retry transient reads for S28 Order List (Admin); retry a mutation only with its original idempotency key and identical payload, never as a new side effect. | Recoverable failure |
+| Success | Refresh S28 Order List (Admin) from the committed server response, expose only the next role/state-allowed action and announce the result via aria-live. | Mutation commits |
+| Conflict | For a stale S28 Order List (Admin) version or lifecycle state, reload authoritative data, explain the conflict and require explicit review before resubmission. | 409 |
 
 ## 5. Interactions and navigation
 
@@ -78,9 +78,9 @@ Home and public catalog are available to Guest and authenticated users. Customer
 
 | FR ID (from the module spec) | What this screen does for it |
 |---|---|
-| MFG-07/F-ORD-005 | Implements this screen's validated user flow and the linked source function. |
-| MFG-07/F-ORD-006 | Implements this screen's validated user flow and the linked source function. |
-| MFG-07/F-ORD-007 | Implements this screen's validated user flow and the linked source function. |
+| MFG-07/F-ORD-005 | UI touchpoint for **Admin Order Dashboard**; this screen defines the visible action/result, while the module spec owns server authorization, validation and persistence. |
+| MFG-07/F-ORD-006 | UI touchpoint for **Status Update Logic**; this screen defines the visible action/result, while the module spec owns server authorization, validation and persistence. |
+| MFG-07/F-ORD-007 | UI touchpoint for **Status Notify Logic**; this screen defines the visible action/result, while the module spec owns server authorization, validation and persistence. |
 The rules in this screen and its linked module specifications are complete for implementation.
 
 ## 8. Responsive and accessibility notes

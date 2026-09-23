@@ -44,13 +44,13 @@ Written behavior below takes precedence over obsolete sample content.
 
 | State | What the user sees | Trigger |
 |---|---|---|
-| Loading | Labelled progress/skeleton; disable duplicate submit. | Request starts |
-| Empty | Render the screen-specific form/detail state; if a required route object is absent, show safe not-found and return to the authorized parent route. | Empty initial form or missing detail payload |
-| Forbidden/not found | Safe message without revealing inaccessible identifiers. | 401/403/404 |
-| Error | Show code, message, field_errors, request_id; preserve entered values. | Request failure |
-| Retry | Retry reads on transient failure; reuse the same idempotency key only for mutations that require one for the documented mutation. | Recoverable failure |
-| Success | Show committed state and next valid action; announce via aria-live. | Mutation commits |
-| Conflict | Explain stale state; reload; never silently overwrite. | 409 |
+| Loading | Load the S33 Contract Detail (Sales Admin) view model and show labelled progress; keep writes disabled until route data and authorization are resolved. | Request starts |
+| Empty | Render the defined initial/empty state for S33 Contract Detail (Sales Admin); if a required route object is absent, return a safe 404 and the authorized parent route. | Empty initial form or missing detail payload |
+| Forbidden/not found | Return a safe 401/403/404 for S33 Contract Detail (Sales Admin) without revealing inaccessible record, customer, staff or payment details. | 401/403/404 |
+| Error | For S33 Contract Detail (Sales Admin), show the API code, message, field_errors and request_id; preserve safe user-entered values. | Request failure |
+| Retry | Retry transient reads for S33 Contract Detail (Sales Admin); retry a mutation only with its original idempotency key and identical payload, never as a new side effect. | Recoverable failure |
+| Success | Refresh S33 Contract Detail (Sales Admin) from the committed server response, expose only the next role/state-allowed action and announce the result via aria-live. | Mutation commits |
+| Conflict | For a stale S33 Contract Detail (Sales Admin) version or lifecycle state, reload authoritative data, explain the conflict and require explicit review before resubmission. | 409 |
 
 ## 5. Interactions and navigation
 
@@ -81,10 +81,10 @@ Home and public catalog are available to Guest and authenticated users. Customer
 
 | FR ID (from the module spec) | What this screen does for it |
 |---|---|
-| MFG-09/F-CONTR-003 | Implements this screen's validated user flow and the linked source function. |
-| MFG-09/F-CONTR-004 | Implements this screen's validated user flow and the linked source function. |
-| MFG-09/F-CONTR-005 | Implements this screen's validated user flow and the linked source function. |
-| MFG-09/F-CONTR-007 | Implements this screen's validated user flow and the linked source function. |
+| MFG-09/F-CONTR-003 | UI touchpoint for **Fill Contract Logic**; this screen defines the visible action/result, while the module spec owns server authorization, validation and persistence. |
+| MFG-09/F-CONTR-004 | UI touchpoint for **Render PDF Logic**; this screen defines the visible action/result, while the module spec owns server authorization, validation and persistence. |
+| MFG-09/F-CONTR-005 | UI touchpoint for **Ready Notify Logic**; this screen defines the visible action/result, while the module spec owns server authorization, validation and persistence. |
+| MFG-09/F-CONTR-007 | UI touchpoint for **Replace unsigned contract and notify customer**; this screen defines the visible action/result, while the module spec owns server authorization, validation and persistence. |
 The rules in this screen and its linked module specifications are complete for implementation.
 
 ## 8. Responsive and accessibility notes

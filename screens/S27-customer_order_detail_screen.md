@@ -33,7 +33,7 @@ Written behavior below takes precedence over obsolete sample content.
 | 4 | status enum | Field / control | canonical MFG-06 lifecycle plus Cancelled | As specified | `AwaitingDigitalApproval`, `DigitalDesignApproved`, `SampleInPreparation`, `SampleShipped`, `PendingContract`, `AwaitingDeposit`, `Confirmed`, `InProduction`, `Shipped`, `DeliveredAwaitingBalance`, `Completed`, `Cancelled`. |
 | 5 | design / sample / contract / deposit / balance / refund / batch | Field / control | read-only related projections | As specified | Show version/evidence and authoritative current states; never infer state from email or browser return. |
 | 6 | cancellation_eligibility / reason | Field / control | server boolean plus required string 1..500 | As specified | Allow eligible pre-deposit states or pre-production unbatched Confirmed; captured funds start policy-based refund. |
-| 7 | carrier / tracking_number / shipped_at / received_at | Field / control | read-only fulfillment fields | As specified | Shipment fields appear at Shipped; receipt evidence appears at DeliveredAwaitingBalance/Completed. |
+| 7 | carrier / tracking_number / shipped_at / delivery_evidence_verified_at / auto_confirm_at / received_at | Fulfillment timeline | Read-only shipment and receipt evidence | By lifecycle state | Verified delivery proof and countdown are visible while Shipped; receipt timestamp appears after Customer confirmation or scheduled auto-confirmation at DeliveredAwaitingBalance/Completed. |
 | 8 | API errors | Field / control | standard API error envelope | As specified | 400 malformed; 422 invalid fields; 409 stale/duplicate; 429 rate limit; 503 dependency failure |
 | 9 | Cancel order | Action | Confirm; enforce state/no-batch/preproduction; schedule policy-based refund for captured funds. | Available when authorized | Destination: S26 |
 | 10 | Approve digital design | Action | Bind current design/quote version and advance `AwaitingDigitalApproval→DigitalDesignApproved`; stale version requires review. | Only in AwaitingDigitalApproval | Destination: S27 |
@@ -41,20 +41,22 @@ Written behavior below takes precedence over obsolete sample content.
 | 12 | Request sample revision | Action | Submit reason and return through a new immutable digital-design/quote approval cycle; do not overwrite prior evidence. | Only in SampleShipped | Destination: S27 |
 | 13 | View contract | Action | Open the authorized current contract only after sample approval. | Only in PendingContract or later | Destination: S34 |
 | 14 | Pay deposit | Action | Open exact `DEPOSIT` amount only after current contract is Signed and order is `AwaitingDeposit`. | Only in AwaitingDeposit | Destination: S35 |
-| 15 | Confirm delivery receipt | Action | Record Customer receipt evidence and advance `Shipped→DeliveredAwaitingBalance`. | Only in Shipped | Destination: S27 |
+| 15 | Confirm delivery receipt | Action | Record Customer receipt evidence and immediately advance `Shipped→DeliveredAwaitingBalance`; no dispute action is in MVP. | Only in Shipped | Destination: S27 |
 | 16 | Pay remaining balance | Action | Open exact `BALANCE` amount only after receipt is recorded. | Only in DeliveredAwaitingBalance | Destination: S35 |
+
+When staff records verified carrier/POD evidence, S27 shows the evidence timestamp and a three-calendar-day auto-confirmation countdown. There is no dispute button or dispute state in the MVP. If the Customer does not confirm before expiry, the scheduled event records receipt and changes the order to `DeliveredAwaitingBalance`.
 
 ## 4. States
 
 | State | What the user sees | Trigger |
 |---|---|---|
-| Loading | Labelled progress/skeleton; disable duplicate submit. | Request starts |
-| Empty | Render the screen-specific form/detail state; if a required route object is absent, show safe not-found and return to the authorized parent route. | Empty initial form or missing detail payload |
-| Forbidden/not found | Safe message without revealing inaccessible identifiers. | 401/403/404 |
-| Error | Show code, message, field_errors, request_id; preserve entered values. | Request failure |
-| Retry | Retry reads on transient failure; reuse the same idempotency key only for mutations that require one for the documented mutation. | Recoverable failure |
-| Success | Show committed state and next valid action; announce via aria-live. | Mutation commits |
-| Conflict | Explain stale state; reload; never silently overwrite. | 409 |
+| Loading | Load the S27 Customer Order Detail view model and show labelled progress; keep writes disabled until route data and authorization are resolved. | Request starts |
+| Empty | Render the defined initial/empty state for S27 Customer Order Detail; if a required route object is absent, return a safe 404 and the authorized parent route. | Empty initial form or missing detail payload |
+| Forbidden/not found | Return a safe 401/403/404 for S27 Customer Order Detail without revealing inaccessible record, customer, staff or payment details. | 401/403/404 |
+| Error | For S27 Customer Order Detail, show the API code, message, field_errors and request_id; preserve safe user-entered values. | Request failure |
+| Retry | Retry transient reads for S27 Customer Order Detail; retry a mutation only with its original idempotency key and identical payload, never as a new side effect. | Recoverable failure |
+| Success | Refresh S27 Customer Order Detail from the committed server response, expose only the next role/state-allowed action and announce the result via aria-live. | Mutation commits |
+| Conflict | For a stale S27 Customer Order Detail version or lifecycle state, reload authoritative data, explain the conflict and require explicit review before resubmission. | 409 |
 
 ## 5. Interactions and navigation
 
@@ -90,9 +92,9 @@ Home and public catalog are available to Guest and authenticated users. Customer
 
 | FR ID (from the module spec) | What this screen does for it |
 |---|---|
-| MFG-07/F-ORD-002 | Implements this screen's validated user flow and the linked source function. |
-| MFG-07/F-ORD-003 | Implements this screen's validated user flow and the linked source function. |
-| MFG-07/F-ORD-004 | Implements this screen's validated user flow and the linked source function. |
+| MFG-07/F-ORD-002 | UI touchpoint for **Order Detail View**; this screen defines the visible action/result, while the module spec owns server authorization, validation and persistence. |
+| MFG-07/F-ORD-003 | UI touchpoint for **Cancel eligible order and request refund if funds were captured**; this screen defines the visible action/result, while the module spec owns server authorization, validation and persistence. |
+| MFG-07/F-ORD-004 | UI touchpoint for **Cancel Notify Logic**; this screen defines the visible action/result, while the module spec owns server authorization, validation and persistence. |
 The rules in this screen and its linked module specifications are complete for implementation.
 
 ## 8. Responsive and accessibility notes

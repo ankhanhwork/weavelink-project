@@ -31,14 +31,14 @@ Written behavior below takes precedence over obsolete sample content.
 | 2 | Route | Navigation target | /admin/orders/{order_id} | Yes | Access checked on server. |
 | 3 | order_id / snapshots | Field / control | UUID and read-only data | As specified | Sales Admin or assigned Sales only; price, address, design and contract snapshots cannot be edited. |
 | 4 | lifecycle_event / expected_version | Field / control | required mutation inputs | As specified | Permit only staff-owned actions: start sample preparation, dispatch sample, start production, ship goods, or record authorized delivery proof. |
-| 5 | sample / shipment / receipt evidence | Field / control | versioned sample fields, strings or proof object | As specified | Sample dispatch binds sample/design version and tracking; goods shipment requires carrier/tracking and server shipped_at; delivery proof records received_at and source. |
+| 5 | sample / shipment / delivery evidence | Evidence panel | Versioned sample fields, carrier tracking event or signed proof-of-delivery reference | By transition | Sample dispatch binds sample/design version and tracking; goods shipment requires carrier/tracking and server shipped_at; verified delivery proof records evidence and verified-delivered timestamp but leaves status Shipped while the 3-day auto-confirmation timer runs. |
 | 6 | cancellation_reason | Field / control | string 1..500, Sales Admin only | As specified | Require current cancellation eligibility; Sales cannot cancel. |
 | 7 | contract_action | Field / control | Sales Admin only | As specified | Open S33 only when current physical sample is Approved and order is PendingContract; never mutate a Signed contract. |
 | 8 | API errors | Field / control | standard API error envelope | As specified | 400 malformed; 422 invalid fields; 409 stale/duplicate; 429 rate limit; 503 dependency failure |
 | 9 | Start/dispatch physical sample | Action | Advance `DigitalDesignApproved→SampleInPreparation→SampleShipped` and retain sample version/evidence. | State and role allowed | Destination: S29 |
 | 10 | Generate contract | Action | Snapshot current approved design/sample plus commercial and deposit terms. | Only in PendingContract with Approved sample | Destination: S33 |
 | 11 | Start production / ship | Action | Advance `Confirmed→InProduction→Shipped`; shipping requires carrier and tracking. | State and role allowed | Destination: S29 |
-| 12 | Record delivery proof | Action | With authorized proof, advance `Shipped→DeliveredAwaitingBalance`; cannot mark Completed. | Sales Admin only | Destination: S29 |
+| 12 | Record delivery proof | Action | Store/verify the evidence timestamp, notify the Customer and start the MFG-06 BR-007 3-calendar-day timer; do not change status immediately or expose balance payment. | Sales Admin only | Destination: S29 |
 | 13 | Cancel order | Action | Sales Admin with reason and eligibility; Sales cannot cancel. | Available when authorized | Destination: S28 |
 | 14 | Merge batch | Action | Sales Admin opens the batch console. | Available when authorized | Destination: S42 |
 
@@ -46,13 +46,13 @@ Written behavior below takes precedence over obsolete sample content.
 
 | State | What the user sees | Trigger |
 |---|---|---|
-| Loading | Labelled progress/skeleton; disable duplicate submit. | Request starts |
-| Empty | Render the screen-specific form/detail state; if a required route object is absent, show safe not-found and return to the authorized parent route. | Empty initial form or missing detail payload |
-| Forbidden/not found | Safe message without revealing inaccessible identifiers. | 401/403/404 |
-| Error | Show code, message, field_errors, request_id; preserve entered values. | Request failure |
-| Retry | Retry reads on transient failure; reuse the same idempotency key only for mutations that require one for the documented mutation. | Recoverable failure |
-| Success | Show committed state and next valid action; announce via aria-live. | Mutation commits |
-| Conflict | Explain stale state; reload; never silently overwrite. | 409 |
+| Loading | Load the S29 Order Detail (Admin) view model and show labelled progress; keep writes disabled until route data and authorization are resolved. | Request starts |
+| Empty | Render the defined initial/empty state for S29 Order Detail (Admin); if a required route object is absent, return a safe 404 and the authorized parent route. | Empty initial form or missing detail payload |
+| Forbidden/not found | Return a safe 401/403/404 for S29 Order Detail (Admin) without revealing inaccessible record, customer, staff or payment details. | 401/403/404 |
+| Error | For S29 Order Detail (Admin), show the API code, message, field_errors and request_id; preserve safe user-entered values. | Request failure |
+| Retry | Retry transient reads for S29 Order Detail (Admin); retry a mutation only with its original idempotency key and identical payload, never as a new side effect. | Recoverable failure |
+| Success | Refresh S29 Order Detail (Admin) from the committed server response, expose only the next role/state-allowed action and announce the result via aria-live. | Mutation commits |
+| Conflict | For a stale S29 Order Detail (Admin) version or lifecycle state, reload authoritative data, explain the conflict and require explicit review before resubmission. | 409 |
 
 ## 5. Interactions and navigation
 
@@ -61,7 +61,7 @@ Written behavior below takes precedence over obsolete sample content.
 | 1 | Start/dispatch physical sample | Activate | Persist versioned preparation/dispatch event and notify Customer. | S29 |
 | 2 | Generate contract | Activate | Snapshot current approved sample and payment terms. | S33 |
 | 3 | Start production / ship | Activate | Commit one valid fulfillment transition with required shipment evidence. | S29 |
-| 4 | Record delivery proof | Activate | Persist authorized proof and expose remaining-balance payment. | S29 |
+| 4 | Record delivery proof | Activate | Persist and verify evidence; keep order `Shipped`, show countdown, and let the scheduled MFG-06 event transition after three calendar days unless the Customer confirms sooner. | S29 |
 | 5 | Cancel order | Activate | Sales Admin supplies a reason; server rechecks eligibility. | S28 |
 | 6 | Merge batch | Activate | Sales Admin opens eligible candidates. | S42 |
 
@@ -86,9 +86,9 @@ Home and public catalog are available to Guest and authenticated users. Customer
 
 | FR ID (from the module spec) | What this screen does for it |
 |---|---|
-| MFG-07/F-ORD-005 | Implements this screen's validated user flow and the linked source function. |
-| MFG-07/F-ORD-006 | Implements this screen's validated user flow and the linked source function. |
-| MFG-07/F-ORD-007 | Implements this screen's validated user flow and the linked source function. |
+| MFG-07/F-ORD-005 | UI touchpoint for **Admin Order Dashboard**; this screen defines the visible action/result, while the module spec owns server authorization, validation and persistence. |
+| MFG-07/F-ORD-006 | UI touchpoint for **Status Update Logic**; this screen defines the visible action/result, while the module spec owns server authorization, validation and persistence. |
+| MFG-07/F-ORD-007 | UI touchpoint for **Status Notify Logic**; this screen defines the visible action/result, while the module spec owns server authorization, validation and persistence. |
 | MFG-06/F-PAY-003 | Implements versioned physical-sample preparation/dispatch and preserves Customer approval gates. |
 | MFG-09/F-CONTR-001 | Opens contract generation only after the current physical sample is Approved. |
 Additional linked modules: [MFG-06](../specs/spec-MFG-06.md), [MFG-09](../specs/spec-MFG-09.md).

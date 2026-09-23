@@ -13,7 +13,7 @@
 
 ## 1. Purpose
 
-**Shown when:** The customer enters exact recipient name, phone and full delivery address (address line, ward and province), chooses positive integer quantities by supported size, identifies the purchase as Individual, Business Buyer or Reseller Shop, and requests a server-priced quote for an owned eligible design. Business Buyer and Reseller Shop must also enter legal name, tax ID and billing address; these are commercial snapshots, not tenant or authorization data. The server enforces product MOQ and max_units_per_order. All identifiers and permissions come from the server session; recoverable failures preserve entered values.
+**Shown when:** The customer enters exact recipient name, phone and full delivery address (address line, ward and province), chooses positive integer quantities by supported size, confirms whether this order is for a Business Buyer or Reseller Shop, and requests a server-priced quote for an owned eligible design. These are Dony's only customer purchasing models; each requires legal name, tax ID and billing address as commercial snapshots, not tenant or authorization data. The server enforces product MOQ and max_units_per_order and revalidates the saved design against every selected size. All identifiers and permissions come from the server session; recoverable failures preserve entered values.
 
 **The user leaves this screen when:** An authorized action in section 5 succeeds, the user follows a role-allowed global route, or they return to the validated originating route.
 
@@ -38,8 +38,8 @@ Written behavior below takes precedence over obsolete sample content. MVP does n
 | 9 | ward | Field / control | string, required | As specified | Trimmed, 1..100 characters. |
 | 10 | province | Field / control | string, required | As specified | Trimmed, 1..100 characters. |
 | 11 | country | Field / control | enum, required | As specified | Exactly VN. |
-| 12 | buyer_type | Selector | Individual, Business Buyer, Reseller Shop | Yes | Describes this purchase only; it is not an account role or tenant boundary. Default Individual. |
-| 13 | buyer_legal_name / buyer_tax_id / billing_address | Conditional fields | Required for Business Buyer and Reseller Shop; omitted for Individual | Conditional | Trimmed strings; legal name 1..200, tax ID 1..50, billing address 1..250. Values are snapshotted to quote/order/contract; no tax-registry verification is claimed. |
+| 12 | buyer_type | Required order-purpose selector | Business Buyer or Reseller Shop | Yes; no default | Business Buyer means company uniforms/garments for its staff; Reseller Shop commissions its own designs/specifications for Dony to manufacture for resale. Neither means buying Dony ready-made stock; neither is a system role or tenant boundary. |
+| 13 | buyer_legal_name / buyer_tax_id / billing_address | Required business-detail fields | Required for both buyer types | Yes | Trimmed strings; legal name 1..200, tax ID 1..50, billing address 1..250. Values are snapshotted to quote/order/contract; no tax-registry verification is claimed. |
 | 14 | client customer_id/buyer_organization_id/unit_price/total | Prohibited client authority | Server-derived | Yes | Resolve Customer session; never trust client organization ID, unit price or total. The organization is descriptive commercial data, not tenant authority. |
 | 15 | expected_version / Idempotency-Key | Version / UUID | Required for mutation | Yes | Reject stale state; financially significant order create is idempotent. |
 | 16 | capacity | Server-derived integer | Product max_units_per_order | Yes | Reject quote if aggregate quantity exceeds capacity with 422 CAPACITY_EXCEEDED. |
@@ -51,13 +51,13 @@ Written behavior below takes precedence over obsolete sample content. MVP does n
 
 | State | What the user sees | Trigger |
 |---|---|---|
-| Loading | Labelled progress/skeleton; disable duplicate submit. | Request starts |
-| Empty | Render the screen-specific form/detail state; if a required route object is absent, show safe not-found and return to the authorized parent route. | Empty initial form or missing detail payload |
-| Forbidden/not found | Safe message without revealing inaccessible identifiers. | 401/403/404 |
-| Error | Show code, message, field_errors, request_id; preserve entered values. | Request failure |
-| Retry | Retry reads on transient failure; reuse the same idempotency key only for mutations that require one for the documented mutation. | Recoverable failure |
-| Success | Show committed state and next valid action; announce via aria-live. | Mutation commits |
-| Conflict | Explain stale state; reload; never silently overwrite. | 409 |
+| Loading | Load the S22 Create Order view model and show labelled progress; keep writes disabled until route data and authorization are resolved. | Request starts |
+| Empty | Render the defined initial/empty state for S22 Create Order; if a required route object is absent, return a safe 404 and the authorized parent route. | Empty initial form or missing detail payload |
+| Forbidden/not found | Return a safe 401/403/404 for S22 Create Order without revealing inaccessible record, customer, staff or payment details. | 401/403/404 |
+| Error | For S22 Create Order, show the API code, message, field_errors and request_id; preserve safe user-entered values. | Request failure |
+| Retry | Retry transient reads for S22 Create Order; retry a mutation only with its original idempotency key and identical payload, never as a new side effect. | Recoverable failure |
+| Success | Refresh S22 Create Order from the committed server response, expose only the next role/state-allowed action and announce the result via aria-live. | Mutation commits |
+| Conflict | For a stale S22 Create Order version or lifecycle state, reload authoritative data, explain the conflict and require explicit review before resubmission. | 409 |
 
 ## 5. Interactions and navigation
 
@@ -80,15 +80,15 @@ Home and public catalog are available to Guest and authenticated users. Customer
 
 ### Acceptance scenarios
 
-1. Exact VN address, supported size map totaling 1..10000, and owned eligible design pass quote creation.
+1. Exact VN address, required Business Buyer/Reseller Shop snapshot, supported size map with aggregate quantity from MOQ through 10000, and owned eligible design pass quote creation.
 2. Client-supplied customer/company/price/total is ignored or rejected; invalid phone/address/quantity returns field errors.
 
 ## 7. Linked requirements
 
 | FR ID (from the module spec) | What this screen does for it |
 |---|---|
-| MFG-06/F-PAY-001 | Implements this screen's validated user flow and the linked source function. |
-| MFG-06/F-PAY-003 | Implements this screen's validated user flow and the linked source function. |
+| MFG-06/F-PAY-001 | UI touchpoint for **Checkout View**; this screen defines the visible action/result, while the module spec owns server authorization, validation and persistence. |
+| MFG-06/F-PAY-003 | UI touchpoint for **Create Order Logic**; this screen defines the visible action/result, while the module spec owns server authorization, validation and persistence. |
 The rules in this screen and its linked module specifications are complete for implementation.
 
 ## 8. Responsive and accessibility notes

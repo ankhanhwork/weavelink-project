@@ -54,7 +54,7 @@ Sales Admin or the Dony Sales employee actively assigned to the Customer advance
 
 1. **Given** a verified deposit and a `Confirmed` order, **when** authorized staff advance it, **then** only `Confirmed→InProduction→Shipped` is accepted as a staff fulfillment transition.
 2. **Given** the target is Shipped, **when** carrier and tracking number are valid, **then** the server records shipped_at and makes the tracking information available.
-3. **Given** delivery is verified by the Customer, a checked carrier-delivered event, or recorded signed proof-of-delivery, **when** the Customer confirms or the MFG-06 three-calendar-day dispute window elapses without a dispute, **then** the order advances `Shipped→DeliveredAwaitingBalance`; a dispute pauses auto-confirmation and `Shipped` alone never enables final payment.
+3. **Given** delivery evidence is verified, **when** the Customer confirms receipt or the MFG-06 three-calendar-day auto-confirmation timer expires, **then** the order advances `Shipped→DeliveredAwaitingBalance`; recording staff evidence alone starts the timer and does not enable final payment. MVP has no dispute action or review flow.
 4. **Given** MFG-06 verifies the full remaining balance, **when** settlement commits, **then** the order advances `DeliveredAwaitingBalance→Completed` and staff cannot perform this transition manually.
 5. **Given** a status event commits, **when** notification delivery is delayed or fails, **then** committed status remains visible in the inbox and email is retryable.
 6. Duplicate commands are idempotent; stale versions and skipped transitions return 409.
@@ -136,7 +136,7 @@ FR identifiers are local to MFG-07. Access is server-checked: customers require 
 | FR-003 | F-ORD-003 | Cancel eligible pre-production orders with trimmed 1–500 character reason, expected_version and Idempotency-Key; retain evidence and request a policy-based refund through MFG-06 for captured funds. | Owning Customer / Sales Admin | Should |
 | FR-004 | F-ORD-004 | Notify customer and Dony Sales Admins after cancellation commit; deduplicate recipients/events and include refund status when relevant. | System | Should |
 | FR-005 | F-ORD-005 | Provide paginated Dony order dashboard with allowlisted status/date/customer filters and counts. | Sales Admin | Should |
-| FR-006 | F-ORD-006 | Enforce lifecycle transitions: Sales Admin or actively assigned Sales may advance `Confirmed→InProduction→Shipped`; `Shipped→DeliveredAwaitingBalance` requires Customer receipt confirmation or authorized delivery proof; only verified MFG-06 balance settlement advances to `Completed`. | Sales Admin / assigned Sales / Customer / System | Should |
+| FR-006 | F-ORD-006 | Enforce lifecycle transitions: Sales Admin or actively assigned Sales may advance `Confirmed→InProduction→Shipped`; `Shipped→DeliveredAwaitingBalance` requires Customer confirmation or the MFG-06 scheduled event after verified delivery proof plus 3 calendar days; only verified MFG-06 balance settlement advances to `Completed`. | Sales Admin / assigned Sales / Customer / System | Should |
 | FR-007 | F-ORD-007 | Notify order owner after committed status change with timestamp and safe tracking link; suppress duplicates and retry email. | System | Should |
 
 ### 5.1 Input / Output contract
@@ -155,7 +155,7 @@ FR identifiers are local to MFG-07. Access is server-checked: customers require 
 
 | Rule ID | Rule | Why it exists |
 | --- | --- | --- |
-| BR-001 | Canonical progression is `AwaitingDigitalApproval→DigitalDesignApproved→SampleInPreparation→SampleShipped→PendingContract→AwaitingDeposit→Confirmed→InProduction→Shipped→DeliveredAwaitingBalance→Completed`; sample revision loops to a new immutable design/quote approval cycle. Only pre-deposit states and eligible unbatched `Confirmed` orders can be cancelled. | Preserve design, sample, contract, deposit, production, receipt and final-payment gates. |
+| BR-001 | Canonical order progression and exceptional transitions are in the MFG-06 Order transition reference; this module's US-1–US-3 define order ownership, cancellation and fulfillment authorization. Sample revision loops to a new immutable design/quote approval cycle. Only pre-deposit states and eligible unbatched `Confirmed` orders can be cancelled. | Preserve design, sample, contract, deposit, production, receipt and final-payment gates. |
 | BR-002 | A merge recommendation does not reserve an order. Before a Sales Admin starts a batch, otherwise eligible Confirmed orders can be cancelled normally. Starting a batch atomically assigns membership and advances every selected order to InProduction; linked orders cannot then be cancelled. If no Admin-started batch includes an order by its seven-day merge-window deadline, scheduler starts its individual production and records fallback. | Preserve Admin final approval, avoid stranded orders, and keep membership auditable. |
 | BR-003 | Cancellation/refund amounts and timing follow MFG-06 BR-013; MFG-07 only records eligibility and requests the refund. No inventory restock occurs because Dony manufactures to order. | Made-to-order production and payment ownership. |
 | BR-004 | Every access is checked server-side; customers require ownership and staff require an internal Dony role or active assignment. | Prevent cross-customer access and privilege escalation. |
@@ -165,7 +165,7 @@ FR identifiers are local to MFG-07. Access is server-checked: customers require 
 
 | Entity | Attributes (from Input/Output fields) | Relationships |
 | --- | --- | --- |
-| Order | UUID, customer_id, buyer_organization_id?, design_id/version, quote_id, approved_sample_id?, policy_version, status, merge_opt_in, contract_id, batch_id?, immutable address/quantity/price snapshots, tracking_number?, carrier?, shipped_at?, received_at?, completed_at?, version, timestamps | Belongs to its Customer and optional Business Buyer/Reseller Shop profile; linked to quote, approved physical sample, contract and optional batch; emits payment/refund/status events. `buyer_organization_id` is descriptive customer data, never a tenant authority. |
+| Order | UUID, customer_id, buyer_type, buyer_organization_snapshot, design_id/version, quote_id, approved_sample_id?, policy_version, status, merge_opt_in, contract_id, batch_id?, immutable address/quantity/price snapshots, tracking_number?, carrier?, shipped_at?, delivery_evidence_verified_at?, auto_confirm_at?, received_at?, completed_at?, version, timestamps | Belongs to its Customer and one required Business Buyer/Reseller Shop order snapshot; linked to quote, approved physical sample, contract and optional batch; emits payment/refund/status events. Buyer details are commercial data, never tenant authority. |
 | Order timeline event | Order ID, prior/target status, actor, timestamp, request/idempotency reference | Belongs to one order; append-only. |
 | Notification/outbox event | Order ID, event type, recipients, delivery state | Created transactionally after order mutation. |
 
