@@ -31,7 +31,7 @@ Written behavior below takes precedence over obsolete sample content.
 | 2 | Route | Navigation target | /orders/{order_id}/payment | Yes | Access checked on server. |
 | 3 | order_id / purpose | Field / control | UUID / DEPOSIT or BALANCE, required | As specified | Customer owns order; DEPOSIT requires Signed contract and AwaitingDeposit; BALANCE requires receipt evidence and DeliveredAwaitingBalance. |
 | 4 | subtotal_vnd | Field / control | integer, required | As specified | Immutable quote/order snapshot; sum quantity times unit price plus option surcharges. |
-| 5 | merge_discount_vnd | Field / control | integer VND, required | As specified | For an eligible quote with accepted MFG-10 v3 merge preference, `min(subtotal_vnd, 840000)`; otherwise 0. Use the immutable order/contract snapshot; never recalculate from a percentage at payment time. |
+| 5 | merge_discount_vnd | Field / control | integer VND, required | As specified | MVP is standard-order only: always 0 because `merge_opt_in=false`. After MFG-10 activation, an eligible immutable quote may carry `min(subtotal_vnd, 840000)`; otherwise 0. Never recalculate from a percentage at payment time. |
 | 6 | shipping_vnd | Field / control | integer, required | As specified | 30000 VND snapshot. |
 | 7 | merge_fee_vnd | Field / control | integer, required | As specified | 0 VND. |
 | 8 | tax_vnd | Field / control | integer, required | As specified | 0 VND under classroom demo pricing assumption. |

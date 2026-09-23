@@ -15,6 +15,8 @@
 
 **Shown when:** The customer reviews the generated contract only after approving the received physical sample. The screen shows bound design/sample evidence, contract total, deposit percentage/amount and remaining-balance formula. Signing requires explicit consent, typed full-name match, recent password reauthentication and a one-time contract-bound challenge.
 
+**MVP authentication level:** Follow the README MVP slice: the already-authenticated Customer gives explicit consent and types their matching full name; the active Customer session is the authentication evidence. MVP does not require password re-entry or a one-time signing challenge. The stronger reauthentication/challenge flow below is post-MVP and must not block MVP contract acknowledgement.
+
 **The user leaves this screen when:** An authorized action in section 5 succeeds, the user follows a role-allowed global route, or they return to the validated originating route.
 
 ## 2. Mockup
@@ -35,10 +37,10 @@ Written behavior below takes precedence over obsolete sample content.
 | 6 | consent_text_version | Field / control | version, required | As specified | Persisted with evidence. |
 | 7 | typed_full_name | Field / control | string, required | As specified | 1..100; trimmed/casefold match to authenticated profile full_name. |
 | 8 | password | Field / control | secret, required at signing | As specified | Reauthenticate; valid within 5 minutes; never logged or stored in evidence. |
-| 9 | signing_challenge | Field / control | one-time token, required | As specified | Server binds contract UUID/version/content hash; expires in 10 minutes; single use. |
+| 9 | signing_challenge | Post-MVP field | one-time token | No (MVP) | Full-system flow: server binds contract UUID/version/content hash; expires in 10 minutes; single use. Omit in MVP. |
 | 10 | Idempotency-Key | Field / control | UUID, required | As specified | Same key/payload returns signed version; changed payload returns 409. |
 | 11 | signature evidence | Field / control | server-generated record | As specified | signer, name, consent version, hash, timestamp, server IP/user-agent, challenge digest. |
-| 12 | Request signing challenge | Action | Require explicit consent, typed name and recent password reauth; issue contract-bound 10m one-use challenge. | Available when authorized | Destination: S34 |
+| 12 | Request signing challenge | Post-MVP action | Require explicit consent, typed name and recent password reauth; issue contract-bound 10m one-use challenge. | Post-MVP only | Destination: S34; MVP signing uses the authenticated session, consent and matching typed name only. |
 | 13 | Sign | Action | Verify challenge/hash/version/sample binding and transactionally record evidence; order advances to `AwaitingDeposit`. | Available when authorized | Destination: S35 |
 | 14 | Download/view PDF | Action | Authorized private URL; no public asset URL. | Available when authorized | Destination: S34 |
 | 15 | design_fee_vnd / source_design_request_id | Read-only price line | Integer VND and originating request reference from order snapshot | Yes | Show separately outside merchandise subtotal, including 0 for free/repeat orders; same fee/total as S25/S35 and PDF; no manual surcharge. |
@@ -60,7 +62,7 @@ Written behavior below takes precedence over obsolete sample content.
 
 | # | Element | User action | System response | Goes to screen |
 |---|---|---|---|---|
-| 1 | Request signing challenge | Activate | Require explicit consent, typed name and recent password reauth; issue contract-bound 10m one-use challenge. | S34 |
+| 1 | Request signing challenge | Post-MVP only | Full-system flow; not used for MVP acknowledgement. | S34 |
 | 2 | Sign | Activate | Verify challenge/hash/version/sample binding and transactionally record evidence; order advances to `AwaitingDeposit`. | S35 |
 | 3 | Download/view PDF | Activate | Authorized private URL; no public asset URL. | S34 |
 

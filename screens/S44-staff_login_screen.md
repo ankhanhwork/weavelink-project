@@ -51,9 +51,9 @@ MVP supports staff sign-in only for pre-provisioned identities; invitation accep
 
 | # | Element | User action | System response | Goes to screen |
 |---|---|---|---|---|
-| 1 | Sign in | Submit credentials | Verify active StaffAccount, set secure session cookie, redirect only to permitted internal route | Role landing route |
+| 1 | Sign in | Submit credentials | Verify active StaffAccount and set secure session cookie. MVP: Sales Admin goes to S28; seeded Sales/System Admin test identities go to S01, with deferred staff-only routes unavailable. | Role landing route per README MVP slice |
 | 2 | Forgot password | Activate link | Open employee-only recovery | S45 |
-| 3 | Accept invitation | Open invitation link and complete required identity/password steps | Consume token and activate staff account atomically | S41 completion, then role landing route |
+| 3 | Accept invitation | Post-MVP only; unavailable to pre-provisioned MVP accounts | After MFG-03 activation, consume a valid token and activate staff account atomically | S41 completion, then role landing route |
 
 ## 6. Screen-level rules
 
