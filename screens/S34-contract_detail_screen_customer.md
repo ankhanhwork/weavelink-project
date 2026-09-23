@@ -13,7 +13,7 @@
 
 ## 1. Purpose
 
-**Shown when:** The customer reviews the generated contract and signs only after explicit consent, typed full-name match, recent password reauthentication and a one-time contract-bound challenge. Signing records immutable evidence. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
+**Shown when:** The customer reviews the generated contract only after approving the received physical sample. The screen shows bound design/sample evidence, contract total, deposit percentage/amount and remaining-balance formula. Signing requires explicit consent, typed full-name match, recent password reauthentication and a one-time contract-bound challenge.
 
 **The user leaves this screen when:** An authorized action in section 5 succeeds, the user follows a role-allowed global route, or they return to the validated originating route.
 
@@ -39,9 +39,10 @@ Written behavior below takes precedence over obsolete sample content.
 | 10 | Idempotency-Key | Field / control | UUID, required | As specified | Same key/payload returns signed version; changed payload returns 409. |
 | 11 | signature evidence | Field / control | server-generated record | As specified | signer, name, consent version, hash, timestamp, server IP/user-agent, challenge digest. |
 | 12 | Request signing challenge | Action | Require explicit consent, typed name and recent password reauth; issue contract-bound 10m one-use challenge. | Available when authorized | Destination: S34 |
-| 13 | Sign | Action | Verify challenge/hash/version and transactionally record evidence; order advances to AwaitingPayment. | Available when authorized | Destination: S35 |
+| 13 | Sign | Action | Verify challenge/hash/version/sample binding and transactionally record evidence; order advances to `AwaitingDeposit`. | Available when authorized | Destination: S35 |
 | 14 | Download/view PDF | Action | Authorized private URL; no public asset URL. | Available when authorized | Destination: S34 |
 | 15 | design_fee_vnd / source_design_request_id | Read-only price line | Integer VND and originating request reference from order snapshot | Yes | Show separately outside merchandise subtotal, including 0 for free/repeat orders; same fee/total as S25/S35 and PDF; no manual surcharge. |
+| 16 | approved sample / payment terms | Read-only evidence | design version, sample ID/version, approved_at, deposit percent/amount and balance formula | Yes | Must match current Approved sample and immutable contract; mismatch blocks signing. |
 
 ## 4. States
 
@@ -60,10 +61,10 @@ Written behavior below takes precedence over obsolete sample content.
 | # | Element | User action | System response | Goes to screen |
 |---|---|---|---|---|
 | 1 | Request signing challenge | Activate | Require explicit consent, typed name and recent password reauth; issue contract-bound 10m one-use challenge. | S34 |
-| 2 | Sign | Activate | Verify challenge/hash/version and transactionally record evidence; order advances to AwaitingPayment. | S35 |
+| 2 | Sign | Activate | Verify challenge/hash/version/sample binding and transactionally record evidence; order advances to `AwaitingDeposit`. | S35 |
 | 3 | Download/view PDF | Activate | Authorized private URL; no public asset URL. | S34 |
 
-Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Company Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales Consultant routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks role, company, membership, ownership and assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Company Admin, S20 for Sales Consultant, S41 for System Admin, and S01 for Guest.
+Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Sales Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks internal role, customer ownership and staff assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Sales Admin, S20 for Sales, S41 for System Admin, and S01 for Guest.
 
 ## 6. Screen-level rules
 
@@ -76,8 +77,8 @@ Home and public catalog are available to Guest and authenticated users. Customer
 
 ### Acceptance scenarios
 
-1. Correct consent, typed profile name, recent password and valid contract-bound challenge records evidence once and moves order to AwaitingPayment.
-2. Expired/replayed challenge, changed hash/version or missing consent rejects signing; checkbox alone never signs.
+1. Correct consent, typed profile name, recent password and valid contract-bound challenge records evidence once and moves order to `AwaitingDeposit`.
+2. Expired/replayed challenge, changed sample/design/hash/version or missing consent rejects signing; checkbox alone never signs.
 3. Contract/PDF displays the snapshotted design fee separately before signing; it never reads current configuration or adds a second charge.
 
 ## 7. Linked requirements

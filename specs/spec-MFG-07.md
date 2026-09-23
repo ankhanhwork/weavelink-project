@@ -4,9 +4,9 @@
 | --- | --- |
 | Module ID | `MFG-07` |
 | Module name | Order Management |
-| Spec version | v1.0 |
+| Spec version | v2.0 |
 | Author (team member) | Group B |
-| Date | 2026-09-19 |
+| Date | 2026-09-23 |
 | Status | Draft |
 | Approved by (Client role) | No approver identified |
 | DBIZ2 source | Function List `MFG-07`, No. 53–59, `F-ORD-001`–`F-ORD-007`; use cases UC-C08 Track Order, UC-C07 Cancel Order, UC-S04 Update Status; screens S26, S27, S28, S29, S30, S38 |
@@ -15,7 +15,7 @@
 
 ## 1. Purpose and scope (mandatory)
 
-Customers can view their orders and follow progress. Company Admins and an assigned same-company Sales Consultant can advance fulfillment; an owning Customer or same-company Company Admin can cancel when the order state permits. This module consumes order, payment, refund and contract events; it does not create orders, settle payment, or generate contracts.
+Customers can view their made-to-order orders and follow every commitment from digital-design approval through sample, deposit, production, receipt and final settlement. Sales Admins and an assigned Sales employee can perform the operational transitions assigned to Dony; an owning Customer or Sales Admin can cancel only when the lifecycle permits. This module consumes design/sample, contract, payment, refund and batch events; it does not price orders, settle payments, or generate contracts.
 
 MVP priority: **Should**, per the project MVP Scope. The module is documented for the complete system. Order creation/payment belongs to MFG-06; contract generation/signature to MFG-09; production batches to MFG-10. MFG-07 function IDs must be qualified with `MFG-07/` because MFG-08 independently reuses `F-ORD-001`–`F-ORD-007`.
 
@@ -24,15 +24,15 @@ MVP priority: **Should**, per the project MVP Scope. The module is documented fo
 | Actor | Role in this module | Where it comes from |
 | --- | --- | --- |
 | Customer | Views own orders/details and cancels own eligible order | MFG-07 resolved contract; UC-C07/UC-C08 |
-| Company Admin | Views same-company orders, cancels with reason, advances fulfillment | MFG-07 resolved contract; UC-S04 |
-| Sales Consultant | Advances fulfillment only for customers actively assigned to the consultant in the same company; cannot cancel | MFG-07 resolved contract |
-| System / MFG-06 / MFG-10 | Supplies verified payment/refund and batch events; not an interactive actor | Inter-module contracts |
+| Sales Admin | Views Dony orders, cancels with reason, advances fulfillment | MFG-07 resolved contract; UC-S04 |
+| Sales | Advances fulfilment only for Customers actively assigned to that Dony employee; cannot cancel | MFG-07 resolved contract |
+| System / MFG-06 / MFG-09 / MFG-10 | Supplies verified payment/refund, contract and batch events; not an interactive actor | Inter-module contracts |
 
 ## 3. User scenarios and acceptance criteria (mandatory)
 
 ### US-1: Track order status (Should)
 
-As a Customer, I can list and inspect my own orders, status timeline, immutable price/address snapshot, payment/refund summary and shipment details. Staff views are restricted to their company and authorized role.
+As a Customer, I can list and inspect my own orders, status timeline, immutable price/address snapshot, payment/refund summary and shipment details. Dony staff views are restricted by internal role and active customer assignment.
 
 1. **Given** the customer has no orders, **when** the list is loaded, **then** an empty paginated result is returned.
 2. **Given** an order ID is not accessible to the actor, **when** its detail is requested, **then** the response is 404 and discloses no object data.
@@ -40,22 +40,24 @@ As a Customer, I can list and inspect my own orders, status timeline, immutable 
 
 ### US-2: Cancel order (Should)
 
-An owning Customer or same-company Company Admin can cancel in an allowed state. A Company Admin supplies a reason. Consultants cannot cancel.
+An owning Customer or Sales Admin can cancel in an allowed state. A Sales Admin supplies a reason. Sales employees cannot cancel.
 
-1. **Given** an order is PendingContract or AwaitingPayment, **when** an authorized actor cancels it, **then** it becomes Cancelled.
-2. **Given** an order is Confirmed, **when** it is not yet in production and has no active batch, **then** an authorized actor may cancel it.
-3. **Given** a paid order is cancelled, **when** cancellation commits, **then** the order remains Cancelled and MFG-06 receives a full-refund request; the order is retained and inventory is not restocked.
-4. **Given** an order is in production, shipped, delivered, or linked to a batch, **when** cancellation is attempted, **then** it is rejected with 409; a Planned batch must first be dissolved by an Admin.
+1. **Given** an order is in a pre-deposit state from `AwaitingDigitalApproval` through `AwaitingDeposit`, **when** an authorized actor cancels it, **then** it becomes `Cancelled`; sample revision itself is not cancellation.
+2. **Given** an order is `Confirmed`, **when** production has not started and no active batch exists, **then** an authorized actor may cancel it.
+3. **Given** a captured deposit exists when cancellation commits, **then** the order remains `Cancelled` and MFG-06 receives a refund request for the captured refundable amount under the snapshotted policy; the order and made-to-order evidence are retained.
+4. **Given** an order is `InProduction`, `Shipped`, `DeliveredAwaitingBalance`, `Completed`, or linked to a Sales Admin-started active batch, **when** cancellation is attempted, **then** it is rejected with 409. A recommendation alone does not reserve the order and does not prevent eligible cancellation.
 5. **Given** cancellation races with production or batch assignment, **when** both mutations contend, **then** one commits and the other returns 409.
 
 ### US-3: Update order status (Should)
 
-Company Admin or the consultant actively assigned to the customer in the same company advances fulfillment through valid successive states.
+Sales Admin or the Dony Sales employee actively assigned to the Customer advances fulfilment through valid successive states.
 
-1. **Given** verified payment and a Confirmed order, **when** authorized staff advance it, **then** only Confirmed→InProduction→Shipped→Delivered is accepted.
+1. **Given** a verified deposit and a `Confirmed` order, **when** authorized staff advance it, **then** only `Confirmed→InProduction→Shipped` is accepted as a staff fulfillment transition.
 2. **Given** the target is Shipped, **when** carrier and tracking number are valid, **then** the server records shipped_at and makes the tracking information available.
-3. **Given** a status event commits, **when** notification delivery is delayed or fails, **then** committed status remains visible in the inbox and email is retryable.
-4. Duplicate commands are idempotent; stale versions and skipped transitions return 409.
+3. **Given** delivery is received, **when** the Customer confirms receipt or Sales Admin submits authorized delivery proof, **then** the order advances `Shipped→DeliveredAwaitingBalance`; `Shipped` alone never enables final payment.
+4. **Given** MFG-06 verifies the full remaining balance, **when** settlement commits, **then** the order advances `DeliveredAwaitingBalance→Completed` and staff cannot perform this transition manually.
+5. **Given** a status event commits, **when** notification delivery is delayed or fails, **then** committed status remains visible in the inbox and email is retryable.
+6. Duplicate commands are idempotent; stale versions and skipped transitions return 409.
 
 ### Edge cases
 
@@ -73,18 +75,22 @@ flowchart LR
   Staff[Authorized staff] --> Dashboard[S28 Admin Orders]
   History --> Detail[S27 Order Detail]
   Dashboard --> Detail
-  Detail --> Scope{Owner or same-company staff?}
+  Detail --> Scope{Owner or authorized Dony staff?}
   Scope -->|No| Denied[404 or 403]
   Scope -->|Yes| Snapshot[Show immutable order snapshot and timeline]
   Snapshot --> Cancel{Cancel eligible?}
   Cancel -->|Yes| Cancelled[Commit Cancelled]
-  Cancelled --> Refund{Paid order?}
-  Refund -->|Yes| RequestRefund[Request full refund from MFG-06]
+  Cancelled --> Refund{Captured deposit?}
+  Refund -->|Yes| RequestRefund[Request policy-based refund from MFG-06]
   Refund -->|No| Notify[Write notification event]
   RequestRefund --> Notify
-  Snapshot --> Advance{Authorized status update?}
-  Advance -->|Yes| Next[Advance one valid fulfillment state]
+  Snapshot --> Advance{Authorized lifecycle event?}
+  Advance -->|Staff| Next[Confirmed to InProduction to Shipped]
+  Advance -->|Receipt evidence| Received[DeliveredAwaitingBalance]
+  Advance -->|Verified balance| Complete[Completed]
   Next --> Notify
+  Received --> Notify
+  Complete --> Notify
 ```
 
 ### 4.2 Sequence for the main flow
@@ -100,20 +106,20 @@ sequenceDiagram
     participant OutboxWorker as Outbox worker
     OrderActor->>OrderUI: Request own or authorized order view
     OrderUI->>OrderModule: Order ID and session
-    OrderModule->>Database: Enforce ownership/company scope, load snapshot and timeline
+    OrderModule->>Database: Enforce customer ownership or staff role/assignment scope, load snapshot and timeline
     Database-->>OrderModule: Authorized order history
     OrderModule-->>OrderUI: Snapshot, status and payment/refund summary
     alt Eligible cancellation
         OrderActor->>OrderModule: Reason, expected version and idempotency key
         OrderModule->>Database: Lock order, validate transition and persist cancellation
-        opt Paid order
-            OrderModule->>PaymentModule: Request full refund after commit
+        opt Captured refundable amount
+            OrderModule->>PaymentModule: Request policy-based refund after commit
         end
         OrderModule->>Database: Write notification outbox event
         OutboxWorker-->>OrderActor: Notify cancellation and refund status
-    else Fulfillment status update
-        OrderActor->>OrderModule: Next status and expected version
-        OrderModule->>Database: Validate role, transition and tracking data, commit
+    else Fulfillment, receipt or settlement event
+        OrderActor->>OrderModule: Authorized event and expected version
+        OrderModule->>Database: Validate event owner, transition and evidence, commit
         OutboxWorker-->>OrderActor: Notify status and safe tracking link
     end
 ```
@@ -121,16 +127,16 @@ sequenceDiagram
 
 ## 5. Functional requirements (mandatory)
 
-FR identifiers are local to MFG-07. Access is server-checked: customers require ownership and staff require same-company authorization. Unauthenticated, prohibited and inaccessible requests return 401, 403 and 404 respectively. Mutations use UUIDs, UTC timestamps, expected-version checks and idempotency. Notifications use a transactional outbox, retry policy, and do not roll back committed state.
+FR identifiers are local to MFG-07. Access is server-checked: customers require ownership and staff require internal role or assignment authorization. Unauthenticated, prohibited and inaccessible requests return 401, 403 and 404 respectively. Mutations use UUIDs, UTC timestamps, expected-version checks and idempotency. Notifications use a transactional outbox, retry policy, and do not roll back committed state.
 
 | FR ID | DBIZ2 Subfunction ID | Requirement (system MUST ...) | Actor | Priority |
 | --- | --- | --- | --- | --- |
 | FR-001 | F-ORD-001 | List own orders with pagination and allowlisted status/date filters; default newest first; empty results are valid. | Customer | Should |
-| FR-002 | F-ORD-002 | Return an authorized order snapshot, timeline, contract/payment/refund summaries and tracking details without recalculating historical prices. | Customer / same-company staff | Should |
-| FR-003 | F-ORD-003 | Cancel eligible orders with trimmed 1–500 character reason, expected_version and Idempotency-Key; retain order and request full refund through MFG-06 when paid. | Owning Customer / same-company Company Admin | Should |
-| FR-004 | F-ORD-004 | Notify customer and same-company management after cancellation commit; deduplicate recipients/events and include refund status when relevant. | System | Should |
-| FR-005 | F-ORD-005 | Provide paginated same-company admin dashboard with allowlisted status/date/customer filters and counts. | Company Admin | Should |
-| FR-006 | F-ORD-006 | Advance only Confirmed→InProduction→Shipped→Delivered; require same-company Admin or actively assigned consultant; Shipped requires carrier, tracking_number and server shipped_at. | Company Admin / assigned Sales Consultant | Should |
+| FR-002 | F-ORD-002 | Return an authorized order snapshot, timeline, contract/payment/refund summaries and tracking details without recalculating historical prices. | Customer / authorized Dony staff | Should |
+| FR-003 | F-ORD-003 | Cancel eligible pre-production orders with trimmed 1–500 character reason, expected_version and Idempotency-Key; retain evidence and request a policy-based refund through MFG-06 for captured funds. | Owning Customer / Sales Admin | Should |
+| FR-004 | F-ORD-004 | Notify customer and Dony Sales Admins after cancellation commit; deduplicate recipients/events and include refund status when relevant. | System | Should |
+| FR-005 | F-ORD-005 | Provide paginated Dony order dashboard with allowlisted status/date/customer filters and counts. | Sales Admin | Should |
+| FR-006 | F-ORD-006 | Enforce lifecycle transitions: Sales Admin or actively assigned Sales may advance `Confirmed→InProduction→Shipped`; `Shipped→DeliveredAwaitingBalance` requires Customer receipt confirmation or authorized delivery proof; only verified MFG-06 balance settlement advances to `Completed`. | Sales Admin / assigned Sales / Customer / System | Should |
 | FR-007 | F-ORD-007 | Notify order owner after committed status change with timestamp and safe tracking link; suppress duplicates and retry email. | System | Should |
 
 ### 5.1 Input / Output contract
@@ -138,27 +144,28 @@ FR identifiers are local to MFG-07. Access is server-checked: customers require 
 | FR ID | Input field | Type | Required | Output field | Type | Notes / validation |
 | --- | --- | --- | --- | --- | --- | --- |
 | FR-001 | page, page_size, filters, sort | Integer / allowlisted values | Optional | order summaries, total, page, page_size | Paginated object | page ≥1; page_size 1–100 |
-| FR-002 | order_id, session | UUID / session | Yes | authorized order snapshot and timeline | Object | Own customer or same-company staff; inaccessible ID 404 |
+| FR-002 | order_id, session | UUID / session | Yes | authorized order snapshot and timeline | Object | Own customer or authorized Dony staff; inaccessible ID 404 |
 | FR-003 | order_id, reason_for_cancellation, expected_version, Idempotency-Key | UUID, string, integer, key | Yes | status, refund workflow reference | Object | Valid transitions only; duplicate key replays |
 | FR-004 | committed cancellation event | Internal event | Yes | notification/outbox IDs | UUIDs | After commit; deduplicated |
-| FR-005 | filters, page, page_size | Allowlisted values / integers | Optional | company order list and counts | Paginated object | Same-company only |
-| FR-006 | order_id, target status, carrier, tracking_number, expected_version, Idempotency-Key | UUID, enum, strings, integer, key | Yes | updated order and timeline | Object | Carrier/tracking required for Shipped |
+| FR-005 | filters, page, page_size | Allowlisted values / integers | Optional | Dony order list and counts | Paginated object | Dony operations only |
+| FR-006 | order_id, lifecycle_event, carrier, tracking_number, receipt_evidence?, expected_version, Idempotency-Key | UUID, enum, strings, object, integer, key | Yes | updated order and timeline | Object | Carrier/tracking required for Shipped; receipt event/evidence required for DeliveredAwaitingBalance; payment event is server-authenticated |
 | FR-007 | committed status event | Internal event | Yes | durable notification/outbox IDs | UUIDs | After commit; inbox authoritative |
 
 ### 5.2 Business rules
 
 | Rule ID | Rule | Why it exists |
 | --- | --- | --- |
-| BR-001 | States are PendingContract→AwaitingPayment→Confirmed→InProduction→Shipped→Delivered; only PendingContract/AwaitingPayment and eligible unbatched Confirmed orders can be cancelled. | Preserve contract, payment and production lifecycle. |
-| BR-002 | Batch-linked orders cannot be cancelled until an Admin dissolves their Planned batch. | Keep batch membership atomic. |
-| BR-003 | Paid cancellation triggers MFG-06 full-refund processing; no inventory restock occurs. | Made-to-order production and payment ownership. |
-| BR-004 | Every access is checked server-side; customers require ownership and staff require same-company authorization. | Prevent cross-customer/company access. |
+| BR-001 | Canonical progression is `AwaitingDigitalApproval→DigitalDesignApproved→SampleInPreparation→SampleShipped→PendingContract→AwaitingDeposit→Confirmed→InProduction→Shipped→DeliveredAwaitingBalance→Completed`; sample revision loops to a new immutable design/quote approval cycle. Only pre-deposit states and eligible unbatched `Confirmed` orders can be cancelled. | Preserve design, sample, contract, deposit, production, receipt and final-payment gates. |
+| BR-002 | A merge recommendation does not reserve an order. Before a Sales Admin starts a batch, otherwise eligible Confirmed orders can be cancelled normally. Starting a batch atomically assigns membership and advances every selected order to InProduction; linked orders cannot then be cancelled. If no Admin-started batch includes an order by its seven-day merge-window deadline, scheduler starts its individual production and records fallback. | Preserve Admin final approval, avoid stranded orders, and keep membership auditable. |
+| BR-003 | Cancellation with captured funds triggers MFG-06 refund processing for the refundable captured amount under the stored policy; no inventory restock occurs because Dony manufactures to order. | Made-to-order production and payment ownership. |
+| BR-005 | Staff cannot manually mark an order `Completed`; completion requires an accepted BALANCE transaction, and receipt must be recorded before that transaction becomes payable. | Prevent false delivery and revenue completion. |
+| BR-004 | Every access is checked server-side; customers require ownership and staff require an internal Dony role or active assignment. | Prevent cross-customer access and privilege escalation. |
 
 ## 6. Key entities (mandatory)
 
 | Entity | Attributes (from Input/Output fields) | Relationships |
 | --- | --- | --- |
-| Order | UUID, company_id, customer_id, design_id/version, quote_id, policy_version, status, merge_opt_in, contract_id, batch_id?, immutable address/quantity/price snapshots, tracking_number?, carrier?, shipped_at?, version, timestamps | Belongs to company/customer; linked to quote, contract and optional batch; emits payment/refund/status events. |
+| Order | UUID, customer_id, buyer_organization_id?, design_id/version, quote_id, approved_sample_id?, policy_version, status, merge_opt_in, contract_id, batch_id?, immutable address/quantity/price snapshots, tracking_number?, carrier?, shipped_at?, received_at?, completed_at?, version, timestamps | Belongs to its Customer and optional Business Buyer/Reseller Shop profile; linked to quote, approved physical sample, contract and optional batch; emits payment/refund/status events. `buyer_organization_id` is descriptive customer data, never a tenant authority. |
 | Order timeline event | Order ID, prior/target status, actor, timestamp, request/idempotency reference | Belongs to one order; append-only. |
 | Notification/outbox event | Order ID, event type, recipients, delivery state | Created transactionally after order mutation. |
 
@@ -168,7 +175,7 @@ FR identifiers are local to MFG-07. Access is server-checked: customers require 
 | --- | --- | --- | --- |
 | S26 | Customer order history | Should | `screens/S26-customer_order_list_screen.md` |
 | S27 | Customer order detail and refund status | Should | `screens/S27-customer_order_detail_screen.md` |
-| S28 | Company Admin order dashboard | Should | Module screen; same-company list and filters |
+| S28 | Sales Admin order dashboard | Should | Module screen; Dony order list and filters |
 | S29 | Production management | Should | Module screen; status progression |
 | S30 | Contract tab | Should | MFG-09 contract boundary |
 | S38 | Notifications | Should | Shared notification screen |
@@ -177,7 +184,7 @@ FR identifiers are local to MFG-07. Access is server-checked: customers require 
 
 | SC ID | Criterion | How it is measured |
 | --- | --- | --- |
-| SC-001 | Every order read is limited to the actor's ownership/company scope and returns the stored snapshot. | Verify authorized and unauthorized customer/staff requests; inaccessible IDs return 404. |
+| SC-001 | Every order read is limited to the actor's customer ownership or staff role/assignment scope and returns the stored snapshot. | Verify authorized and unauthorized customer/staff requests; inaccessible IDs return 404. |
 | SC-002 | Only valid cancellation and fulfillment transitions commit, including under concurrent requests. | Exercise state-transition matrix and race tests; one winner, stale loser 409. |
 | SC-003 | Notifications and refund requests are durable and deduplicated after order commit. | Inspect outbox/inbox and refund event for retries and duplicate commands. |
 

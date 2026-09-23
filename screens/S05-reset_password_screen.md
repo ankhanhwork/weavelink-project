@@ -3,30 +3,32 @@
 | Field | Value |
 |---|---|
 | Screen ID | `S05` |
-| Screen name | Reset Password |
+| Screen name | Customer Storefront Reset Password |
 | Actor | Guest with single-use token |
 | Priority | P3 |
 | Belongs to module | [MFG-01](../specs/spec-MFG-01.md) |
-| Route | `/reset-password?token={token}` |
-| Mockup image | Don't have mockup |
+| Route | `/reset-password?token={token}` (Customer storefront only) |
+| Mockup image | img/S05-reset_password_screen.png |
 | Status | Resolved implementation specification |
 
 ## 1. Purpose
 
-**Shown when:** The token query parameter authorizes one password reset for 30 minutes. Successful reset revokes all sessions and consumes the token. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
+**Shown when:** The Customer storefront-bound token query parameter authorizes one password reset for 30 minutes. This page uses the storefront header and footer. Successful reset revokes all sessions and consumes the token, then returns to S03. Staff reset is isolated to S46. Provider/social login is unsupported.
 
 **The user leaves this screen when:** An authorized action in section 5 succeeds, the user follows a role-allowed global route, or they return to the validated originating route.
 
 ## 2. Mockup
 
-Don't have mockup
+![Historical visual reference](img/S05-reset_password_screen.png)
+
+Written behavior below takes precedence over obsolete sample content.
 
 ## 3. Element inventory
 
 | # | Element | Type | Content / data source | Required | Validation |
 |---|---|---|---|---|---|
 | 1 | Screen heading | Heading | Reset Password | Yes | Static route title. |
-| 2 | Route | Navigation target | /reset-password?token={token} | Yes | Access checked on server. |
+| 2 | Route | Navigation target | Customer or staff reset-password route with token | Yes | Token purpose must match portal. |
 | 3 | token | Field / control | required query secret | As specified | token: required query secret; single-use hashed token; 30m expiry. |
 | 4 | new_password | Field / control | required, 12..128 characters, spaces allowed. | As specified | new_password: required, 12..128 characters, spaces allowed. |
 | 5 | confirm_password | Field / control | required | As specified | confirm_password: required; exact match with new_password. |
@@ -54,7 +56,7 @@ Don't have mockup
 | 1 | Reset password | Activate | Validate single-use token/password match, update hash, revoke all sessions. | S03 |
 | 2 | Request new link | Activate | Discard token route and open recovery. | S04 |
 
-Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Company Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales Consultant routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks role, company, membership, ownership and assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Company Admin, S20 for Sales Consultant, S41 for System Admin, and S01 for Guest.
+Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Sales Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks internal role, customer ownership and staff assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Sales Admin, S20 for Sales, S41 for System Admin, and S01 for Guest.
 
 ## 6. Screen-level rules
 

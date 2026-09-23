@@ -15,13 +15,13 @@
 
 ## 1. Purpose and scope (mandatory)
 
-System Admins inspect redacted audit events, create/inspect backups, perform controlled restoration and change typed system configuration. System Admin access does not grant customer-design/order mutation or company financial export. Restore and configuration changes require recent reauthentication.
+System Admins inspect redacted audit events, create/inspect backups, perform controlled restoration and change typed system configuration. System Admin access does not grant customer-design/order mutation or Dony financial export. Restore and configuration changes require recent reauthentication.
 
 MVP priority: **Won't**; these functions remain specified for the complete system and are excluded from MVP release. S40 is the audit log viewer; S39 provides backup, restore and configuration controls.
 
 Audit events are append-only and retained 365 days. Severity is INFO for committed success, WARN for denied/invalid actions and ERROR for dependency/job failures; DEBUG is not persisted. Nightly encrypted base snapshot runs at 02:00 Asia/Ho_Chi_Minh, with seven daily and four weekly bases retained. A continuous verified transaction-log archive permits restore through the pre-maintenance committed watermark. Payment event/restore journal remains outside the restored snapshot to avoid duplicate fulfillment/refunds.
 
-Configuration stores secret references, never secret values. Allowlisted settings are public company contacts, SMTP reference, VNPay environment/merchant secret references, design_service_fee_vnd (suggested Complex assessment fee, default 200000 VND, integer 1..9999999999), shipping_vnd and backup schedule/retention. Merge discount 5%, standard production seven days and merge allowance three days are read-only policy-v1 values; changing them requires a new reviewed policy version and updated specifications.
+Configuration stores secret references, never secret values. Allowlisted settings are Dony public contacts, optional production-notification email, SMTP reference, VNPay environment/merchant secret references, design_service_fee_vnd (suggested Complex assessment fee, default 200000 VND, integer 1..9999999999), shipping_vnd and backup schedule/retention. Merge policy values (discount up to 840,000 VND per order based on a 2,800,000 VND setup-cost assumption; rolling seven-day order window; 7/10 calendar-day production targets after deposit) are versioned business policy, not ordinary configuration; changes require a reviewed policy version and updated specs. System recommendations do not start batches: Sales Admin is the final approver and explicit batch starter; scheduler only refreshes suggestions and starts individual fallback after the seven-day window expires.
 
 ## 2. Actors (mandatory)
 
@@ -50,6 +50,7 @@ Admin triggers or inspects encrypted base backups and initiates a controlled res
 3. **Given** two restores contend for the single restore lock, **when** requests begin, **then** one proceeds and the other returns 409.
 4. **Given** restore succeeds through the pre-maintenance watermark, **when** recovery completes, **then** committed orders/payment attempts through that watermark survive, queued provider events reconcile idempotently and sessions are revoked.
 5. **Given** restore fails after maintenance begins, **when** rollback runs, **then** the pre-restore backup is used and maintenance remains enabled until integrity is confirmed.
+6. **Given** provider replay returns a transaction for an order/payment resource created after the restore point and absent from the restored database, **when** reconciliation runs, **then** it creates no ghost order/payment, records an ERROR event, alerts System Admin and directs manual refund through VNPay dashboard.
 
 ### US-3: Configure system (Won't for MVP)
 
@@ -129,7 +130,7 @@ sequenceDiagram
 
 | FR ID | DBIZ2 Subfunction ID | Requirement (system MUST ...) | Actor | Priority |
 | --- | --- | --- | --- | --- |
-| FR-001 | F-SYS-001 | Display paginated redacted audit events with allowlisted filters and default last-30-day UTC range. | System Admin | Won't (MVP) |
+| FR-001 | F-SYS-001 | Display paginated redacted audit events with allowlisted filters and default last-30-day UTC range; API timestamps use UTC ISO 8601 and the UI displays Asia/Ho_Chi_Minh. | System Admin | Won't (MVP) |
 | FR-002 | F-SYS-002 | Search redacted audit events by text, allowlisted fields, severity, date and pagination. | System Admin | Won't (MVP) |
 | FR-003 | F-SYS-003 | Show backup schedule/retention, base/log watermarks, recent jobs, operation lock and available controls. | System Admin | Won't (MVP) |
 | FR-004 | F-SYS-004 | Queue verified encrypted snapshot and return backup job state/manifest reference. | System Admin / scheduler | Won't (MVP) |
@@ -160,7 +161,7 @@ sequenceDiagram
 | BR-003 | Continuous transaction-log archive must verify sequence/checksums and restore to committed pre-maintenance watermark; missing/gapped/corrupt chain prevents activation. | Prevent incomplete restoration. |
 | BR-004 | Keep payment event/restore journal outside restored snapshot; reconcile queued provider events idempotently. | Prevent duplicate fulfillment/refunds. |
 | BR-005 | Config patch is allowlisted, fully validated, and atomically activated; secrets are references only. | Prevent partial, unsafe configuration changes. |
-| BR-006 | Policy-v1 merge discount 5%, standard production 7 days and merge allowance 3 days are read-only. | Preserve customer commitments. |
+| BR-006 | MFG-10 merge policy and rolling-window values are read-only configuration and may change only through a reviewed policy version; estimates label setup cost/time as assumptions. | Preserve customer commitments and avoid presenting assumptions as measured factory results. |
 
 Configuration notices list changed key names, actor, version and time only; secret values are excluded. In-app inbox is authoritative and email delivery is retried; notification failure never rolls back configuration. Restore success revokes sessions. During maintenance, provider callbacks are durably queued and reconciled idempotently after recovery.
 
@@ -168,7 +169,7 @@ Configuration notices list changed key names, actor, version and time only; secr
 
 | Entity | Attributes (from Input/Output fields) | Relationships |
 | --- | --- | --- |
-| AuditEvent | id, actor_id, company_id?, target_type/id?, action, outcome, severity, request_id, timestamp, redacted_details | Append-only event; retained 365 days. |
+| AuditEvent | id, actor_id, buyer_organization_id?, target_type/id?, action, outcome, severity, request_id, timestamp, redacted_details | Append-only event; retained 365 days. Optional buyer organization is context only, not a tenant scope. |
 | Backup | id, created_at, creator_id?, state, manifest, checksum, schema_version, asset_count, transaction_log_start/end, error_code? | Base snapshot plus assets and continuous log archive. |
 | SystemConfig | version, typed_values, activated_at, actor_id | New version atomically replaces active version; prior remains auditable. |
 | Restore journal | committed watermark, payment/provider events, restore operation state | Stored outside restored snapshot and reconciled idempotently. |

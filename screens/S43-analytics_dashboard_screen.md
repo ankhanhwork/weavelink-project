@@ -4,22 +4,24 @@
 |---|---|
 | Screen ID | `S43` |
 | Screen name | Analytics Dashboard |
-| Actor | Company Admin |
+| Actor | Sales Admin |
 | Priority | P3 |
 | Belongs to module | [MFG-11](../specs/spec-MFG-11.md) |
 | Route | `/admin/analytics` |
-| Mockup image | Don't have mockup |
+| Mockup image | img/S43-analytics_dashboard_screen.png |
 | Status | Resolved implementation specification |
 
 ## 1. Purpose
 
-**Shown when:** The Company Admin views company-scoped read-only metrics for the selected local date range and product filter. Exports use the same metric rules and snapshot watermark. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
+**Shown when:** The Sales Admin views Dony-scoped read-only metrics for the selected local date range and product filter. Exports use the same metric rules and snapshot watermark. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
 
 **The user leaves this screen when:** An authorized action in section 5 succeeds, the user follows a role-allowed global route, or they return to the validated originating route.
 
 ## 2. Mockup
 
-Don't have mockup
+![Historical visual reference](img/S43-analytics_dashboard_screen.png)
+
+Written behavior below takes precedence over obsolete sample content.
 
 ## 3. Element inventory
 
@@ -28,16 +30,16 @@ Don't have mockup
 | 1 | Screen heading | Heading | Analytics Dashboard | Yes | Static route title. |
 | 2 | Route | Navigation target | /admin/analytics | Yes | Access checked on server. |
 | 3 | date_start / date_end | Field / control | local dates, inclusive/exclusive | As specified | Default last 30 local calendar days; maximum 366 days; reject start >= end. |
-| 4 | product_id | Field / control | optional UUID | As specified | Same-company product only; filter related orders. |
-| 5 | revenue_vnd | Field / control | integer VND aggregates | As specified | Accepted ORDER settlement by paid_at less refunds by refunded_at; design-fee component included; exclude duplicate/late receipts and their refunds. |
+| 4 | product_id | Field / control | optional UUID | As specified | Dony product only; filter related orders. |
+| 5 | revenue_vnd / cash_collected_vnd | Field / control | integer VND aggregates | As specified | Revenue uses immutable contract total when order becomes Completed, net recognized refunds; cash collected uses accepted DEPOSIT/BALANCE by paid_at net refunds. Never count installments twice. |
 | 6 | order_count / cancellation_count | Field / control | integer counts | As specified | Count orders by created_at in all states; cancellations shown separately. |
-| 7 | new_customers | Field / control | integer count | As specified | Distinct customers whose first submitted order in this company falls in range. |
+| 7 | new_customers | Field / control | integer count | As specified | Distinct Customer accounts by customer_id whose first submitted order in Dony's system falls in range. Buyer-organization context is not an authorization boundary. |
 | 8 | refreshed_at / timezone | Field / control | UTC timestamp / Asia/Ho_Chi_Minh | As specified | Always display snapshot watermark and local range; zero-data metrics are zero. |
 | 9 | export_format / export_limit | Field / control | CSV or XLSX / max 100000 rows | As specified | Same filters/formulas/watermark; prevent spreadsheet formula injection. |
-| 10 | Apply date/product filters | Action | Recompute authoritative company-scoped metrics; display timezone/range/refreshed_at. | Available when authorized | Destination: S43 |
+| 10 | Apply date/product filters | Action | Recompute authoritative Dony-scoped metrics; display timezone/range/refreshed_at. | Available when authorized | Destination: S43 |
 | 11 | Export CSV/XLSX | Action | Same filters/formulas and snapshot watermark; <=100000 rows; neutralize formula injection. | Available when authorized | Destination: S43 |
-| 12 | Open order | Action | Navigate only to authorized company order detail. | Available when authorized | Destination: S29 |
-| 13 | design_fee_revenue_vnd | Read-only revenue component | Design fees included in order revenue | Yes | Sum order design_fee_vnd on accepted settlements by paid_at less the same component on full refunds by refunded_at; same filters/watermark/exclusions; no double-counting; zero/negative range values allowed. |
+| 12 | Open order | Action | Navigate only to authorized Dony order detail. | Available when authorized | Destination: S29 |
+| 13 | design_fee_revenue_vnd | Read-only revenue component | Design fees included in recognized revenue | Yes | Sum design_fee_vnd for orders completed in range less its component on recognized refunds; same filters/watermark/exclusions; no double-counting. |
 
 ## 4. States
 
@@ -55,11 +57,11 @@ Don't have mockup
 
 | # | Element | User action | System response | Goes to screen |
 |---|---|---|---|---|
-| 1 | Apply date/product filters | Activate | Recompute authoritative company-scoped metrics; display timezone/range/refreshed_at. | S43 |
+| 1 | Apply date/product filters | Activate | Recompute authoritative Dony-scoped metrics; display timezone/range/refreshed_at. | S43 |
 | 2 | Export CSV/XLSX | Activate | Same filters/formulas and snapshot watermark; <=100000 rows; neutralize formula injection. | S43 |
-| 3 | Open order | Activate | Navigate only to authorized company order detail. | S29 |
+| 3 | Open order | Activate | Navigate only to authorized Dony order detail. | S29 |
 
-Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Company Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales Consultant routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks role, company, membership, ownership and assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Company Admin, S20 for Sales Consultant, S41 for System Admin, and S01 for Guest.
+Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Sales Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks internal role, customer ownership and staff assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Sales Admin, S20 for Sales, S41 for System Admin, and S01 for Guest.
 
 ## 6. Screen-level rules
 
@@ -72,9 +74,9 @@ Home and public catalog are available to Guest and authenticated users. Customer
 
 ### Acceptance scenarios
 
-1. Revenue equals successful ORDER payments minus successful ORDER refunds by their respective timestamps; design-fee component is included and displayed separately without adding it again.
+1. Revenue is recognized once on Completed order totals net recognized refunds; cash collected separately sums accepted DEPOSIT/BALANCE settlements net refunds.
 2. Zero-data period shows zeros; export matches filter/formula/watermark and rejects >100000 rows.
-3. S43 and exports show the same design-fee revenue component; Simple/repeat orders contribute 0, and no order/payment produces no fee revenue. Full refunds subtract the original fee component.
+3. S43 and exports show the same design-fee revenue component; a deposit alone is not revenue, Simple/repeat orders contribute 0, and recognized refunds subtract the original fee component.
 
 ## 7. Linked requirements
 

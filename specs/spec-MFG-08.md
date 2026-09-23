@@ -1,9 +1,9 @@
-# Spec Document: Sales Consultant
+# Spec Document: Sales
 
 | Field | Value |
 | --- | --- |
 | Module ID | `MFG-08` |
-| Module name | Sales Consultant |
+| Module name | Sales |
 | Spec version | v1.1 |
 | Author (team member) | Group B |
 | Date | 2026-09-22 |
@@ -15,7 +15,7 @@
 
 ## 1. Purpose and scope (mandatory)
 
-Company Admins assign company customers to Sales Consultants. Consultants see assigned customer context and record consultation progress. Customers may see their own design request status and deliveries through MFG-05, but never internal CRM notes. Approved/assigned design requests remain MFG-05 records; when customer assignment changes, all active Assigned/InProgress requests transfer atomically with the assignment. Contract, order and payment state belongs to their owning modules.
+Sales Admins assign Dony Customers to Sales employees. A Customer may represent a Business Buyer or Reseller Shop through optional Buyer Organization data, which does not define staff authorization. Sales sees assigned customer context and records consultation progress. Customers may see their own design request status and deliveries through MFG-05, but never internal CRM notes. Approved/assigned design requests remain MFG-05 records; when customer assignment changes, all active Assigned/InProgress requests transfer atomically with the assignment. Contract, order and payment state belongs to their owning modules.
 
 MVP priority: **Could**. Complete-system target includes all eight functions. `F-ORD-001`–`F-ORD-007` are reused by MFG-07 for different functions; all references here mean `MFG-08/F-ORD-nnn`.
 
@@ -23,8 +23,8 @@ MVP priority: **Could**. Complete-system target includes all eight functions. `F
 
 | Actor | Role in this module | Where it comes from |
 | --- | --- | --- |
-| Company Admin | Reviews same-company customer activity and assigns/reassigns consultants | MFG-08 resolved permissions; UC-C19 |
-| Sales Consultant | Reads only assigned same-company customers and records consultation updates | MFG-08 resolved permissions; UC-S01/UC-S02 |
+| Sales Admin | Reviews Dony customer activity and assigns/reassigns consultants | MFG-08 resolved permissions; UC-C19 |
+| Sales | Reads only assigned Dony customers and records consultation updates | MFG-08 resolved permissions; UC-S01/UC-S02 |
 | Customer | Owns customer profile and may view own customer-facing design request status; cannot read CRM notes | MFG-05 boundary |
 | System | Persists assignment/status events and sends notifications | MFG-08 function contract |
 
@@ -32,26 +32,26 @@ MVP priority: **Could**. Complete-system target includes all eight functions. `F
 
 ### US-1: Assign consultant (Could)
 
-As a Company Admin, assign an active Sales Consultant in the same company to a customer. The assignment is unique per company/customer. Approved requests receive first assignment; reassignment transfers all active Assigned/InProgress requests in one transaction, retaining their state and committed due date.
+As a Sales Admin, assign an active Dony Sales employee to a Customer. The assignment is unique per Customer. Approved requests receive first assignment; reassignment transfers all active Assigned/InProgress requests in one transaction, retaining their state and committed due date.
 
-1. **Given** a same-company active consultant and eligible customer, **when** the Admin assigns them, **then** one active assignment is committed and affected active design requests are transferred atomically.
-2. **Given** the consultant is inactive or belongs to another company, **when** assignment is submitted, **then** it is rejected; no partial changes occur.
+1. **Given** a active Dony Sales employee and eligible customer, **when** the Admin assigns them, **then** one active assignment is committed and affected active design requests are transferred atomically.
+2. **Given** the consultant is inactive or belongs to a different system operator, **when** assignment is submitted, **then** it is rejected; no partial changes occur.
 3. **Given** concurrent assignment or request changes, **when** versions conflict, **then** one valid transaction wins and stale writes return 409.
 4. **Given** assignment commits, **when** notification is sent, **then** the consultant receives one authorized context link; email failure leaves the in-app notice.
 
 ### US-2: View assignment and customer context (Could)
 
-Consultants view only active same-company assignments, relevant customer context, requests/orders and chronological interaction history. Company Admins may inspect company records. Internal notes are visible only to assigned consultants and same-company Admins.
+Consultants view only active assigned Dony customer records, relevant customer context, requests/orders and chronological interaction history. Sales Admins may inspect company records. Internal notes are visible only to assigned consultants and Sales Admins.
 
 1. **Given** a consultant has no active assignment, **when** customer context is requested, **then** access is denied without exposing another customer's data.
 2. **Given** interaction history is requested, **when** returned, **then** it is paginated and chronological with source channel, kind, timestamp and related record IDs.
 
 ### US-3: Update consultation (Could)
 
-An assigned consultant records notes and advances consultation status. A Company Admin may reopen a closed consultation to InProgress.
+An assigned consultant records notes and advances consultation status. A Sales Admin may reopen a closed consultation to InProgress.
 
 1. **Given** a valid current status, **when** an authorized update follows the allowed transition, **then** the new status, notes and timeline are persisted.
-2. **Given** a closed consultation is reopened, **when** the requester is not a same-company Admin, **then** the transition is rejected.
+2. **Given** a closed consultation is reopened, **when** the requester is not a Sales Admin, **then** the transition is rejected.
 3. **Given** a duplicate or stale update, **when** submitted, **then** it is idempotent or returns 409 without overwriting newer notes.
 
 ### Edge cases
@@ -66,8 +66,8 @@ An assigned consultant records notes and advances consultation status. A Company
 
 ```mermaid
 flowchart LR
-  Admin[Company Admin] --> Review[Review same-company customers]
-  Review --> Assign[Assign active same-company consultant]
+  Admin[Sales Admin] --> Review[Review Dony customers]
+  Review --> Assign[Assign active Dony Sales employee]
   Assign --> Transfer[Atomically transfer affected active design requests]
   Transfer --> Notify[Persist assignment notification]
   Notify --> Context[Consultant opens authorized context]
@@ -80,15 +80,15 @@ flowchart LR
 
 ```mermaid
 sequenceDiagram
-    actor CompanyAdmin as Company Admin
-    actor Consultant as Sales Consultant
+    actor CompanyAdmin as Sales Admin
+    actor Consultant as Sales
     participant ConsultationUI as S18-S21
     participant ConsultationModule as Consultation module
     participant Database as Database
     participant OutboxWorker as Outbox worker
-    CompanyAdmin->>ConsultationUI: Select same-company customer and consultant
+    CompanyAdmin->>ConsultationUI: Select Dony customer and consultant
     ConsultationUI->>ConsultationModule: Assignment change with expected version and key
-    ConsultationModule->>Database: Validate active membership and lock assignment
+    ConsultationModule->>Database: Validate active Dony StaffAccount and lock assignment
     Database-->>ConsultationModule: Current assignment and active requests
     ConsultationModule->>Database: Atomically change assignment and transfer active request ownership
     ConsultationModule->>Database: Append assignment history and outbox event
@@ -96,7 +96,7 @@ sequenceDiagram
     Consultant->>ConsultationUI: Open assigned customer
     ConsultationUI->>ConsultationModule: Request customer context
     ConsultationModule->>Database: Check active assignment and load permitted summaries
-    Database-->>ConsultationModule: Company-scoped context
+    Database-->>ConsultationModule: Authorized customer context and optional buyer organization
     ConsultationModule-->>ConsultationUI: Context and consultation timeline
     Consultant->>ConsultationModule: Update consultation status/notes with expected version
     ConsultationModule->>Database: Validate transition and append interaction event
@@ -108,35 +108,35 @@ sequenceDiagram
 
 | FR ID | DBIZ2 Subfunction ID | Requirement (system MUST ...) | Actor | Priority |
 | --- | --- | --- | --- | --- |
-| FR-001 | F-ORD-001 | List same-company customers without active assignment, with relevant company request/order summaries and pagination. | Company Admin | Could |
-| FR-002 | F-ORD-002 | Show company-specific customer/contact data, request/order summaries and current assignment. | Company Admin | Could |
-| FR-003 | F-ORD-003 | Assign/reassign an active same-company consultant with version checks, idempotency and atomic paired assignment of affected approved/assigned design requests; `committed_due_at` is the company's commitment, not the customer's requested deadline. | Company Admin | Could |
+| FR-001 | F-ORD-001 | List Dony customers without active assignment, with relevant customer request/order summaries and pagination. | Sales Admin | Could |
+| FR-002 | F-ORD-002 | Show customer and optional buyer-organization contact data, request/order summaries and current assignment. | Sales Admin | Could |
+| FR-003 | F-ORD-003 | Assign/reassign an active Dony Sales employee with version checks, idempotency and atomic paired assignment of affected approved/assigned design requests; `committed_due_at` is the Dony's commitment, not the customer's requested deadline. | Sales Admin | Could |
 | FR-004 | F-ORD-004 | Notify the newly assigned consultant with authorized customer context after commit; reassignment also notifies affected staff and customer; deduplicate and retry delivery. | System | Could |
-| FR-005 | F-ORD-005 | List only the consultant's active same-company assignments with pagination and allowlisted filters. | Sales Consultant / Company Admin | Could |
-| FR-006 | F-ORD-006 | Return authorized customer context and chronological interaction history without exposing another company's records or CRM notes to customers. | Assigned Sales Consultant | Could |
-| FR-007 | F-ORD-007 | Show consultation status, notes and linked record summaries to assigned consultant or same-company Admin. | Assigned Sales Consultant / Company Admin | Could |
-| FR-008 | F-ORD-008 | Advance valid consultation status with trimmed 1–5000 character notes, version checks and idempotency; only Admin may reopen a closed consultation. | Assigned Sales Consultant / Company Admin | Could |
+| FR-005 | F-ORD-005 | List only the consultant's active assigned Dony customer records with pagination and allowlisted filters. | Sales / Sales Admin | Could |
+| FR-006 | F-ORD-006 | Return authorized customer context and chronological interaction history without exposing unassigned customer records or CRM notes to customers. | Assigned Sales | Could |
+| FR-007 | F-ORD-007 | Show consultation status, notes and linked record summaries to assigned consultant or Sales Admin. | Assigned Sales / Sales Admin | Could |
+| FR-008 | F-ORD-008 | Advance valid consultation status with trimmed 1–5000 character notes, version checks and idempotency; only Admin may reopen a closed consultation. | Assigned Sales / Sales Admin | Could |
 
 ### 5.1 Input / Output contract
 
 | FR ID | Input field | Type | Required | Output field | Type | Notes / validation |
 | --- | --- | --- | --- | --- | --- | --- |
-| FR-001 | page, page_size, filters | Integers / allowlisted values | Optional | unassigned company customers and activity summaries | Paginated object | Relevant company activity only; page_size 1–100; invalid filters 400; empty list valid |
-| FR-002 | customer_id | UUID | Yes | company customer profile, history summaries, assignment | Object | Same-company relationship required |
-| FR-003 | customer_id, consultant_user_id, expected versions, request IDs, committed_due_at, Idempotency-Key | UUIDs, versions, timestamps, key | Yes | assignment and affected request assignments/due dates | Object | Due date after now and is the company's promise; first assignment only for Approved request (Simple or accepted Complex fee); delivered history unchanged |
+| FR-001 | page, page_size, filters | Integers / allowlisted values | Optional | unassigned customers and optional buyer-organization activity summaries | Paginated object | Relevant Dony activity only; page_size 1–100; invalid filters 400; empty list valid. |
+| FR-002 | customer_id | UUID | Yes | customer and buyer-organization profile, history summaries, assignment | Object | Prior Dony request/order relationship or authorized lead record required; no tenant membership. |
+| FR-003 | customer_id, consultant_user_id, expected versions, request IDs, committed_due_at, Idempotency-Key | UUIDs, versions, timestamps, key | Yes | assignment and affected request assignments/due dates | Object | Due date after now and is Dony's promise; first assignment only for Approved request (Simple or accepted Complex fee); delivered history unchanged |
 | FR-004 | committed assignment event | Internal event | Yes | durable notification/outbox ID | UUID | In-app inbox authoritative |
-| FR-005 | page, page_size, filters | Integers / allowlisted values | Optional | consultant assignment summaries | Paginated object | Active assigned customers only; Admin may inspect company list |
-| FR-006 | customer_id | UUID | Yes | company/customer context, product interest, customer-visible request/order summaries and interaction_history_logs | Object/chronological array | Same-company active assignment required; internal notes only through authorized consultation detail |
-| FR-007 | consultation_id | UUID | Yes | status, notes, linked summaries, version | Object | Assigned consultant or same-company Admin |
+| FR-005 | page, page_size, filters | Integers / allowlisted values | Optional | consultant assignment summaries | Paginated object | Active assigned customers only; Sales Admin may inspect Dony-wide assignment list |
+| FR-006 | customer_id | UUID | Yes | customer and optional buyer-organization context, product interest, customer-visible request/order summaries and interaction_history_logs | Object/chronological array | Active staff assignment required; internal notes only through authorized consultation detail. |
+| FR-007 | consultation_id | UUID | Yes | status, notes, linked summaries, version | Object | Assigned consultant or Sales Admin |
 | FR-008 | consultation_id, new_status, notes, expected_version, Idempotency-Key | UUID, enum, string, version, key | Yes | consultation and timeline | Object | Notes 1–5000 chars; valid transition required |
 
 ### 5.2 Business rules
 
 | Rule ID | Rule | Why it exists |
 | --- | --- | --- |
-| BR-001 | One active assignment exists per company/customer; assignment history is retained. | Preserve accountable ownership. |
+| BR-001 | One active Sales assignment exists per Customer; assignment history is retained. | Preserve accountable ownership without introducing tenant memberships. |
 | BR-002 | First request assignment requires Approved status (Simple or accepted Complex fee); reassignment transfers all active Assigned/InProgress requests atomically while retaining their state and committed due date. | Keep CRM and design-service ownership consistent. |
-| BR-003 | Notes are private to assigned consultant and same-company Admin; customer cannot read internal notes. | Protect internal CRM records. |
+| BR-003 | Notes are private to assigned consultant and Sales Admin; customer cannot read internal notes. | Protect internal CRM records. |
 | BR-004 | Interaction logs are append-only; corrections reference prior events and never erase audit history. | Preserve interaction history. |
 | BR-005 | Status transitions: New→Contacted/ClosedLost; Contacted→InProgress/ClosedLost; InProgress→ClosedLost/ClosedWon; Admin alone may reopen a closed consultation to InProgress. | Keep consultation lifecycle controlled. |
 
@@ -146,9 +146,9 @@ Interaction history uses source_channel InApp, Email, Phone or Chat and kind Not
 
 | Entity | Attributes (from Input/Output fields) | Relationships |
 | --- | --- | --- |
-| CustomerAssignment | company_id, customer_id, consultant_user_id, assigned_by, assigned_at, version | Unique active company/customer assignment; assignment history retained. |
-| Consultation | UUID, company_id, customer_id, consultant_id, notes, related_request_ids/order_ids, status, version, timestamps | Belongs to company/customer and assigned consultant; links relevant requests/orders. |
-| Interaction history event | id, company_id, customer_id, consultant_id, source_channel, kind, occurred_at, summary, related_request_id?, related_order_id? | Chronological immutable customer/company interaction. |
+| CustomerAssignment | customer_id, buyer_organization_id?, sales_user_id, assigned_by, assigned_at, version | Unique active Dony/customer assignment; optional organization identifies the represented Business Buyer or Reseller Shop and is not an authorization tenant. |
+| Consultation | UUID, customer_id, buyer_organization_id?, sales_user_id, notes, related_request_ids/order_ids, status, version, timestamps | Belongs to the Customer and assigned Dony Sales employee; links relevant requests/orders. |
+| Interaction history event | id, customer_id, buyer_organization_id?, sales_user_id, source_channel, kind, occurred_at, summary, related_request_id?, related_order_id? | Chronological immutable interaction with a Business Buyer or Reseller Shop representative. |
 
 ## 7. Screens involved
 
@@ -164,8 +164,8 @@ Interaction history uses source_channel InApp, Email, Phone or Chat and kind Not
 
 | SC ID | Criterion | How it is measured |
 | --- | --- | --- |
-| SC-001 | Assignment and design-request ownership change atomically and remain same-company. | Verify reassignments, versions and rollback on conflicting request. |
-| SC-002 | Consultants see only assigned customer records and authorized interaction history. | Verify assigned, unassigned, cross-company and customer access. |
+| SC-001 | Assignment and design-request ownership change atomically and remain Dony. | Verify reassignments, versions and rollback on conflicting request. |
+| SC-002 | Consultants see only assigned customer records and authorized interaction history. | Verify assigned, unassigned, unauthorized and customer access. |
 | SC-003 | Consultation status and notes are auditable and duplicate/stale writes do not lose data. | Verify transition matrix, version conflict and append-only corrections. |
 
 ## 9. Assumptions

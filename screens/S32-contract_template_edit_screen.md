@@ -4,22 +4,24 @@
 |---|---|
 | Screen ID | `S32` |
 | Screen name | Contract Template Edit |
-| Actor | Company Admin |
+| Actor | Sales Admin |
 | Priority | P2 |
 | Belongs to module | [MFG-09](../specs/spec-MFG-09.md) |
 | Route | `/admin/contracts/templates/{template_id}/edit` |
-| Mockup image | Don't have mockup |
+| Mockup image | img/S32-contract_template_edit_screen.png |
 | Status | Resolved implementation specification |
 
 ## 1. Purpose
 
-**Shown when:** The Company Admin edits a template by creating a new version. Existing contracts retain the exact template version and rendered snapshot they used. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
+**Shown when:** The Sales Admin edits a template by creating a new version. Existing contracts retain the exact template version and rendered snapshot they used. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
 
 **The user leaves this screen when:** An authorized action in section 5 succeeds, the user follows a role-allowed global route, or they return to the validated originating route.
 
 ## 2. Mockup
 
-Don't have mockup
+![Historical visual reference](img/S32-contract_template_edit_screen.png)
+
+Written behavior below takes precedence over obsolete sample content.
 
 ## 3. Element inventory
 
@@ -27,7 +29,7 @@ Don't have mockup
 |---|---|---|---|---|---|
 | 1 | Screen heading | Heading | Contract Template Edit | Yes | Static route title. |
 | 2 | Route | Navigation target | /admin/contracts/templates/{template_id}/edit | Yes | Access checked on server. |
-| 3 | template_id / current version | Field / control | UUID plus read model | As specified | Load same-company name, structured body, status and version before editing. |
+| 3 | template_id / current version | Field / control | UUID plus read model | As specified | Load Dony name, structured body, status and version before editing. |
 | 4 | new template_body | Field / control | safe text and allowlisted placeholders | As specified | new template_body: safe text and allowlisted placeholders; creates immutable new version. |
 | 5 | expected_version | Field / control | required integer | As specified | Stale save returns 409; previous immutable versions remain linked to existing contracts. |
 | 6 | API errors | Field / control | standard API error envelope | As specified | 400 malformed; 422 invalid fields; 409 stale/duplicate; 429 rate limit; 503 dependency failure |
@@ -57,7 +59,7 @@ Don't have mockup
 | 3 | Archive template | Activate | Disable future use; preserve versions referenced by contracts. | S30 templates tab |
 | 4 | Cancel | Activate | Discard edits. | S30 templates tab |
 
-Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Company Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales Consultant routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks role, company, membership, ownership and assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Company Admin, S20 for Sales Consultant, S41 for System Admin, and S01 for Guest.
+Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Sales Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks internal role, customer ownership and staff assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Sales Admin, S20 for Sales, S41 for System Admin, and S01 for Guest.
 
 ## 6. Screen-level rules
 

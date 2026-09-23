@@ -29,7 +29,7 @@ Written behavior below takes precedence over obsolete sample content.
 |---|---|---|---|---|---|
 | 1 | Screen heading | Heading | Customer Order List | Yes | Static route title. |
 | 2 | Route | Navigation target | /orders | Yes | Access checked on server. |
-| 3 | page/page_size | Field / control | integer page>=1, size1..100 default20 | As specified | page/page_size: integer page>=1, size1..100 default20; allowlisted status/date sorting. |
+| 3 | page/page_size/status | Field / control | integer page>=1, size1..100 default20; canonical status enum | As specified | Allowlist `AwaitingDigitalApproval`, `DigitalDesignApproved`, `SampleInPreparation`, `SampleShipped`, `PendingContract`, `AwaitingDeposit`, `Confirmed`, `InProduction`, `Shipped`, `DeliveredAwaitingBalance`, `Completed`, `Cancelled`; allow date sorting. |
 | 4 | Rows | Field / control | order_id UUID, created_at, status, total_vnd integer, product summary. | As specified | Rows: order_id UUID, created_at, status, total_vnd integer, product summary. |
 | 5 | ownership_scope | Field / control | session-derived, read-only | As specified | Return only the current customer's orders; filters cannot broaden ownership. |
 | 6 | API errors | Field / control | standard API error envelope | As specified | 400 malformed; 422 invalid fields; 409 stale/duplicate; 429 rate limit; 503 dependency failure |
@@ -55,7 +55,7 @@ Written behavior below takes precedence over obsolete sample content.
 | 1 | Open order | Activate | Load current customer's order detail and actions. | S27 |
 | 2 | Filter/sort | Activate | Query only owned orders. | S26 |
 
-Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Company Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales Consultant routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks role, company, membership, ownership and assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Company Admin, S20 for Sales Consultant, S41 for System Admin, and S01 for Guest.
+Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Sales Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks internal role, customer ownership and staff assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Sales Admin, S20 for Sales, S41 for System Admin, and S01 for Guest.
 
 ## 6. Screen-level rules
 
@@ -68,7 +68,7 @@ Home and public catalog are available to Guest and authenticated users. Customer
 
 ### Acceptance scenarios
 
-1. Customer sees only own orders with current status and VND snapshot total.
+1. Customer sees only own orders with the current design/sample/contract/payment/fulfillment status and immutable VND total.
 2. Opening another customer's order id returns 404 without revealing its existence.
 
 ## 7. Linked requirements

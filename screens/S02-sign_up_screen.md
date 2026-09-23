@@ -13,7 +13,7 @@
 
 ## 1. Purpose
 
-**Shown when:** Registration creates a Customer identity in pending-verification state; staff memberships are never created through this form. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
+**Shown when:** Registration creates a Customer identity in pending-verification state on Dony's public storefront. The page retains the shared customer utility bar, store navigation header and footer. The registrant may represent a company buying uniforms for internal use or a Reseller Shop commissioning garments from its own designs for resale. Registration never creates a Sales, Sales Admin or System Admin account and never provisions a company as a system tenant. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
 
 **The user leaves this screen when:** An authorized action in section 5 succeeds, the user follows a role-allowed global route, or they return to the validated originating route.
 
@@ -58,7 +58,7 @@ Written behavior below takes precedence over obsolete sample content.
 | 2 | Resend verification | Activate | Rate-limit; invalidate prior token; report generic queued state. | S02 |
 | 3 | Sign in | Activate | Navigate to login. | S03 |
 
-Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Company Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales Consultant routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks role, company, membership, ownership and assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Company Admin, S20 for Sales Consultant, S41 for System Admin, and S01 for Guest.
+Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Sales Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks internal role, customer ownership and staff assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Sales Admin, S20 for Sales, S41 for System Admin, and S01 for Guest.
 
 ## 6. Screen-level rules
 

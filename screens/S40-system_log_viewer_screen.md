@@ -8,7 +8,7 @@
 | Priority | P2 |
 | Belongs to module | [MFG-12](../specs/spec-MFG-12.md) |
 | Route | `/system/logs` |
-| Mockup image | Don't have mockup |
+| Mockup image | img/S40-system_log_viewer_screen.png |
 | Status | Resolved implementation specification |
 
 ## 1. Purpose
@@ -19,7 +19,9 @@
 
 ## 2. Mockup
 
-Don't have mockup
+![Historical visual reference](img/S40-system_log_viewer_screen.png)
+
+Written behavior below takes precedence over obsolete sample content.
 
 ## 3. Element inventory
 
@@ -30,7 +32,7 @@ Don't have mockup
 | 3 | level | Field / control | enum, optional | As specified | INFO, WARN, ERROR only; derived server-side, no DEBUG selector. resolved log rule |
 | 4 | date_from/date_to | Field / control | ISO-8601 timestamps, optional | As specified | Range validated; UTC stored, Asia/Ho_Chi_Minh displayed; max range policy enforced. |
 | 5 | search_query | Field / control | trimmed string, optional | As specified | Search allowlisted actor/target/action/request_id fields only. |
-| 6 | company_id/target_id/action/outcome | Field / control | allowlisted filters | As specified | System Admin only; redact sensitive target details and secrets. |
+| 6 | buyer_organization_id/target_id/action/outcome | Field / control | allowlisted filters | As specified | System Admin only; optional organization is event context, not a tenant; redact sensitive target details and secrets. |
 | 7 | audit row | Field / control | read-only event | As specified | Actor, company, target, action, outcome, request_id, timestamp. Append-only. |
 | 8 | retention | Field / control | 365 days | As specified | Expired audit events are not returned. |
 | 9 | Search logs | Action | Query append-only redacted events by allowlisted filters. | Available when authorized | Destination: S40 |
@@ -57,7 +59,7 @@ Don't have mockup
 | 2 | Open target | Activate | Navigate only when current System Admin is authorized for target; otherwise show redacted event detail here. | authorized detail or S40 |
 | 3 | Configuration | Activate | Open settings and operations. | S39 |
 
-Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Company Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales Consultant routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks role, company, membership, ownership and assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Company Admin, S20 for Sales Consultant, S41 for System Admin, and S01 for Guest.
+Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Sales Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks internal role, customer ownership and staff assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Sales Admin, S20 for Sales, S41 for System Admin, and S01 for Guest.
 
 ## 6. Screen-level rules
 

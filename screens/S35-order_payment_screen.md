@@ -13,7 +13,7 @@
 
 ## 1. Purpose
 
-**Shown when:** The customer pays the exact server-snapshotted order total in integer VND through VNPay. Browser returns trigger status polling; verified callbacks alone confirm payment. Retry reuses an eligible pending attempt or creates a new attempt after failure/expiry. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
+**Shown when:** The customer pays exactly one server-derived installment through VNPay: `DEPOSIT` after signing, or `BALANCE` after delivery receipt is recorded. Browser returns trigger status polling; verified callbacks alone settle payment. Retry is isolated by order and purpose.
 
 **The user leaves this screen when:** An authorized action in section 5 succeeds, the user follows a role-allowed global route, or they return to the validated originating route.
 
@@ -29,22 +29,22 @@ Written behavior below takes precedence over obsolete sample content.
 |---|---|---|---|---|---|
 | 1 | Screen heading | Heading | Order Payment | Yes | Static route title. |
 | 2 | Route | Navigation target | /orders/{order_id}/payment | Yes | Access checked on server. |
-| 3 | order_id | Field / control | UUID, required | As specified | Current customer owns order; current Contract Signed; order AwaitingPayment. |
+| 3 | order_id / purpose | Field / control | UUID / DEPOSIT or BALANCE, required | As specified | Customer owns order; DEPOSIT requires Signed contract and AwaitingDeposit; BALANCE requires receipt evidence and DeliveredAwaitingBalance. |
 | 4 | subtotal_vnd | Field / control | integer, required | As specified | Immutable quote/order snapshot; sum quantity times unit price plus option surcharges. |
 | 5 | merge_discount_vnd | Field / control | integer, required | As specified | floor(subtotal_vnd*5/100) only when accepted merge preference exists; otherwise 0. |
 | 6 | shipping_vnd | Field / control | integer, required | As specified | 30000 VND snapshot. |
 | 7 | merge_fee_vnd | Field / control | integer, required | As specified | 0 VND. |
 | 8 | tax_vnd | Field / control | integer, required | As specified | 0 VND under classroom demo pricing assumption. |
-| 9 | total_vnd | Field / control | integer, required | As specified | subtotal - discount + shipping + merge_fee + tax + design_fee; server snapshot only. |
+| 9 | total_vnd / payable_amount_vnd | Field / control | integer, required | As specified | Show immutable contract total and exact installment. Deposit is floor(total × snapshotted percent / 100); balance is total minus accepted deposit and accepted order credit. |
 | 10 | payment_method | Field / control | enum | As specified | VNPay only in this release; external sandbox/provider route. |
 | 11 | transaction_id | Field / control | UUID | As specified | Returned browser route is lookup-only; poll status, never mark paid from browser. |
 | 12 | Idempotency-Key | Field / control | UUID, required on initiation | As specified | Same key/payload returns same attempt; changed payload conflicts. |
 | 13 | promo_code/marketing_consent/second merge consent | Field / control | absent | As specified | No promo controls; merge policy is already snapshotted at order submission. |
-| 14 | Initiate/retry payment | Action | Reuse active Pending attempt or create new provider reference after failure; use server snapshot amount. | Available when authorized | Destination: External VNPay |
+| 14 | Initiate/retry payment | Action | Reuse active Pending attempt for this order/purpose or create a new reference after failure; use exact server amount. | Available when authorized | Destination: External VNPay |
 | 15 | Browser return | Action | Ignore claimed success, poll authoritative transaction. | Available when authorized | Destination: S35 |
-| 16 | Verified success | Action | Show receipt/result and order status Confirmed. | Available when authorized | Destination: S27 |
-| 17 | Failed/expired/processing | Action | Keep order AwaitingPayment; show retry/processing without false success. | Available when authorized | Destination: S35 |
-| 18 | design_fee_vnd | Read-only price line | Integer VND from immutable order snapshot | Yes | Separate from subtotal and merge fee; no quantity multiplier/discount; 0 for free/repeat orders; included in ORDER payment and full refund. |
+| 16 | Verified success | Action | DEPOSIT success shows `Confirmed`; BALANCE success shows `Completed`. | Available when authorized | Destination: S27 |
+| 17 | Failed/expired/processing | Action | Keep `AwaitingDeposit` or `DeliveredAwaitingBalance`; show retry/processing without false success. | Available when authorized | Destination: S35 |
+| 18 | design_fee_vnd | Read-only price line | Integer VND from immutable order snapshot | Yes | Component of contract total; never charged again as a standalone service or duplicated between installments. |
 
 ## 4. States
 
@@ -62,12 +62,12 @@ Written behavior below takes precedence over obsolete sample content.
 
 | # | Element | User action | System response | Goes to screen |
 |---|---|---|---|---|
-| 1 | Initiate/retry payment | Activate | Reuse active Pending attempt or create new provider reference after failure; use server snapshot amount. | External VNPay |
+| 1 | Initiate/retry payment | Activate | Reuse/create an attempt for the exact order/purpose and server amount. | External VNPay |
 | 2 | Browser return | Activate | Ignore claimed success, poll authoritative transaction. | S35 |
-| 3 | Verified success | Activate | Show receipt/result and order status Confirmed. | S27 |
-| 4 | Failed/expired/processing | Activate | Keep order AwaitingPayment; show retry/processing without false success. | S35 |
+| 3 | Verified success | Activate | Show purpose-specific receipt and `Confirmed` or `Completed`. | S27 |
+| 4 | Failed/expired/processing | Activate | Preserve the purpose-specific payable state and offer safe retry/polling. | S35 |
 
-Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Company Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales Consultant routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks role, company, membership, ownership and assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Company Admin, S20 for Sales Consultant, S41 for System Admin, and S01 for Guest.
+Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Sales Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks internal role, customer ownership and staff assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Sales Admin, S20 for Sales, S41 for System Admin, and S01 for Guest.
 
 ## 6. Screen-level rules
 
@@ -80,8 +80,9 @@ Home and public catalog are available to Guest and authenticated users. Customer
 
 ### Acceptance scenarios
 
-1. For Signed/AwaitingPayment order, show exact subtotal/discount/shipping/merge_fee/tax/design_fee/total integer VND and initiate 15m attempt.
-2. Browser return cannot mark paid; verified callback confirms once, while failed/expired stays AwaitingPayment and enables retry.
+1. Signed/`AwaitingDeposit` exposes only the exact DEPOSIT; accepted callback advances once to `Confirmed`.
+2. Receipt-confirmed/`DeliveredAwaitingBalance` exposes only the exact BALANCE; accepted callback advances once to `Completed`.
+3. Browser return cannot mark paid; failed/expired attempts preserve the current order state and enable purpose-specific retry.
 
 ## 7. Linked requirements
 

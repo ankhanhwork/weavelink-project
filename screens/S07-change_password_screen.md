@@ -8,7 +8,7 @@
 | Priority | P3 |
 | Belongs to module | [MFG-02](../specs/spec-MFG-02.md) |
 | Route | `/profile/change-password` |
-| Mockup image | Don't have mockup |
+| Mockup image | img/S07-change_password_screen.png |
 | Status | Resolved implementation specification |
 
 ## 1. Purpose
@@ -19,7 +19,9 @@
 
 ## 2. Mockup
 
-Don't have mockup
+![Historical visual reference](img/S07-change_password_screen.png)
+
+Written behavior below takes precedence over obsolete sample content.
 
 ## 3. Element inventory
 
@@ -54,7 +56,7 @@ Don't have mockup
 | 1 | Change password | Activate | Verify current password, hash new password, revoke other sessions, show confirmation. | S06 |
 | 2 | Cancel | Activate | Discard unsaved password fields. | S06 |
 
-Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Company Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales Consultant routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks role, company, membership, ownership and assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Company Admin, S20 for Sales Consultant, S41 for System Admin, and S01 for Guest.
+Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Sales Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks internal role, customer ownership and staff assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Sales Admin, S20 for Sales, S41 for System Admin, and S01 for Guest.
 
 ## 6. Screen-level rules
 

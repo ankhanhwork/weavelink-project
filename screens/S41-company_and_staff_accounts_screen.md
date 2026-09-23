@@ -1,51 +1,53 @@
-# Screen Spec: S41 Company and Staff Accounts
+# Screen Spec: S41 Dony Staff Accounts
 
 | Field | Value |
 |---|---|
 | Screen ID | `S41` |
-| Screen name | Company and Staff Accounts |
+| Screen name | Dony Staff Accounts |
 | Actor | System Admin |
 | Priority | P2 |
 | Belongs to module | [MFG-03](../specs/spec-MFG-03.md) |
-| Route | `/system/companies` |
-| Mockup image | Don't have mockup |
+| Route | `/system/staff` |
+| Mockup image | img/S41-company_and_staff_accounts_screen.png |
 | Status | Resolved implementation specification |
 
 ## 1. Purpose
 
-**Shown when:** The System Admin provisions companies and staff memberships, sends invitations, changes lifecycle status and soft-deletes eligible records while protecting last active administrators. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
+**Shown when:** A System Admin manages accounts for Dony employees, sends invitations, changes roles or employment status and soft-deletes eligible staff while protecting the last active System Admin. Business Buyers and Reseller Shops are customers and never appear here as tenants or staff-account owners. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
 
 **The user leaves this screen when:** An authorized action in section 5 succeeds, the user follows a role-allowed global route, or they return to the validated originating route.
 
 ## 2. Mockup
 
-Don't have mockup
+![Historical visual reference](img/S41-company_and_staff_accounts_screen.png)
+
+Written behavior below takes precedence over obsolete sample content.
 
 ## 3. Element inventory
 
 | # | Element | Type | Content / data source | Required | Validation |
 |---|---|---|---|---|---|
-| 1 | Screen heading | Heading | Company and Staff Accounts | Yes | Static route title. |
-| 2 | Route | Navigation target | /system/companies | Yes | Access checked on server. |
-| 3 | company_id / version | Field / control | UUID / integer | As specified | Server-issued; expected_version required for lifecycle edits. |
-| 4 | legal_name / display_name | Field / control | strings, required | As specified | Trimmed; legal name 1..200 characters, display name 1..100. |
-| 5 | tax_id / address | Field / control | strings, required | As specified | Tax ID 1..30 characters; address 1..500. |
-| 6 | admin_contact_info | Field / control | name, email, phone | As specified | Initial admin contact; normalize email and require 8..15 digits with optional leading + for phone. |
-| 7 | initial_admin_email | Field / control | normalized email, required | As specified | Create 48-hour single-use invite atomically with company. |
-| 8 | company_status | Field / control | Provisioning, Active, Suspended, Deleted | As specified | Provisioning activates only when initial admin accepts; suspension blocks new catalog/order/payment activity but preserves customer reads/reconciliation. |
-| 9 | staff email / role / status | Field / control | normalized email / Company Admin or Sales Consultant / Invited, Active, Suspended, Deleted | As specified | Customers are not staff; only System Admin provisions memberships. |
-| 10 | API errors | Field / control | standard API error envelope | As specified | 400 malformed; 403 prohibited; 404 inaccessible company; 409 duplicate/stale/last-admin protection; 422 invalid fields. |
-| 11 | Create company | Action | Create Provisioning company with required tax_id, address and initial admin contact/invite; activate only after invite acceptance. | Available when authorized | Destination: S41 |
-| 12 | Invite staff | Action | Create 48h single-use invitation for Company Admin/Sales Consultant. | Available when authorized | Destination: S41 |
-| 13 | Suspend/reactivate | Action | Enforce company work/read/reconciliation policy; audit transition. | Available when authorized | Destination: S41 |
-| 14 | Soft delete | Action | Confirm; retain history and revoke sessions; protect last active admins. | Available when authorized | Destination: S41 |
+| 1 | Screen heading | Heading | Dony Staff Accounts | Yes | Static route title. |
+| 2 | Route | Navigation target | /system/staff | Yes | System Admin authorization checked on server. |
+| 3 | staff_account_id / version | Field / control | UUID / integer | As specified | Server-issued; expected_version required for edits. |
+| 4 | full_name / work_email | Field / control | strings, required | As specified | Name 1..100; email normalized and globally unique. |
+| 5 | role | Field / control | Sales, Sales Admin or System Admin | As specified | Internal Dony role only; Customer cannot be assigned here. |
+| 6 | status | Field / control | Invited, Active, Suspended, Deleted | As specified | Deleted is terminal; suspended staff cannot start authenticated actions. |
+| 7 | open_work_counts | Read-only summary | assigned customers, requests, orders, payment and production exceptions | When relevant | Unresolved work must be reassigned or resolved before removal. |
+| 8 | role/status/query filters | Search and filters | allowlisted enums and bounded text | No | Filters Dony employees only. |
+| 9 | API errors | Field / control | standard API error envelope | As specified | 400 malformed; 403 prohibited; 404 inaccessible staff; 409 duplicate/stale/last-admin/open-work; 422 invalid fields. |
+| 10 | Add employee | Action | Create one inactive Dony employee and 48-hour single-use invitation with idempotency. | Available when authorized | Destination: S41 |
+| 11 | Update employee | Action | Update allowlisted identity, role or status fields; audit and revoke obsolete sessions. | Available when authorized | Destination: S41 |
+| 12 | Resend invitation | Action | Invalidate the old invitation and issue a new 48-hour token. | Invited status only | Destination: S41 |
+| 13 | Suspend/reactivate | Action | Change employee access after last-admin and open-work checks. | Available when authorized | Destination: S41 |
+| 14 | Soft delete | Action | Confirm employee identity and consequences; retain history and revoke sessions. | Eligible staff only | Destination: S41 |
 
 ## 4. States
 
 | State | What the user sees | Trigger |
 |---|---|---|
 | Loading | Labelled progress/skeleton; disable duplicate submit. | Request starts |
-| Empty | Show no companies or staff memberships matching filters; preserve filters where present and explain eligibility/filter conditions. | Successful query returns no rows |
+| Empty | Show no Dony employees matching the current filters; preserve filters and explain how to add an employee. | Successful query returns no rows |
 | Forbidden/not found | Safe message without revealing inaccessible identifiers. | 401/403/404 |
 | Error | Show code, message, field_errors, request_id; preserve entered values. | Request failure |
 | Retry | Retry reads on transient failure; reuse the same idempotency key only for mutations that require one for the documented mutation. | Recoverable failure |
@@ -56,12 +58,13 @@ Don't have mockup
 
 | # | Element | User action | System response | Goes to screen |
 |---|---|---|---|---|
-| 1 | Create company | Activate | Create Provisioning company with required tax_id, address and initial admin contact/invite; activate only after invite acceptance. | S41 |
-| 2 | Invite staff | Activate | Create 48h single-use invitation for Company Admin/Sales Consultant. | S41 |
-| 3 | Suspend/reactivate | Activate | Enforce company work/read/reconciliation policy; audit transition. | S41 |
-| 4 | Soft delete | Activate | Confirm; retain history and revoke sessions; protect last active admins. | S41 |
+| 1 | Add employee | Activate | Validate unique work email and internal role; create inactive staff account and invitation atomically. | S41 |
+| 2 | Update employee | Activate | Apply allowlisted fields with expected-version and last-admin checks; audit committed changes. | S41 |
+| 3 | Resend invitation | Activate | Invalidate the prior token and enqueue one replacement invitation. | S41 |
+| 4 | Suspend/reactivate | Activate | Change staff access, revoke obsolete sessions and preserve history. | S41 |
+| 5 | Soft delete | Activate | Require reassignment of blocking work, confirm identity, revoke sessions and retain history. | S41 |
 
-Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Company Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales Consultant routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks role, company, membership, ownership and assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Company Admin, S20 for Sales Consultant, S41 for System Admin, and S01 for Guest.
+Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Sales Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks internal role, customer ownership and staff assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Sales Admin, S20 for Sales, S41 for System Admin, and S01 for Guest.
 
 ## 6. Screen-level rules
 
@@ -74,8 +77,9 @@ Home and public catalog are available to Guest and authenticated users. Customer
 
 ### Acceptance scenarios
 
-1. Staff invite accepts only assignable staff roles and expires after 48h; customer role is not provisioned here.
-2. Deleting/demoting the last active System Admin or Company Admin is rejected; soft delete retains business history.
+1. Adding an employee creates no company or tenant; the 48-hour invitation accepts only Sales, Sales Admin or System Admin.
+2. Public Customer registration cannot grant an internal Dony role.
+3. Deleting, suspending or demoting the last active System Admin is rejected; blocking work must be reassigned and soft deletion retains business history.
 
 ## 7. Linked requirements
 

@@ -26,21 +26,27 @@ flowchart TD
     Policy --> Review["S25: review quote and separate design fee"]
     Merge -->|No| Review
     Review -->|Expired or changed| OrderInput
-    Review -->|Submit once| Persist["PendingContract order; atomic first-order fee allocation"]
-    Persist --> Contract["S29 / S33: admin generates Ready contract"]
+    Review -->|Submit once| Persist["AwaitingDigitalApproval order; immutable quote snapshot"]
+    Persist --> Digital["S27: customer approves digital design"]
+    Digital --> Sample["S29: Dony prepares and ships physical sample"]
+    Sample --> SampleDecision{"S27: received sample approved?"}
+    SampleDecision -->|Revise| Digital
+    SampleDecision -->|Approve| Contract["S29 / S33: PendingContract; admin generates Ready contract"]
     Contract --> Sign["S34: PDF, reauthentication, signing"]
     Sign -->|Stale version| Contract
-    Sign -->|Committed signature| Pay["S35: ORDER payment; AwaitingPayment"]
-    Pay -->|Failed or expired attempt| Retry{"Retry or cancel?"}
-    Retry -->|Retry| Pay
+    Sign -->|Committed signature| Deposit["S35: DEPOSIT payment; AwaitingDeposit"]
+    Deposit -->|Failed or expired attempt| Retry{"Retry or cancel?"}
+    Retry -->|Retry| Deposit
     Retry -->|Cancel| Cancel["S27: Cancelled; refund if paid"]
-    Pay -->|Verified settlement| Confirmed["Confirmed order"]
+    Deposit -->|Verified deposit| Confirmed["Confirmed order"]
     Confirmed -->|Eligible cancellation and no batch| Cancel
-    Confirmed -->|Merge opted in| Batch["S42: batch or individual fallback"]
+    Confirmed -->|Merge opted in| Batch["S42: system recommends compatible groups for 7 days; Sales Admin reviews and starts batch; scheduler starts individual fallback at expiry"]
     Confirmed -->|Standard| Production["S29: InProduction"]
     Batch --> Production
     Production --> Shipped["S29: carrier and tracking; Shipped"]
-    Shipped --> Delivered["S27 / S29: Delivered"]
+    Shipped --> Received["S27: receipt confirmation; DeliveredAwaitingBalance"]
+    Received --> Balance["S35: BALANCE payment"]
+    Balance -->|Verified settlement| Completed["Completed order"]
 ```
 
 Nodes found: 30

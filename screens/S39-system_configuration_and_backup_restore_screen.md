@@ -8,18 +8,20 @@
 | Priority | P2 |
 | Belongs to module | [MFG-12](../specs/spec-MFG-12.md) |
 | Route | `/system/configuration` |
-| Mockup image | Don't have mockup |
+| Mockup image | img/S39-system_configuration_and_backup_restore_screen.png |
 | Status | Resolved implementation specification |
 
 ## 1. Purpose
 
-**Shown when:** The System Admin edits typed allowlisted global configuration and runs backup/restore operations. Secret fields show status only; price-policy v1 constants remain read-only. Restore requires reauthentication, exact backup ID, verified log chain, pre-restore backup and maintenance mode. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
+**Shown when:** The System Admin edits typed allowlisted Dony-wide configuration and runs backup/restore operations. Secret fields show status only; merge policy (840,000 VND cap, rolling seven-day pool, Sales Admin final approval/start, and 7/10 production days after deposit) is versioned and read-only here. Restore requires reauthentication, exact backup ID, verified log chain, pre-restore backup and maintenance mode. If provider replay references an order absent from the restored snapshot, do not create a ghost order; log ERROR, alert System Admin and manually refund via VNPay dashboard.
 
 **The user leaves this screen when:** An authorized action in section 5 succeeds, the user follows a role-allowed global route, or they return to the validated originating route.
 
 ## 2. Mockup
 
-Don't have mockup
+![Historical visual reference](img/S39-system_configuration_and_backup_restore_screen.png)
+
+Written behavior below takes precedence over obsolete sample content.
 
 ## 3. Element inventory
 
@@ -38,6 +40,8 @@ Don't have mockup
 | 11 | daily_retention_count / weekly_retention_count | Field / control | integers, editable | As specified | Daily 1..30 default 7; weekly 1..12 default 4; retain required transaction logs/assets for all retained bases. |
 | 12 | backup_id | Field / control | UUID, required for restore | As specified | Require reauth and exact confirmation; checksum/schema validation and pre-restore backup. |
 | 13 | maintenance_mode / restore_lock | Field / control | server state | As specified | One restore at a time; payment callbacks queue durably and replay idempotently. |
+| 14 | production_notification_email | Field / control | optional validated email | As specified | Allowlisted Dony-wide notification address; absent value falls back to active Sales Admin recipients. |
+| 15 | post-restore orphan payment | Field / control | provider event/resource reference | As specified | Never recreate an order missing from restored database; ERROR audit + System Admin alert + manual VNPay refund. |
 | 14 | Save settings | Action | Validate allowlist and complete config version atomically; secrets are reference-only; audit and notify after commit. | Available when authorized | Destination: S39 |
 | 15 | Run backup | Action | Queue backup; show state until checksums/schema manifest verified. | Available when authorized | Destination: S39 |
 | 16 | Restore backup | Action | Reauthenticate, confirm exact ID, prebackup and enter maintenance; replay callbacks idempotently after validation. | Available when authorized | Destination: S39 |
@@ -64,7 +68,7 @@ Don't have mockup
 | 3 | Restore backup | Activate | Reauthenticate, confirm exact ID, prebackup and enter maintenance; replay callbacks idempotently after validation. | S39 |
 | 4 | View logs | Activate | Open redacted audit viewer. | S40 |
 
-Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Company Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales Consultant routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks role, company, membership, ownership and assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Company Admin, S20 for Sales Consultant, S41 for System Admin, and S01 for Guest.
+Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Sales Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks internal role, customer ownership and staff assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Sales Admin, S20 for Sales, S41 for System Admin, and S01 for Guest.
 
 ## 6. Screen-level rules
 
@@ -79,6 +83,7 @@ Home and public catalog are available to Guest and authenticated users. Customer
 
 1. Allowlisted settings version activates atomically only after validation and emits audit/notification.
 2. Restore requires reauth/confirmation/prebackup; failure keeps maintenance enabled and does not report success.
+3. Orphaned provider replay after restore creates no order/payment record and yields ERROR audit, System Admin alert and manual-refund instruction.
 
 ## 7. Linked requirements
 

@@ -89,9 +89,9 @@ for (const [index, [prefix, count]] of expectedFunctions.entries()) {
 const screenFiles = files.filter(file => /^screens\/S\d{2}-.*\.md$/.test(file));
 const screenCatalogue = read('docs/screen-list.md');
 const listedScreens = [...screenCatalogue.matchAll(/^\| (S\d{2}) \|/gm)].map(match => match[1]);
-check(screenFiles.length === 43, `Expected 43 screen specs, got ${screenFiles.length}`);
-check(listedScreens.length === 43 && new Set(listedScreens).size === 43, 'Expected 43 unique screen-list rows');
-const inheritedWithMockups = new Set(['S01','S02','S03','S06','S08','S09','S13','S15','S16','S17','S22','S23','S25','S26','S27','S34','S35']);
+check(screenFiles.length === 45, `Expected 45 screen specs, got ${screenFiles.length}`);
+check(listedScreens.length === 45 && new Set(listedScreens).size === 45, 'Expected 45 unique screen-list rows');
+const inheritedWithMockups = new Set(['S01','S02','S03','S06','S08','S09','S13','S15','S17','S22','S23','S25','S26','S27','S34','S35']);
 const requiredScreenHeadings = ['## 1. Purpose','## 2. Mockup','## 3. Element inventory','## 4. States','## 5. Interactions and navigation','## 6. Screen-level rules','## 7. Linked requirements','## 8. Responsive and accessibility notes','## 9. Open questions','## Completion checklist'];
 const requiredScreenTables = [
   '| Field | Value |',
@@ -101,7 +101,8 @@ const requiredScreenTables = [
   '| Rule ID | Rule | Source |',
   '| # | Question | Blocking? | Status |'
 ];
-for (let number = 1; number <= 43; number++) {
+for (let number = 1; number <= 46; number++) {
+  if (number === 16) continue;
   const id = `S${String(number).padStart(2, '0')}`;
   const matches = screenFiles.filter(file => path.basename(file).startsWith(`${id}-`));
   check(matches.length === 1, `${id}: expected exactly one screen spec`);
@@ -113,11 +114,13 @@ for (let number = 1; number <= 43; number++) {
   for (const header of requiredScreenTables) check(body.includes(header), `${matches[0]}: missing teacher-format table ${header}`);
   const questionSection = body.match(/## 9\. Open questions([\s\S]*?)## Completion checklist/)?.[1] || '';
   check(/No remaining open questions|Resolved/.test(questionSection), `${matches[0]}: open-question section is not explicitly resolved`);
-  if (!inheritedWithMockups.has(id)) {
-    check((body.match(/Don't have mockup/g) || []).length >= 2, `${matches[0]}: exact no-mockup note must appear in metadata and section 2`);
+  const mockupRef = body.match(/^\| Mockup image \| `?img\/([^ |`]+\.png)`? \|$/m)?.[1];
+  if (mockupRef) {
+    check(fs.existsSync(path.join(root, 'screens', 'img', mockupRef)), `${matches[0]}: mockup image file missing`);
+    check(body.includes(`![`) && body.includes(`img/${mockupRef}`), `${matches[0]}: mockup image not embedded in section 2`);
+    check(!body.includes("Don't have mockup"), `${matches[0]}: linked screen incorrectly marked without mockup`);
   } else {
-    check(!body.includes("Don't have mockup"), `${matches[0]}: inherited screen incorrectly marked without mockup`);
-    check(body.includes(`img/${path.basename(matches[0], '.md')}.png`), `${matches[0]}: inherited PNG reference missing`);
+    check((body.match(/Don't have mockup/g) || []).length >= 2, `${matches[0]}: exact no-mockup note must appear in metadata and section 2`);
   }
   check(screenCatalogue.includes(`../${matches[0]}`), `${id}: screen-list link missing`);
 }
@@ -166,7 +169,8 @@ for (const [file, body] of texts) {
 }
 
 const pngs = fs.readdirSync(path.join(root, 'screens', 'img')).filter(file => file.endsWith('.png'));
-check(pngs.length === 17, `Expected 17 original PNGs, got ${pngs.length}`);
+const referencedPngs = screenFiles.filter(file => texts.get(file).match(/^\| Mockup image \| `?img\/([^ |`]+\.png)`? \|$/m)).length;
+check(pngs.length === referencedPngs, `Every PNG must be linked from one screen spec (${pngs.length} files, ${referencedPngs} referenced)`);
 check(fs.existsSync(path.join(root, 'ai-files', 'docs', 'user-input-needed.md')), 'Preserved user input register missing from ai-files');
 check(!fs.existsSync(path.join(root, 'docs', 'user-input-needed.md')), 'AI-created user input register must not remain under docs');
 

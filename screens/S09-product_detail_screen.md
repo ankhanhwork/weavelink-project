@@ -13,7 +13,7 @@
 
 ## 1. Purpose
 
-**Shown when:** The product detail shows the current Published product version, supported options, capacity and safe images. Hidden, Archived or inaccessible products return not found. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
+**Shown when:** The product detail shows a current Published Dony garment base, supported materials, colours, customization methods, capacity and safe images. It describes what Dony can manufacture to order; it is not a ready-made item or stock record. Hidden, Archived or inaccessible products return not found. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
 
 **The user leaves this screen when:** An authorized action in section 5 succeeds, the user follows a role-allowed global route, or they return to the validated originating route.
 
@@ -30,7 +30,7 @@ Written behavior below takes precedence over obsolete sample content.
 | 1 | Screen heading | Heading | Product Detail | Yes | Static route title. |
 | 2 | Route | Navigation target | /products/{product_id} | Yes | Access checked on server. |
 | 3 | product_id | Field / control | UUID path | As specified | product_id: UUID path; inaccessible/unpublished product returns 404. |
-| 4 | name, company_id, SKU, category | Field / control | read-only product data. | As specified | name, company_id, SKU, category: read-only product data. |
+| 4 | name, SKU, category | Field / control | Read-only Dony product-base data. | As specified | Describes a configurable garment base, not a finished item in stock. |
 | 5 | unit_price_vnd | Field / control | integer >=0 | As specified | unit_price_vnd: integer >=0; no client price edits. |
 | 6 | sizes/colors/materials/capacity | Field / control | only currently supported options | As specified | sizes/colors/materials/capacity: only currently supported options; no checkout if Hidden/Archived. |
 | 7 | API errors | Field / control | standard API error envelope | As specified | 400 malformed; 422 invalid fields; 409 stale/duplicate; 429 rate limit; 503 dependency failure |
@@ -58,7 +58,7 @@ Written behavior below takes precedence over obsolete sample content.
 | 2 | Request design service | Activate | Customer opens DesignRequest form; Guest/non-Customer authenticates with safe return_to. | S15 or S03 |
 | 3 | Back to results | Activate | Preserve catalog filters. | S08 |
 
-Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Company Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales Consultant routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks role, company, membership, ownership and assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Company Admin, S20 for Sales Consultant, S41 for System Admin, and S01 for Guest.
+Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Sales Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks internal role, customer ownership and staff assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Sales Admin, S20 for Sales, S41 for System Admin, and S01 for Guest.
 
 ## 6. Screen-level rules
 

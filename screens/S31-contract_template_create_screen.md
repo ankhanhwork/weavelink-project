@@ -4,22 +4,24 @@
 |---|---|
 | Screen ID | `S31` |
 | Screen name | Contract Template Create |
-| Actor | Company Admin |
+| Actor | Sales Admin |
 | Priority | P2 |
 | Belongs to module | [MFG-09](../specs/spec-MFG-09.md) |
 | Route | `/admin/contracts/templates/new` |
-| Mockup image | Don't have mockup |
+| Mockup image | img/S31-contract_template_create_screen.png |
 | Status | Resolved implementation specification |
 
 ## 1. Purpose
 
-**Shown when:** The Company Admin creates a contract template version with validated name and permitted template content; executable code and arbitrary placeholders are rejected. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
+**Shown when:** The Sales Admin creates a contract template version with validated name and permitted template content; executable code and arbitrary placeholders are rejected. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
 
 **The user leaves this screen when:** An authorized action in section 5 succeeds, the user follows a role-allowed global route, or they return to the validated originating route.
 
 ## 2. Mockup
 
-Don't have mockup
+![Historical visual reference](img/S31-contract_template_create_screen.png)
+
+Written behavior below takes precedence over obsolete sample content.
 
 ## 3. Element inventory
 
@@ -58,7 +60,7 @@ Don't have mockup
 | 3 | Publish | Activate | Activate only after complete template validation. | S30 templates tab |
 | 4 | Cancel | Activate | Discard form. | S30 templates tab |
 
-Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Company Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales Consultant routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks role, company, membership, ownership and assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Company Admin, S20 for Sales Consultant, S41 for System Admin, and S01 for Guest.
+Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Sales Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks internal role, customer ownership and staff assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Sales Admin, S20 for Sales, S41 for System Admin, and S01 for Guest.
 
 ## 6. Screen-level rules
 

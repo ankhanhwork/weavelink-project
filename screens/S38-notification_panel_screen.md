@@ -8,7 +8,7 @@
 | Priority | P3 |
 | Belongs to module | [MFG-01](../specs/spec-MFG-01.md) |
 | Route | `/notifications` |
-| Mockup image | Don't have mockup |
+| Mockup image | img/S38-notification_panel_screen.png |
 | Status | Resolved implementation specification |
 
 ## 1. Purpose
@@ -19,7 +19,9 @@
 
 ## 2. Mockup
 
-Don't have mockup
+![Historical visual reference](img/S38-notification_panel_screen.png)
+
+Written behavior below takes precedence over obsolete sample content.
 
 ## 3. Element inventory
 
@@ -31,6 +33,7 @@ Don't have mockup
 | 4 | read_at / pagination | Field / control | nullable UTC plus bounded paging | As specified | Event/recipient uniqueness suppresses duplicates. |
 | 5 | target_route | Field / control | optional internal route | As specified | Reauthorize the target when opened; hide invalid or inaccessible deep links. |
 | 6 | email_delivery_state | Field / control | secondary read-only status | As specified | The persisted in-app inbox remains authoritative. |
+| 7 | order lifecycle event | Notification payload | safe design/sample/contract/deposit/production/shipment/receipt/balance label | Optional | Deep link to S27, S29, S34 or S35 only after fresh authorization; never include provider secrets. |
 | 7 | API errors | Field / control | standard API error envelope | As specified | 400 malformed; 422 invalid fields; 409 stale/duplicate; 429 rate limit; 503 dependency failure |
 | 8 | Mark read | Action | Persist recipient read_at; repeated action is idempotent. | Available when authorized | Destination: S38 |
 | 9 | Open notification | Action | Resolve allowlisted target and reauthorize target access. | Available when authorized | Destination: authorized target route |
@@ -56,7 +59,7 @@ Don't have mockup
 | 2 | Open notification | Activate | Resolve allowlisted target and reauthorize target access. | authorized target route |
 | 3 | Close | Activate | Return to prior validated route. | Origin |
 
-Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Company Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales Consultant routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks role, company, membership, ownership and assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Company Admin, S20 for Sales Consultant, S41 for System Admin, and S01 for Guest.
+Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Sales Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks internal role, customer ownership and staff assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Sales Admin, S20 for Sales, S41 for System Admin, and S01 for Guest.
 
 ## 6. Screen-level rules
 
@@ -71,6 +74,7 @@ Home and public catalog are available to Guest and authenticated users. Customer
 
 1. User sees only own persisted notifications and repeated mark-read is idempotent.
 2. Opening an unauthorized/stale target is blocked after a fresh server access check.
+3. Each committed digital approval, sample dispatch/decision, contract readiness/signature, deposit, shipment/receipt and balance event creates at most one notification per recipient; email failure does not roll back state.
 
 ## 7. Linked requirements
 

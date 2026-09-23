@@ -14,7 +14,7 @@
 | UC-C01 | Design product | Customer | UC-C02 | MFG-05/F-DES-001, MFG-05/F-DES-002, MFG-05/F-DES-003 |
 | UC-C02 | Product Customization | Customer | Includes UC-C01, UC-C03, UC-C04 | MFG-05/F-DES-001, MFG-05/F-DES-002, MFG-05/F-DES-003 |
 | UC-C03 | View saved design | Customer | None | MFG-05/F-DES-004 |
-| UC-C04 | Request design service | Customer | Company Admin (complexity assessment); System (notifications) | MFG-05/F-DES-005, MFG-05/F-DES-006, MFG-05/F-DES-007, MFG-05/F-DES-008, MFG-05/F-DES-012, MFG-05/F-DES-013 |
+| UC-C04 | Request design service | Customer | Sales Admin (complexity assessment); System (notifications) | MFG-05/F-DES-005, MFG-05/F-DES-006, MFG-05/F-DES-007, MFG-05/F-DES-008, MFG-05/F-DES-012, MFG-05/F-DES-013 |
 | UC-C05 | Finalize order | Customer | None | MFG-06/F-PAY-001, MFG-06/F-PAY-002, MFG-06/F-PAY-003 |
 | UC-C06 | Choose merge option | Customer | None | MFG-10/F-MER-001, MFG-10/F-MER-002, MFG-10/F-MER-003 |
 | UC-C07 | Cancel order | Customer | None | MFG-07/F-ORD-003, MFG-07/F-ORD-004 |
@@ -23,29 +23,29 @@
 | UC-C09 | View/Sign contract | Customer | UC-C10, UC-C11 | MFG-09/F-CONTR-008, MFG-09/F-CONTR-009 |
 | UC-C11 | Sign contract | Customer | None | MFG-09/F-CONTR-008, MFG-09/F-CONTR-009 |
 | UC-C12 | Make payment | Customer | None | MFG-06/F-PAY-004, MFG-06/F-PAY-005, MFG-06/F-PAY-006 |
-| UC-S01 | View assignment | Sales Consultant | None | MFG-08/F-ORD-005, MFG-08/F-ORD-006 |
-| UC-S02 | Update customer consultation | Sales Consultant | None | MFG-08/F-ORD-007, MFG-08/F-ORD-008 |
-| UC-S03 | Send design to customer | Sales Consultant | None | MFG-05/F-DES-009, MFG-05/F-DES-010, MFG-05/F-DES-011 |
-| UC-S04 | Update order status | Sales Consultant | Company Admin (same-company fulfillment) | MFG-07/F-ORD-005, MFG-07/F-ORD-006, MFG-07/F-ORD-007 |
-| UC-C14 | Generate contracts | Company Admin | None | MFG-09/F-CONTR-001, MFG-09/F-CONTR-002, MFG-09/F-CONTR-003, MFG-09/F-CONTR-004, MFG-09/F-CONTR-005 |
-| UC-C15 | Manage contract templates and unsigned revisions | Company Admin | None | MFG-09/F-CONTR-006, MFG-09/F-CONTR-007 |
-| UC-C13 | Manage company contracts | Company Admin | UC-C14, UC-C15 | MFG-09/F-CONTR-001, MFG-09/F-CONTR-002, MFG-09/F-CONTR-003, MFG-09/F-CONTR-004, MFG-09/F-CONTR-005, MFG-09/F-CONTR-006, MFG-09/F-CONTR-007 |
-| UC-C17 | View merge-eligible orders | Company Admin | None | MFG-10/F-MER-004, MFG-10/F-MER-005 |
-| UC-C18 | Confirm merge batch | Company Admin | None | MFG-10/F-MER-006, MFG-10/F-MER-007 |
-| UC-C16 | Optimize order | Company Admin | UC-C17, UC-C18 | MFG-10/F-MER-004, MFG-10/F-MER-005, MFG-10/F-MER-006, MFG-10/F-MER-007 |
-| UC-C19 | Assign consultant | Company Admin | None | MFG-08/F-ORD-001, MFG-08/F-ORD-002, MFG-08/F-ORD-003, MFG-08/F-ORD-004 |
-| UC-C21 | View dashboard | Company Admin | None | MFG-11/F-DA-001, MFG-11/F-DA-002 |
-| UC-C22 | Export data | Company Admin | None | MFG-11/F-DA-003 |
-| UC-C20 | Data Analytics | Company Admin | UC-C21, UC-C22 | MFG-11/F-DA-001, MFG-11/F-DA-002, MFG-11/F-DA-003 |
-| UC-C24 | Add product | Company Admin | None | MFG-04/F-PROD-004, MFG-04/F-PROD-005, MFG-04/F-PROD-006 |
-| UC-C25 | Update product info | Company Admin | None | MFG-04/F-PROD-007, MFG-04/F-PROD-008 |
-| UC-C26 | Delete product | Company Admin | None | MFG-04/F-PROD-009, MFG-04/F-PROD-010 |
-| UC-C27 | Publish/ Unpublish product | Company Admin | None | MFG-04/F-PROD-011 |
-| UC-C23 | Manage product catalog | Company Admin | UC-C24, UC-C25, UC-C26, UC-C27 | MFG-04/F-PROD-004, MFG-04/F-PROD-005, MFG-04/F-PROD-006, MFG-04/F-PROD-007, MFG-04/F-PROD-008, MFG-04/F-PROD-009, MFG-04/F-PROD-010, MFG-04/F-PROD-011 |
-| UC-S06 | Add account | System Admin | None | MFG-03/F-ACC-001, MFG-03/F-ACC-002, MFG-03/F-ACC-003, MFG-03/F-ACC-004 |
-| UC-S07 | Update account info & role | System Admin | None | MFG-03/F-ACC-005, MFG-03/F-ACC-006 |
-| UC-S08 | Delete account | System Admin | None | MFG-03/F-ACC-007, MFG-03/F-ACC-008 |
-| UC-S05 | Manage company's user accounts | System Admin | UC-S06, UC-S07, UC-S08 | MFG-03/F-ACC-001, MFG-03/F-ACC-002, MFG-03/F-ACC-003, MFG-03/F-ACC-004, MFG-03/F-ACC-005, MFG-03/F-ACC-006, MFG-03/F-ACC-007, MFG-03/F-ACC-008 |
+| UC-S01 | View assignment | Sales | None | MFG-08/F-ORD-005, MFG-08/F-ORD-006 |
+| UC-S02 | Update customer consultation | Sales | None | MFG-08/F-ORD-007, MFG-08/F-ORD-008 |
+| UC-S03 | Send design to customer | Sales | None | MFG-05/F-DES-009, MFG-05/F-DES-010, MFG-05/F-DES-011 |
+| UC-S04 | Update order status | Sales | Sales Admin (Dony fulfillment) | MFG-07/F-ORD-005, MFG-07/F-ORD-006, MFG-07/F-ORD-007 |
+| UC-C14 | Generate contracts | Sales Admin | None | MFG-09/F-CONTR-001, MFG-09/F-CONTR-002, MFG-09/F-CONTR-003, MFG-09/F-CONTR-004, MFG-09/F-CONTR-005 |
+| UC-C15 | Manage contract templates and unsigned revisions | Sales Admin | None | MFG-09/F-CONTR-006, MFG-09/F-CONTR-007 |
+| UC-C13 | Manage company contracts | Sales Admin | UC-C14, UC-C15 | MFG-09/F-CONTR-001, MFG-09/F-CONTR-002, MFG-09/F-CONTR-003, MFG-09/F-CONTR-004, MFG-09/F-CONTR-005, MFG-09/F-CONTR-006, MFG-09/F-CONTR-007 |
+| UC-C17 | View merge-eligible orders | Sales Admin | None | MFG-10/F-MER-004, MFG-10/F-MER-005 |
+| UC-C18 | Confirm merge batch | Sales Admin | None | MFG-10/F-MER-006, MFG-10/F-MER-007 |
+| UC-C16 | Optimize order | Sales Admin | UC-C17, UC-C18 | MFG-10/F-MER-004, MFG-10/F-MER-005, MFG-10/F-MER-006, MFG-10/F-MER-007 |
+| UC-C19 | Assign consultant | Sales Admin | None | MFG-08/F-ORD-001, MFG-08/F-ORD-002, MFG-08/F-ORD-003, MFG-08/F-ORD-004 |
+| UC-C21 | View dashboard | Sales Admin | None | MFG-11/F-DA-001, MFG-11/F-DA-002 |
+| UC-C22 | Export data | Sales Admin | None | MFG-11/F-DA-003 |
+| UC-C20 | Data Analytics | Sales Admin | UC-C21, UC-C22 | MFG-11/F-DA-001, MFG-11/F-DA-002, MFG-11/F-DA-003 |
+| UC-C24 | Add product | Sales Admin | None | MFG-04/F-PROD-004, MFG-04/F-PROD-005, MFG-04/F-PROD-006 |
+| UC-C25 | Update product info | Sales Admin | None | MFG-04/F-PROD-007, MFG-04/F-PROD-008 |
+| UC-C26 | Delete product | Sales Admin | None | MFG-04/F-PROD-009, MFG-04/F-PROD-010 |
+| UC-C27 | Publish/ Unpublish product | Sales Admin | None | MFG-04/F-PROD-011 |
+| UC-C23 | Manage product catalog | Sales Admin | UC-C24, UC-C25, UC-C26, UC-C27 | MFG-04/F-PROD-004, MFG-04/F-PROD-005, MFG-04/F-PROD-006, MFG-04/F-PROD-007, MFG-04/F-PROD-008, MFG-04/F-PROD-009, MFG-04/F-PROD-010, MFG-04/F-PROD-011 |
+| UC-S06 | Add Dony staff account | System Admin | None | MFG-03/F-ACC-001, MFG-03/F-ACC-002, MFG-03/F-ACC-003, MFG-03/F-ACC-004 |
+| UC-S07 | Update Dony staff information, role or status | System Admin | None | MFG-03/F-ACC-005, MFG-03/F-ACC-006 |
+| UC-S08 | Deactivate or delete Dony staff account | System Admin | None | MFG-03/F-ACC-007, MFG-03/F-ACC-008 |
+| UC-S05 | Manage Dony staff accounts | System Admin | UC-S06, UC-S07, UC-S08 | MFG-03/F-ACC-001, MFG-03/F-ACC-002, MFG-03/F-ACC-003, MFG-03/F-ACC-004, MFG-03/F-ACC-005, MFG-03/F-ACC-006, MFG-03/F-ACC-007, MFG-03/F-ACC-008 |
 | UC-S09 | Monitor system logs | System Admin | None | MFG-12/F-SYS-001, MFG-12/F-SYS-002 |
 | UC-S10 | Backup & restore data | System Admin | None | MFG-12/F-SYS-003, MFG-12/F-SYS-004, MFG-12/F-SYS-005 |
 | UC-S11 | Configure system | System Admin | None | MFG-12/F-SYS-006, MFG-12/F-SYS-007, MFG-12/F-SYS-008 |

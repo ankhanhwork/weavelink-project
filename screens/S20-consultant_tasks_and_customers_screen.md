@@ -4,11 +4,11 @@
 |---|---|
 | Screen ID | `S20` |
 | Screen name | Consultant Tasks and Customers |
-| Actor | Sales Consultant |
+| Actor | Sales |
 | Priority | P2 |
 | Belongs to module | [MFG-08](../specs/spec-MFG-08.md) |
 | Route | `/consultant/tasks?tab=assigned,customers` |
-| Mockup image | Don't have mockup |
+| Mockup image | img/S20-consultant_tasks_and_customers_screen.png |
 | Status | Resolved implementation specification |
 
 ## 1. Purpose
@@ -19,7 +19,9 @@
 
 ## 2. Mockup
 
-Don't have mockup
+![Historical visual reference](img/S20-consultant_tasks_and_customers_screen.png)
+
+Written behavior below takes precedence over obsolete sample content.
 
 ## 3. Element inventory
 
@@ -27,14 +29,14 @@ Don't have mockup
 |---|---|---|---|---|---|
 | 1 | Screen heading | Heading | Consultant Tasks and Customers | Yes | Static route title. |
 | 2 | Route | Navigation target | /consultant/tasks?tab=assigned,customers | Yes | Access checked on server. |
-| 3 | tab | Field / control | enum: assigned or customers; default assigned | As specified | Both tabs query only the current consultant assignments and same-company customer records. |
+| 3 | tab | Field / control | enum: assigned or customers; default assigned | As specified | Both tabs query only the current consultant assignments and assigned customer records. |
 | 4 | design_request_status | Field / control | Submitted, UnderReview, FeeProposed, Approved, Assigned, InProgress, Delivered, Cancelled, Rejected | As specified | Display-only task state; only currently assigned Assigned or InProgress work is actionable. |
 | 5 | crm_status | Field / control | New, Contacted, InProgress, ClosedWon, ClosedLost | As specified | Applies only to CRM records; transitions follow MFG-08. |
-| 6 | customer_id / request_id / company_id | Field / control | read-only UUIDs | As specified | Derived from authorized assignment/session; another consultant's identifier returns 404. |
+| 6 | customer_id / request_id / buyer_organization_id | Field / control | read-only UUIDs | As specified | Derived from the authorized assignment; organization identifies a Business Buyer or Reseller Shop but grants no staff access. |
 | 7 | page / page_size / sort | Field / control | integer / integer / enum | As specified | documented pagination bounds; sort allowlist is updated_at, requested_deadline or status. |
 | 8 | API errors | Field / control | standard API error envelope | As specified | 400 malformed; 422 invalid filters/transitions; 403 prohibited action; 404 inaccessible assignment; 409 stale version/state; 503 dependency failure. |
 | 9 | Open assigned task | Action | Load assigned customer/request context. | Available when authorized | Destination: S21 |
-| 10 | Update CRM status | Action | Apply New→Contacted→InProgress→ClosedWon/ClosedLost; reopen only by Company Admin. | Available when authorized | Destination: S20 |
+| 10 | Update CRM status | Action | Apply New→Contacted→InProgress→ClosedWon/ClosedLost; reopen only by Sales Admin. | Available when authorized | Destination: S20 |
 | 11 | Switch tab | Action | Show assigned customers only. | Available when authorized | Destination: S20 customers tab |
 
 ## 4. States
@@ -54,10 +56,10 @@ Don't have mockup
 | # | Element | User action | System response | Goes to screen |
 |---|---|---|---|---|
 | 1 | Open assigned task | Activate | Load assigned customer/request context. | S21 |
-| 2 | Update CRM status | Activate | Apply New→Contacted→InProgress→ClosedWon/ClosedLost; reopen only by Company Admin. | S20 |
+| 2 | Update CRM status | Activate | Apply New→Contacted→InProgress→ClosedWon/ClosedLost; reopen only by Sales Admin. | S20 |
 | 3 | Switch tab | Activate | Show assigned customers only. | S20 customers tab |
 
-Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Company Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales Consultant routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks role, company, membership, ownership and assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Company Admin, S20 for Sales Consultant, S41 for System Admin, and S01 for Guest.
+Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Sales Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks internal role, customer ownership and staff assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Sales Admin, S20 for Sales, S41 for System Admin, and S01 for Guest.
 
 ## 6. Screen-level rules
 
@@ -71,7 +73,7 @@ Home and public catalog are available to Guest and authenticated users. Customer
 ### Acceptance scenarios
 
 1. Consultant sees only assigned tasks/customers; another consultant's ID returns 404.
-2. Valid CRM transition follows allowed state graph; reopening closed state requires Company Admin.
+2. Valid CRM transition follows allowed state graph; reopening closed state requires Sales Admin.
 
 ## 7. Linked requirements
 

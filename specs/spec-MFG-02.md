@@ -15,7 +15,7 @@
 
 ## 1. Purpose and scope (mandatory)
 
-Authenticated active members view and maintain their own identity details and change a known password. The server derives identity from the session. This module cannot modify roles, company memberships or ownership.
+Authenticated active members view and maintain their own identity details and change a known password. A Customer profile may identify the representative and optional Buyer Organization for a company buying uniforms or a Reseller Shop commissioning production from its own designs. The server derives identity from the session. This module cannot assign internal Dony roles or transfer ownership.
 
 **In scope:** view profile; edit full name; request verified email change; change password after current-password verification.
 

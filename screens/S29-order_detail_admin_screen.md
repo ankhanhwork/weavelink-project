@@ -4,22 +4,24 @@
 |---|---|
 | Screen ID | `S29` |
 | Screen name | Order Detail (Admin) |
-| Actor | Company Admin/Assigned Consultant |
+| Actor | Sales Admin / Assigned Sales |
 | Priority | P2 |
 | Belongs to module | [MFG-07](../specs/spec-MFG-07.md) |
 | Route | `/admin/orders/{order_id}` |
-| Mockup image | Don't have mockup |
+| Mockup image | img/S29-order_detail_admin_screen.png |
 | Status | Resolved implementation specification |
 
 ## 1. Purpose
 
-**Shown when:** The Company Admin sees any same-company order; a consultant sees only an order tied to their current assignment. Mutations follow order state and expected_version. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
+**Shown when:** The Sales Admin sees any Dony order; a Sales employee sees only an order tied to their current customer assignment. Mutations follow order state and expected_version. All identifiers and permissions come from the server session.
 
 **The user leaves this screen when:** An authorized action in section 5 succeeds, the user follows a role-allowed global route, or they return to the validated originating route.
 
 ## 2. Mockup
 
-Don't have mockup
+![Historical visual reference](img/S29-order_detail_admin_screen.png)
+
+Written behavior below takes precedence over obsolete sample content.
 
 ## 3. Element inventory
 
@@ -27,16 +29,18 @@ Don't have mockup
 |---|---|---|---|---|---|
 | 1 | Screen heading | Heading | Order Detail (Admin) | Yes | Static route title. |
 | 2 | Route | Navigation target | /admin/orders/{order_id} | Yes | Access checked on server. |
-| 3 | order_id / snapshots | Field / control | UUID and read-only data | As specified | Same company or assigned consultant only; price, address, design and contract snapshots cannot be edited. |
-| 4 | target_status / expected_version | Field / control | required mutation inputs | As specified | Permit only the next fulfillment state: Confirmed -> InProduction -> Shipped -> Delivered from the current version. |
-| 5 | carrier / tracking_number | Field / control | strings required for Shipped | As specified | Server records shipped_at; Delivered records delivered_at. |
-| 6 | cancellation_reason | Field / control | string 1..500, Company Admin only | As specified | Require current cancellation eligibility; assigned consultants cannot cancel. |
-| 7 | contract_action | Field / control | Company Admin only | As specified | Open S33 to create/revise an unsigned version; never mutate a Signed contract. |
+| 3 | order_id / snapshots | Field / control | UUID and read-only data | As specified | Sales Admin or assigned Sales only; price, address, design and contract snapshots cannot be edited. |
+| 4 | lifecycle_event / expected_version | Field / control | required mutation inputs | As specified | Permit only staff-owned actions: start sample preparation, dispatch sample, start production, ship goods, or record authorized delivery proof. |
+| 5 | sample / shipment / receipt evidence | Field / control | versioned sample fields, strings or proof object | As specified | Sample dispatch binds sample/design version and tracking; goods shipment requires carrier/tracking and server shipped_at; delivery proof records received_at and source. |
+| 6 | cancellation_reason | Field / control | string 1..500, Sales Admin only | As specified | Require current cancellation eligibility; Sales cannot cancel. |
+| 7 | contract_action | Field / control | Sales Admin only | As specified | Open S33 only when current physical sample is Approved and order is PendingContract; never mutate a Signed contract. |
 | 8 | API errors | Field / control | standard API error envelope | As specified | 400 malformed; 422 invalid fields; 409 stale/duplicate; 429 rate limit; 503 dependency failure |
-| 9 | Generate contract | Action | Snapshot current order/customer data and chosen template. | Available when authorized | Destination: S33 |
-| 10 | Update fulfillment | Action | Apply only next fulfillment transition; consultant assignment guard; record tracking/dates. | Available when authorized | Destination: S29 |
-| 11 | Cancel order | Action | Company Admin with reason and eligibility; consultants cannot cancel. | Available when authorized | Destination: S28 |
-| 12 | Merge batch | Action | Open batch console. | Available when authorized | Destination: S42 |
+| 9 | Start/dispatch physical sample | Action | Advance `DigitalDesignApproved→SampleInPreparation→SampleShipped` and retain sample version/evidence. | State and role allowed | Destination: S29 |
+| 10 | Generate contract | Action | Snapshot current approved design/sample plus commercial and deposit terms. | Only in PendingContract with Approved sample | Destination: S33 |
+| 11 | Start production / ship | Action | Advance `Confirmed→InProduction→Shipped`; shipping requires carrier and tracking. | State and role allowed | Destination: S29 |
+| 12 | Record delivery proof | Action | With authorized proof, advance `Shipped→DeliveredAwaitingBalance`; cannot mark Completed. | Sales Admin only | Destination: S29 |
+| 13 | Cancel order | Action | Sales Admin with reason and eligibility; Sales cannot cancel. | Available when authorized | Destination: S28 |
+| 14 | Merge batch | Action | Sales Admin opens the batch console. | Available when authorized | Destination: S42 |
 
 ## 4. States
 
@@ -54,12 +58,14 @@ Don't have mockup
 
 | # | Element | User action | System response | Goes to screen |
 |---|---|---|---|---|
-| 1 | Generate contract | Activate | Snapshot current order/customer data and chosen template. | S33 |
-| 2 | Update fulfillment | Activate | Apply only next fulfillment transition; consultant assignment guard; record tracking/dates. | S29 |
-| 3 | Cancel order | Activate | Company Admin with reason and eligibility; consultants cannot cancel. | S28 |
-| 4 | Merge batch | Activate | Open batch console. | S42 |
+| 1 | Start/dispatch physical sample | Activate | Persist versioned preparation/dispatch event and notify Customer. | S29 |
+| 2 | Generate contract | Activate | Snapshot current approved sample and payment terms. | S33 |
+| 3 | Start production / ship | Activate | Commit one valid fulfillment transition with required shipment evidence. | S29 |
+| 4 | Record delivery proof | Activate | Persist authorized proof and expose remaining-balance payment. | S29 |
+| 5 | Cancel order | Activate | Sales Admin supplies a reason; server rechecks eligibility. | S28 |
+| 6 | Merge batch | Activate | Sales Admin opens eligible candidates. | S42 |
 
-Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Company Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales Consultant routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks role, company, membership, ownership and assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Company Admin, S20 for Sales Consultant, S41 for System Admin, and S01 for Guest.
+Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Sales Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks internal role, customer ownership and staff assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Sales Admin, S20 for Sales, S41 for System Admin, and S01 for Guest.
 
 ## 6. Screen-level rules
 
@@ -73,7 +79,8 @@ Home and public catalog are available to Guest and authenticated users. Customer
 ### Acceptance scenarios
 
 1. Only valid next fulfillment transition is applied; shipment requires carrier, tracking and timestamp.
-2. Consultant cannot cancel order or bypass payment/contract gates; stale order version returns 409.
+2. Sales cannot cancel an order or bypass Customer design/sample approval, contract, deposit, receipt or balance gates; stale order version returns 409.
+3. Staff can never set `Completed`; only verified BALANCE settlement can do so.
 
 ## 7. Linked requirements
 
@@ -82,6 +89,10 @@ Home and public catalog are available to Guest and authenticated users. Customer
 | MFG-07/F-ORD-005 | Implements this screen's validated user flow and the linked source function. |
 | MFG-07/F-ORD-006 | Implements this screen's validated user flow and the linked source function. |
 | MFG-07/F-ORD-007 | Implements this screen's validated user flow and the linked source function. |
+| MFG-06/F-PAY-003 | Implements versioned physical-sample preparation/dispatch and preserves Customer approval gates. |
+| MFG-09/F-CONTR-001 | Opens contract generation only after the current physical sample is Approved. |
+Additional linked modules: [MFG-06](../specs/spec-MFG-06.md), [MFG-09](../specs/spec-MFG-09.md).
+
 The rules in this screen and its linked module specifications are complete for implementation.
 
 ## 8. Responsive and accessibility notes

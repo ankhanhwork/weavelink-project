@@ -13,7 +13,7 @@
 
 ## 1. Purpose
 
-**Shown when:** The customer explicitly opts into or out of merging and reviews the fixed 5 percent discount policy before quote calculation. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
+**Shown when:** The customer explicitly opts into or out of merging and reviews the versioned 840,000 VND per-order discount (30% of Dony's 2,800,000 VND setup-cost assumption), capped at subtotal. State merge production completes 10 days after deposit, compared with 7 days for a separate run. Show the number of compatible confirmed orders waiting without exposing identities. Compatible orders may be recommended to Sales Admin during the rolling seven-day window after deposit; only Sales Admin can approve and start a batch.
 
 **The user leaves this screen when:** An authorized action in section 5 succeeds, the user follows a role-allowed global route, or they return to the validated originating route.
 
@@ -31,7 +31,7 @@ Written behavior below takes precedence over obsolete sample content.
 | 2 | Route | Navigation target | /orders/merge?design_id={id} | Yes | Access checked on server. |
 | 3 | merge_opt_in | Field / control | explicit boolean | As specified | merge_opt_in: explicit boolean; default false; acceptance stores merge policy_version. |
 | 4 | merge_eligible | Field / control | server-derived boolean | As specified | Enable opt-in only for an eligible design/product; otherwise show the reason and keep the standard route available. |
-| 5 | merge_discount_vnd | Field / control | server floor(subtotal_vnd*5/100) | As specified | merge_discount_vnd: server floor(subtotal_vnd*5/100); max 3 extra calendar days; company honors promise without batch. |
+| 5 | merge_discount_vnd | Field / control | 840000 VND, capped at subtotal | As specified | Server applies min(subtotal_vnd, 840000); per-order discount is fixed by policy version. |
 | 6 | checkout_effect | Field / control | read-only explanation | As specified | Saving preference issues a replacement quote; it creates no batch and applies no merge fee. |
 | 7 | API errors | Field / control | standard API error envelope | As specified | 400 malformed; 422 invalid fields; 409 stale/duplicate; 429 rate limit; 503 dependency failure |
 | 8 | Accept merge policy | Action | Persist explicit opt-in/version then request server quote. | Available when authorized | Destination: S25 |
@@ -58,7 +58,7 @@ Written behavior below takes precedence over obsolete sample content.
 | 2 | Decline | Activate | Persist false and request standard quote. | S25 |
 | 3 | Read terms | Activate | Show versioned conditions without silently accepting. | S24 |
 
-Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Company Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales Consultant routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks role, company, membership, ownership and assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Company Admin, S20 for Sales Consultant, S41 for System Admin, and S01 for Guest.
+Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Sales Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks internal role, customer ownership and staff assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Sales Admin, S20 for Sales, S41 for System Admin, and S01 for Guest.
 
 ## 6. Screen-level rules
 
@@ -71,7 +71,7 @@ Home and public catalog are available to Guest and authenticated users. Customer
 
 ### Acceptance scenarios
 
-1. Explicit opt-in stores policy version and server applies floor(subtotal*5/100), without creating a batch.
+1. Explicit opt-in stores policy version and server applies min(subtotal, 840000 VND), without creating a batch.
 2. Decline sets no discount; displayed promise still honored if no batch forms.
 
 ## 7. Linked requirements

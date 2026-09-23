@@ -38,7 +38,7 @@ Written behavior below takes precedence over obsolete sample content.
 | 9 | ward | Field / control | string, required | As specified | Trimmed, 1..100 characters. |
 | 10 | province | Field / control | string, required | As specified | Trimmed, 1..100 characters. |
 | 11 | country | Field / control | enum, required | As specified | Exactly VN. |
-| 12 | client customer_id/company_id/unit_price/total | Field / control | prohibited | As specified | Resolve identity/company from session; server calculates all prices and total. |
+| 12 | client customer_id/buyer_organization_id/unit_price/total | Field / control | prohibited | As specified | Resolve Customer ownership and any saved buyer organization on the server; the organization is not a tenant selector; server calculates all prices and total. |
 | 13 | expected_version / Idempotency-Key | Field / control | version and UUID, required for mutation | As specified | Reject stale state; financially significant order create is idempotent. |
 | 14 | capacity | Field / control | server-derived integer | As specified | Reject quote if total exceeds product max_units_per_order with 422 CAPACITY_EXCEEDED. |
 | 15 | Get quote | Action | Server computes amounts for design/options/quantities/address; no order created yet. | Available when authorized | Destination: S25 |
@@ -65,7 +65,7 @@ Written behavior below takes precedence over obsolete sample content.
 | 2 | Select merge | Activate | Continue to explicit opt-in/terms. | S23 |
 | 3 | Select design | Activate | Return to owned designs. | S17 |
 
-Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Company Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales Consultant routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks role, company, membership, ownership and assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Company Admin, S20 for Sales Consultant, S41 for System Admin, and S01 for Guest.
+Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Sales Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks internal role, customer ownership and staff assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Sales Admin, S20 for Sales, S41 for System Admin, and S01 for Guest.
 
 ## 6. Screen-level rules
 

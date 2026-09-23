@@ -13,7 +13,7 @@
 
 ## 1. Purpose
 
-**Shown when:** The customer sees one owned order’s immutable design, quantity, delivery, price, contract, payment and production snapshots, with actions enabled by current status. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
+**Shown when:** The customer sees one owned made-to-order order’s immutable design, physical-sample, quantity, delivery, price, contract, deposit, balance and production snapshots, with only the action owned by the current lifecycle state enabled. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
 
 **The user leaves this screen when:** An authorized action in section 5 succeeds, the user follows a role-allowed global route, or they return to the validated originating route.
 
@@ -30,14 +30,19 @@ Written behavior below takes precedence over obsolete sample content.
 | 1 | Screen heading | Heading | Customer Order Detail | Yes | Static route title. |
 | 2 | Route | Navigation target | /orders/{order_id} | Yes | Access checked on server. |
 | 3 | order_id / item_snapshot | Field / control | UUID and read-only snapshot | As specified | Owner only; show immutable quantities, address and price breakdown. |
-| 4 | status enum | Field / control | PendingContract, AwaitingPayment, Confirmed, InProduction, Shipped, Delivered, Cancelled. | As specified | status enum: PendingContract, AwaitingPayment, Confirmed, InProduction, Shipped, Delivered, Cancelled. |
-| 5 | contract / payment / refund / batch | Field / control | read-only related projections | As specified | Display authoritative current states and nullable batch_id; never infer state from email/browser return. |
-| 6 | cancellation_eligibility / reason | Field / control | server boolean plus required string 1..500 | As specified | Allow only PendingContract, AwaitingPayment or pre-production unbatched Confirmed; paid cancellation starts full refund. |
-| 7 | carrier / tracking_number / shipped_at / delivered_at | Field / control | read-only fulfillment fields | As specified | Required/displayed only for the corresponding Shipped/Delivered states. |
+| 4 | status enum | Field / control | canonical MFG-06 lifecycle plus Cancelled | As specified | `AwaitingDigitalApproval`, `DigitalDesignApproved`, `SampleInPreparation`, `SampleShipped`, `PendingContract`, `AwaitingDeposit`, `Confirmed`, `InProduction`, `Shipped`, `DeliveredAwaitingBalance`, `Completed`, `Cancelled`. |
+| 5 | design / sample / contract / deposit / balance / refund / batch | Field / control | read-only related projections | As specified | Show version/evidence and authoritative current states; never infer state from email or browser return. |
+| 6 | cancellation_eligibility / reason | Field / control | server boolean plus required string 1..500 | As specified | Allow eligible pre-deposit states or pre-production unbatched Confirmed; captured funds start policy-based refund. |
+| 7 | carrier / tracking_number / shipped_at / received_at | Field / control | read-only fulfillment fields | As specified | Shipment fields appear at Shipped; receipt evidence appears at DeliveredAwaitingBalance/Completed. |
 | 8 | API errors | Field / control | standard API error envelope | As specified | 400 malformed; 422 invalid fields; 409 stale/duplicate; 429 rate limit; 503 dependency failure |
-| 9 | Cancel order | Action | Confirm; enforce state/no-batch/preproduction; schedule full refund if paid. | Available when authorized | Destination: S26 |
-| 10 | Pay | Action | Available only after current contract Signed and status AwaitingPayment. | Available when authorized | Destination: S35 |
-| 11 | View contract | Action | Open authorized current contract. | Available when authorized | Destination: S34 |
+| 9 | Cancel order | Action | Confirm; enforce state/no-batch/preproduction; schedule policy-based refund for captured funds. | Available when authorized | Destination: S26 |
+| 10 | Approve digital design | Action | Bind current design/quote version and advance `AwaitingDigitalApproval→DigitalDesignApproved`; stale version requires review. | Only in AwaitingDigitalApproval | Destination: S27 |
+| 11 | Approve received sample | Action | Confirm physical receipt and approval of the current sample/design version; advance `SampleShipped→PendingContract`. | Only in SampleShipped | Destination: S27 |
+| 12 | Request sample revision | Action | Submit reason and return through a new immutable digital-design/quote approval cycle; do not overwrite prior evidence. | Only in SampleShipped | Destination: S27 |
+| 13 | View contract | Action | Open the authorized current contract only after sample approval. | Only in PendingContract or later | Destination: S34 |
+| 14 | Pay deposit | Action | Open exact `DEPOSIT` amount only after current contract is Signed and order is `AwaitingDeposit`. | Only in AwaitingDeposit | Destination: S35 |
+| 15 | Confirm delivery receipt | Action | Record Customer receipt evidence and advance `Shipped→DeliveredAwaitingBalance`. | Only in Shipped | Destination: S27 |
+| 16 | Pay remaining balance | Action | Open exact `BALANCE` amount only after receipt is recorded. | Only in DeliveredAwaitingBalance | Destination: S35 |
 
 ## 4. States
 
@@ -55,11 +60,14 @@ Written behavior below takes precedence over obsolete sample content.
 
 | # | Element | User action | System response | Goes to screen |
 |---|---|---|---|---|
-| 1 | Cancel order | Activate | Confirm; enforce state/no-batch/preproduction; schedule full refund if paid. | S26 |
-| 2 | Pay | Activate | Available only after current contract Signed and status AwaitingPayment. | S35 |
-| 3 | View contract | Activate | Open authorized current contract. | S34 |
+| 1 | Cancel order | Activate | Confirm eligibility and schedule a policy-based refund for captured funds. | S26 |
+| 2 | Approve digital design | Activate | Bind reviewed design/quote versions and request sample preparation. | S27 |
+| 3 | Approve or revise received sample | Activate | Persist immutable approval/revision evidence and select the corresponding next state. | S27 |
+| 4 | View contract | Activate | Open the current sample-bound contract. | S34 |
+| 5 | Pay deposit or remaining balance | Activate | Pass server-derived purpose and exact payable amount. | S35 |
+| 6 | Confirm delivery receipt | Activate | Record receipt before exposing BALANCE payment. | S27 |
 
-Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Company Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales Consultant routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks role, company, membership, ownership and assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Company Admin, S20 for Sales Consultant, S41 for System Admin, and S01 for Guest.
+Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Sales Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks internal role, customer ownership and staff assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Sales Admin, S20 for Sales, S41 for System Admin, and S01 for Guest.
 
 ## 6. Screen-level rules
 
@@ -72,8 +80,11 @@ Home and public catalog are available to Guest and authenticated users. Customer
 
 ### Acceptance scenarios
 
-1. Cancellation succeeds only in allowed preproduction unbatched state; paid eligible cancel schedules full refund.
-2. Cancellation after batch assignment or production start returns 409 and leaves order unchanged.
+1. Digital approval binds the reviewed version; stale design/quote returns 409 and cannot start sample preparation.
+2. Only the current shipped sample can be approved or revised; approval opens contract generation, while revision preserves history and restarts digital approval.
+3. Cancellation succeeds only in an allowed pre-production unbatched state; captured funds use the stored refund policy.
+4. Deposit payment is visible only in `AwaitingDeposit`; remaining-balance payment is visible only in `DeliveredAwaitingBalance` after receipt evidence.
+5. Cancellation after batch assignment or production start returns 409 and leaves order unchanged.
 
 ## 7. Linked requirements
 

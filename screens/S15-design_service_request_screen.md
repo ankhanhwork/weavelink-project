@@ -13,7 +13,7 @@
 
 ## 1. Purpose
 
-**Shown when:** The customer submits a DesignRequest for an owned Published product, with requirements, optional safe attachments and a deadline at least three calendar days ahead. No fee is displayed or snapshotted at submission; Company Admin assesses complexity afterward. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
+**Shown when:** The customer submits a DesignRequest against a Published Dony garment base, with the Business Buyer's uniform requirements or the Reseller Shop's own artwork, branding and specifications, optional safe attachments and a deadline at least three calendar days ahead. Dony will manufacture only after design, sample and order approval; this is not a ready-made-stock request. No fee is displayed or snapshotted at submission; Sales Admin assesses complexity afterward. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
 
 **The user leaves this screen when:** An authorized action in section 5 succeeds, the user follows a role-allowed global route, or they return to the validated originating route.
 
@@ -29,7 +29,7 @@ Written behavior below takes precedence over obsolete sample content.
 |---|---|---|---|---|---|
 | 1 | Screen heading | Heading | Design Service Request | Yes | Static route title. |
 | 2 | Route | Navigation target | /design-requests/new?product_id={id} | Yes | Access checked on server. |
-| 3 | product_id | Field / control | UUID, must be published in selected company. | As specified | product_id: UUID, must be published in selected company. |
+| 3 | product_id | Field / control | UUID of a Published Dony garment base. | As specified | The product supplies configurable production rules; it is not ready-made stock. |
 | 4 | requirements | Field / control | required string 20..5000 trimmed chars. | As specified | requirements: required string 20..5000 trimmed chars. |
 | 5 | attachment_ids | Field / control | optional private image UUIDs | As specified | attachment_ids: optional private image UUIDs; max5, MIME PNG/JPEG/WebP <=10MiB each, access checked. |
 | 6 | requested_deadline | Field / control | optional ISO date >=3 calendar days from submission | As specified | requested_deadline: optional ISO date >=3 calendar days from submission; not guaranteed. |
@@ -57,7 +57,7 @@ Written behavior below takes precedence over obsolete sample content.
 | 1 | Submit request | Activate | Create Submitted with fee null and requested deadline; persist admin notice and open the owned request in S17. | S17 /designs?tab=requests&request_id={id} |
 | 2 | Cancel | Activate | Discard unsubmitted request. | S09 |
 
-Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Company Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales Consultant routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks role, company, membership, ownership and assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Company Admin, S20 for Sales Consultant, S41 for System Admin, and S01 for Guest.
+Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Sales Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks internal role, customer ownership and staff assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Sales Admin, S20 for Sales, S41 for System Admin, and S01 for Guest.
 
 ## 6. Screen-level rules
 

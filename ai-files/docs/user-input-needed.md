@@ -20,7 +20,7 @@ The MVP scope is defined by priority and mapped to the corresponding MFG (Module
 
 | Priority | Feature / Item | MFG | Notes |
 |---|---|---|---|
-| **Must** | Role-based Authentication & Access (Customer, Sales Consultant, Company Admin) | MFG-01 | Foundation - every other feature depends on secure, role-aware access |
+| **Must** | Role-based Authentication & Access (Customer, Sales, Sales Admin) | MFG-01 | Foundation - every other feature depends on secure, role-aware access |
 | **Must** | Product Catalog (browse, search, view product detail) | MFG-04 | Entry point for customers to find a base product to customize |
 | **Must** | Product Design Workspace (self-design, upload artwork, preview, save design) | MFG-05 | Core value proposition - replaces scattered email/chat design specifications |
 | **Must** | Order & Payment (checkout, VNPay integration, order creation) | MFG-06 | Core revenue flow - must work before "design & order" has any value |
@@ -28,9 +28,9 @@ The MVP scope is defined by priority and mapped to the corresponding MFG (Module
 | **Should** | Digital Contract Generation & E-signature | MFG-09 | Builds trust for business clients, but an emailed/paper contract is an acceptable stopgap at launch |
 | **Could** | Order Optimization / Merge (batch small orders into one production run) | MFG-10 | Directly targets high operational overhead, but only pays off once order volume exists |
 | **Could** | Assessed Design Service Request (Simple free; accepted Complex fee collected with order) | MFG-05 | Alternative to self-design for complex custom-design clients |
-| **Could** | Sales Consultant Assignment & Task Dashboard | MFG-08 | Only needed once consultation volume justifies a dedicated queue |
+| **Could** | Sales Assignment & Task Dashboard | MFG-08 | Only needed once consultation volume justifies a dedicated queue |
 | **Won't** | Data Analytics Dashboard & Data Export | MFG-11 | Out of scope for MVP; revisit once there is sufficient order history to analyze |
-| **Won't** | Company Accounts & System Operations (multi-admin roles, system logs, backup/restore) | MFG-03, MFG-12 | A single admin login is sufficient at launch; defer full account/system administration |
+| **Won't** | Dony Staff Accounts & System Operations (internal staff administration, system logs, backup/restore) | MFG-03, MFG-12 | A single internal admin login is sufficient at launch; defer full staff/system administration |
 
 ## MVP Priority Summary
 

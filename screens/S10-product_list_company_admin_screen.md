@@ -1,39 +1,41 @@
-# Screen Spec: S10 Product List (Company Admin)
+# Screen Spec: S10 Product List (Sales Admin)
 
 | Field | Value |
 |---|---|
 | Screen ID | `S10` |
-| Screen name | Product List (Company Admin) |
-| Actor | Company Admin |
+| Screen name | Product List (Sales Admin) |
+| Actor | Sales Admin |
 | Priority | P2 |
 | Belongs to module | [MFG-04](../specs/spec-MFG-04.md) |
 | Route | `/admin/products` |
-| Mockup image | Don't have mockup |
+| Mockup image | img/S10-product_list_company_admin_screen.png |
 | Status | Resolved implementation specification |
 
 ## 1. Purpose
 
-**Shown when:** The Company Admin sees products belonging to the selected active company, with Draft, Published, Hidden and Archived status and product-level actions. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
+**Shown when:** The Sales Admin manages Dony's configurable garment bases, with Draft, Published, Hidden and Archived status and product-level actions. These records describe production options and rules, not ready-made inventory. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
 
 **The user leaves this screen when:** An authorized action in section 5 succeeds, the user follows a role-allowed global route, or they return to the validated originating route.
 
 ## 2. Mockup
 
-Don't have mockup
+![Historical visual reference](img/S10-product_list_company_admin_screen.png)
+
+Written behavior below takes precedence over obsolete sample content.
 
 ## 3. Element inventory
 
 | # | Element | Type | Content / data source | Required | Validation |
 |---|---|---|---|---|---|
-| 1 | Screen heading | Heading | Product List (Company Admin) | Yes | Static route title. |
+| 1 | Screen heading | Heading | Product List (Sales Admin) | Yes | Static route title. |
 | 2 | Route | Navigation target | /admin/products | Yes | Access checked on server. |
 | 3 | q | Field / control | optional trimmed search | As specified | q: optional trimmed search; status: Draft, Published, Hidden, Archived. |
 | 4 | page / page_size / sort / filters | Field / control | pagination and allowlisted query | As specified | page >=1; page_size 1..100, default 20; reject unknown sort/filter fields. |
 | 5 | Each row | Field / control | product UUID, SKU, name, state, unit_price_vnd integer, updated_at, version. | As specified | Each row: product UUID, SKU, name, state, unit_price_vnd integer, updated_at, version. |
-| 6 | company_scope | Field / control | session-derived, read-only | As specified | Resolve company from active membership; ignore/reject a submitted company_id. |
+| 6 | Dony administration scope | Field / control | session-derived, read-only | As specified | Require an active Sales Admin role; no company or tenant selector is accepted. |
 | 7 | API errors | Field / control | standard API error envelope | As specified | 400 malformed; 422 invalid fields; 409 stale/duplicate; 429 rate limit; 503 dependency failure |
 | 8 | Create product | Action | Open create form. | Available when authorized | Destination: S11 |
-| 9 | Edit content | Action | Open company-owned product form. | Available when authorized | Destination: S12 |
+| 9 | Edit content | Action | Open Dony-owned product base form. | Available when authorized | Destination: S12 |
 | 10 | Edit design rules | Action | Open rule form for same product. | Available when authorized | Destination: S14 |
 | 11 | Publish/hide/archive | Action | Confirm and apply allowed state transition; archive terminal and removes public listing. | Available when authorized | Destination: S10 |
 
@@ -42,7 +44,7 @@ Don't have mockup
 | State | What the user sees | Trigger |
 |---|---|---|
 | Loading | Labelled progress/skeleton; disable duplicate submit. | Request starts |
-| Empty | Show no company products matching filters; preserve filters where present and explain eligibility/filter conditions. | Successful query returns no rows |
+| Empty | Show no Dony product bases matching filters; preserve filters where present and explain eligibility/filter conditions. | Successful query returns no rows |
 | Forbidden/not found | Safe message without revealing inaccessible identifiers. | 401/403/404 |
 | Error | Show code, message, field_errors, request_id; preserve entered values. | Request failure |
 | Retry | Retry reads on transient failure; reuse the same idempotency key only for mutations that require one for the documented mutation. | Recoverable failure |
@@ -54,11 +56,11 @@ Don't have mockup
 | # | Element | User action | System response | Goes to screen |
 |---|---|---|---|---|
 | 1 | Create product | Activate | Open create form. | S11 |
-| 2 | Edit content | Activate | Open company-owned product form. | S12 |
+| 2 | Edit content | Activate | Open Dony-owned product base form. | S12 |
 | 3 | Edit design rules | Activate | Open rule form for same product. | S14 |
 | 4 | Publish/hide/archive | Activate | Confirm and apply allowed state transition; archive terminal and removes public listing. | S10 |
 
-Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Company Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales Consultant routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks role, company, membership, ownership and assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Company Admin, S20 for Sales Consultant, S41 for System Admin, and S01 for Guest.
+Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Sales Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks internal role, customer ownership and staff assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Sales Admin, S20 for Sales, S41 for System Admin, and S01 for Guest.
 
 ## 6. Screen-level rules
 
@@ -71,7 +73,7 @@ Home and public catalog are available to Guest and authenticated users. Customer
 
 ### Acceptance scenarios
 
-1. Company Admin sees only own-company products and can archive after confirmation.
+1. Sales Admin sees Dony's configurable garment bases and can archive one after confirmation; there is no company/tenant selector.
 2. Publishing fails until all required content, option, capacity, and safe-image checks pass.
 
 ## 7. Linked requirements

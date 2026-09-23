@@ -8,7 +8,7 @@
 | Priority | P3 |
 | Belongs to module | [MFG-10](../specs/spec-MFG-10.md) |
 | Route | `/merge-terms` |
-| Mockup image | Don't have mockup |
+| Mockup image | img/S24-merge_terms_screen.png |
 | Status | Resolved implementation specification |
 
 ## 1. Purpose
@@ -19,7 +19,9 @@
 
 ## 2. Mockup
 
-Don't have mockup
+![Historical visual reference](img/S24-merge_terms_screen.png)
+
+Written behavior below takes precedence over obsolete sample content.
 
 ## 3. Element inventory
 
@@ -28,7 +30,7 @@ Don't have mockup
 | 1 | Screen heading | Heading | Merge Terms | Yes | Static route title. |
 | 2 | Route | Navigation target | /merge-terms | Yes | Access checked on server. |
 | 3 | policy_version | Field / control | immutable terms version shown and included in order quote on explicit opt-in. | As specified | policy_version: immutable terms version shown and included in order quote on explicit opt-in. |
-| 4 | policy_terms | Field / control | versioned read-only content | As specified | State 5% subtotal discount, production due up to 3 extra calendar days, and individual fallback with unchanged terms. |
+| 4 | policy_terms | Field / control | versioned read-only content | As specified | Explain discount capped at min(subtotal, 840,000 VND = 30% of 2,800,000 VND setup-cost assumption); system may recommend compatible orders for up to seven days after deposit; Sales Admin makes the final decision and starts any batch; standard/merge production due 7/10 calendar days after deposit; no guarantee that other orders will merge. |
 | 5 | acceptance_effect | Field / control | read-only explanation | As specified | Opening terms records no consent; acceptance occurs only on S23 with the displayed policy version. |
 | 6 | API errors | Field / control | standard API error envelope | As specified | 400 malformed; 422 invalid fields; 409 stale/duplicate; 429 rate limit; 503 dependency failure |
 | 7 | Return to order choice | Action | Preserve validated origin; no preference is recorded by page view. | Available when authorized | Destination: S23 |
@@ -51,7 +53,7 @@ Don't have mockup
 |---|---|---|---|---|
 | 1 | Return to order choice | Activate | Preserve validated origin; no preference is recorded by page view. | S23 |
 
-Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Company Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales Consultant routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks role, company, membership, ownership and assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Company Admin, S20 for Sales Consultant, S41 for System Admin, and S01 for Guest.
+Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Sales Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks internal role, customer ownership and staff assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Sales Admin, S20 for Sales, S41 for System Admin, and S01 for Guest.
 
 ## 6. Screen-level rules
 
@@ -65,7 +67,7 @@ Home and public catalog are available to Guest and authenticated users. Customer
 ### Acceptance scenarios
 
 1. Opening terms alone does not set merge_opt_in; only return action preserves source route.
-2. Displayed terms state 5% discount, up to 3 extra days and batch non-guarantee.
+2. Displayed terms state discount cap/calculation, rolling-window policy, 7/10-day production target after deposit, and batch non-guarantee.
 
 ## 7. Linked requirements
 

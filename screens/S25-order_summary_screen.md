@@ -31,11 +31,11 @@ Written behavior below takes precedence over obsolete sample content.
 | 2 | Route | Navigation target | /orders/summary?quote_id={id} | Yes | Access checked on server. |
 | 3 | quote_id | Field / control | UUID | As specified | quote_id: UUID; server quote lasts 30 minutes and binds product/design/policy versions. |
 | 4 | subtotal_vnd | Field / control | sum(quantity*(unit_price_vnd+option_surcharge_vnd)), integer. | As specified | subtotal_vnd: sum(quantity*(unit_price_vnd+option_surcharge_vnd)), integer. |
-| 5 | merge_discount_vnd | Field / control | floor(subtotal*5/100) when opted-in | As specified | merge_discount_vnd: floor(subtotal*5/100) when opted-in; else 0. |
+| 5 | merge_discount_vnd | Field / control | min(subtotal, 840000 VND) when opted in to eligible MFG-10 v3 merge | As specified | Discount is fixed at 840000 VND per order (30% of setup-cost assumption), capped at subtotal; otherwise 0. |
 | 6 | price_breakdown | Field / control | integer VND, read-only | As specified | Show snapshotted subtotal, discount, shipping, merge fee, tax, separate design_fee_vnd and total; default shipping is 30000, merge fee/tax are 0; design fee is outside subtotal and never discounted or quantity-multiplied. |
 | 7 | quote_id / expected_version / Idempotency-Key | Field / control | required submission contract | As specified | Never submit a client total; an expired/superseded quote returns to requote and explicit review. |
 | 8 | API errors | Field / control | standard API error envelope | As specified | 400 malformed; 422 invalid fields; 409 stale/duplicate; 429 rate limit; 503 dependency failure |
-| 9 | Submit order | Action | Revalidate quote and fee-allocation versions; atomically claim any fee allocation and create PendingContract order/snapshots with idempotency. | Available when authorized | Destination: S34 |
+| 9 | Submit order | Action | Revalidate quote and fee-allocation versions; atomically claim any fee allocation and create an `AwaitingDigitalApproval` order with immutable snapshots and idempotency. | Available when authorized | Destination: S27 |
 | 10 | Edit quantities/address | Action | Requote and show changed breakdown before submit. | Available when authorized | Destination: S22 |
 | 11 | Change merge preference | Action | Requote with explicit preference. | Available when authorized | Destination: S23 |
 
@@ -55,11 +55,11 @@ Written behavior below takes precedence over obsolete sample content.
 
 | # | Element | User action | System response | Goes to screen |
 |---|---|---|---|---|
-| 1 | Submit order | Activate | Revalidate quote and fee-allocation versions; atomically claim any fee allocation and create PendingContract order/snapshots with idempotency. | S34 |
+| 1 | Submit order | Activate | Revalidate quote and fee-allocation versions; atomically claim any fee allocation and create an `AwaitingDigitalApproval` order with immutable snapshots. | S27 |
 | 2 | Edit quantities/address | Activate | Requote and show changed breakdown before submit. | S22 |
 | 3 | Change merge preference | Activate | Requote with explicit preference. | S23 |
 
-Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Company Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales Consultant routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks role, company, membership, ownership and assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Company Admin, S20 for Sales Consultant, S41 for System Admin, and S01 for Guest.
+Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Sales Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks internal role, customer ownership and staff assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Sales Admin, S20 for Sales, S41 for System Admin, and S01 for Guest.
 
 ## 6. Screen-level rules
 
@@ -72,7 +72,7 @@ Home and public catalog are available to Guest and authenticated users. Customer
 
 ### Acceptance scenarios
 
-1. Valid unexpired quote submission creates one PendingContract order and immutable address/price snapshots.
+1. Valid unexpired quote submission creates one `AwaitingDigitalApproval` order and immutable address/price/design snapshots; contract and payment are not yet available.
 2. Expired quote or changed product/design version requires requote and review; duplicate same key returns same order.
 3. First Complex-design order shows accepted fee separately; pending fee-bearing order blocks another order until InProduction or resolved cancellation. Stale allocation returns 409 and requires a reviewed replacement quote; repeat orders after InProduction show fee 0.
 

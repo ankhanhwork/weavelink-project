@@ -4,11 +4,11 @@
 |---|---|
 | Screen ID | `S11` |
 | Screen name | Product Create |
-| Actor | Company Admin |
+| Actor | Sales Admin |
 | Priority | P2 |
 | Belongs to module | [MFG-04](../specs/spec-MFG-04.md) |
 | Route | `/admin/products/new` |
-| Mockup image | Don't have mockup |
+| Mockup image | img/S11-product_create_screen.png |
 | Status | Resolved implementation specification |
 
 ## 1. Purpose
@@ -19,7 +19,9 @@
 
 ## 2. Mockup
 
-Don't have mockup
+![Historical visual reference](img/S11-product_create_screen.png)
+
+Written behavior below takes precedence over obsolete sample content.
 
 ## 3. Element inventory
 
@@ -28,7 +30,7 @@ Don't have mockup
 | 1 | Screen heading | Heading | Product Create | Yes | Static route title. |
 | 2 | Route | Navigation target | /admin/products/new | Yes | Access checked on server. |
 | 3 | name | Field / control | string, required | As specified | 1..120 trimmed characters. |
-| 4 | sku | Field / control | string, required | As specified | Unique within company. |
+| 4 | sku | Field / control | string, required | As specified | Unique across Dony's single product catalogue. |
 | 5 | category | Field / control | string, required | As specified | Allowlisted configured category. |
 | 6 | unit_price_vnd | Field / control | integer, required | As specified | Nonnegative; never floating point. |
 | 7 | supported_sizes/colors/materials | Field / control | arrays, required to publish | As specified | At least one of each; values from configured options. |
@@ -58,7 +60,7 @@ Don't have mockup
 | 2 | Save and publish | Activate | Require all publish fields and safe images then transition to Published. | S10 |
 | 3 | Cancel | Activate | Discard create form. | S10 |
 
-Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Company Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales Consultant routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks role, company, membership, ownership and assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Company Admin, S20 for Sales Consultant, S41 for System Admin, and S01 for Guest.
+Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Sales Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks internal role, customer ownership and staff assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Sales Admin, S20 for Sales, S41 for System Admin, and S01 for Guest.
 
 ## 6. Screen-level rules
 
@@ -71,7 +73,7 @@ Home and public catalog are available to Guest and authenticated users. Customer
 
 ### Acceptance scenarios
 
-1. Valid product creates Draft with company-unique SKU and integer price.
+1. Valid product creates Draft with a Dony-catalogue-unique SKU and integer price.
 2. Duplicate SKU or invalid image returns field errors; no partial product is saved.
 
 ## 7. Linked requirements

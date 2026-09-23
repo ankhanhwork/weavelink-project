@@ -15,7 +15,7 @@
 
 ## 1. Purpose and scope (mandatory)
 
-Customers configure, preview and save versioned product designs and may request consultant design work with assessment-based pricing. Self-design/upload/preview/save is MVP Must; assessed design service is MVP Could.
+Customers configure, preview and save versioned made-to-order garment designs and may request Dony design assistance with assessment-based pricing. For a Business Buyer, the design commonly represents uniforms or garments for internal use. For a Reseller Shop, it represents the shop's own artwork, branding or specifications that Dony will manufacture for the shop to sell to its customers. Dony does not supply ready-made resale inventory. Self-design/upload/preview/save is MVP Must; assessed design service is MVP Could.
 
 **In scope:** validate product options/assets; save immutable design versions; list owned designs; create/cancel requests; assess complexity and accept deferred fees; assign via MFG-08; deliver consultant design and notify owner.
 
@@ -26,8 +26,8 @@ Customers configure, preview and save versioned product designs and may request 
 | Actor | Role in this module | Where it comes from |
 | --- | --- | --- |
 | Customer | Creates own designs/requests and views own results | MFG-05 resolved contract; UC-C02/UC-C03/UC-C04 |
-| Sales Consultant | Works assigned approved requests | MFG-05 role boundary |
-| Company Admin | Assesses complexity, proposes fees/rejects, assigns, sets committed due date, may deliver | MFG-05 role boundary |
+| Sales | Works assigned approved requests | MFG-05 role boundary |
+| Sales Admin | Assesses complexity, proposes fees/rejects, assigns, sets committed due date, may deliver | MFG-05 role boundary |
 | System | Sends durable request and delivery notifications | MFG-05 function contract |
 
 ## 3. User scenarios and acceptance criteria (mandatory)
@@ -42,11 +42,11 @@ Every option and print asset is validated against the current Published product 
 
 ### US-3 (Must): View saved design
 
-Customer receives only own same-company Saved/Delivered designs with pagination; empty result is successful. Editing an ordered design forks a version.
+Customer receives only own Saved/Delivered designs with pagination; empty result is successful. Editing an ordered design forks a version.
 
 ### US-4 (Could): Request design service
 
-Valid submission creates Submitted, persists an administrator notification and navigates from S15 to S17 at `/designs?tab=requests&request_id={id}`. No fee is displayed or snapshotted at submission and no payment transaction is created. Company Admin starts UnderReview in S18, then approves Simple with fee 0, proposes a positive Complex fee, or rejects with a customer-visible reason. Customer explicitly accepts the current Complex fee/version in S17 before Approved becomes assignable through S19.
+Valid submission creates Submitted, persists an administrator notification and navigates from S15 to S17 at `/designs?tab=requests&request_id={id}`. No fee is displayed or snapshotted at submission and no payment transaction is created. Sales Admin starts UnderReview in S18, then approves Simple with fee 0, proposes a positive Complex fee, or rejects with a customer-visible reason. Customer explicitly accepts the current Complex fee/version in S17 before Approved becomes assignable through S19.
 
 The owner may cancel Submitted, UnderReview, FeeProposed or unassigned Approved, including after fee acceptance, without refund. Assigned/InProgress/Delivered reject cancellation; Rejected cannot become Cancelled; repeated cancellation returns the Cancelled result. Cancellation and assignment lock the same request: one wins and a stale/state conflict returns 409. Assessment, acceptance and cancellation require expected_version and Idempotency-Key.
 
@@ -121,7 +121,7 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     actor Customer
-    actor CompanyAdmin as Company Admin
+    actor CompanyAdmin as Sales Admin
     participant RequestUI as S15 / S17
     participant AdminUI as S18
     participant DesignModule
@@ -191,10 +191,10 @@ sequenceDiagram
 | FR-004 | F-DES-004 | List only the customer's Saved/Delivered designs and a separate owned-request status/detail view with pagination. | Customer | Must (designs); Could (requests) |
 | FR-005 | F-DES-005 | Render the design-service request form without a submission fee or payment step. | Customer | Could |
 | FR-006 | F-DES-006 | Create a validated Submitted request with idempotency and return S17 request navigation; no submission fee/payment. | Customer | Could |
-| FR-007 | F-DES-007 | Start UnderReview and assess complexity: approve Simple with fee 0, propose a Complex fee or reject with a reason, using version checks and idempotency. | Company Admin | Could |
-| FR-008 | F-DES-008 | Notify same-company administrators after submission/acceptance/cancellation and the owner after assessment outcomes/cancellation, using committed outbox events. | System | Could |
-| FR-009 | F-DES-009 | List same-company assessment/approved requests for Admin and assigned work for consultants; enforce state-specific authorization. | Sales Consultant / Company Admin | Could |
-| FR-010 | F-DES-010 | Deliver an immutable validated design for an Assigned/InProgress request atomically, recording source_design_request_id. | Sales Consultant / Company Admin | Could |
+| FR-007 | F-DES-007 | Start UnderReview and assess complexity: approve Simple with fee 0, propose a Complex fee or reject with a reason, using version checks and idempotency. | Sales Admin | Could |
+| FR-008 | F-DES-008 | Notify Dony Sales Admins after submission/acceptance/cancellation and the owner after assessment outcomes/cancellation, using committed outbox events. | System | Could |
+| FR-009 | F-DES-009 | List Dony assessment/approved requests for Admin and assigned work for consultants; enforce state-specific authorization. | Sales / Sales Admin | Could |
+| FR-010 | F-DES-010 | Deliver an immutable validated design for an Assigned/InProgress request atomically, recording source_design_request_id. | Sales / Sales Admin | Could |
 | FR-011 | F-DES-011 | Notify the owning customer after design delivery. | System | Could |
 | FR-012 | F-DES-012 | Accept the exact current proposed fee/version for an owned FeeProposed request and atomically record acceptance and Approved. | Customer | Could |
 | FR-013 | F-DES-013 | Cancel an owned unassigned Submitted/UnderReview/FeeProposed/Approved request without refund; reject after assignment and replay repeated cancellation. | Customer | Could |
@@ -203,15 +203,15 @@ sequenceDiagram
 
 | FR ID | Input field | Type | Required | Output field | Type | Notes / validation |
 | --- | --- | --- | --- | --- | --- | --- |
-| FR-001 | product UUID, session | UUID / session | Yes | S13 workspace model | View model | Published same-company product |
+| FR-001 | product UUID, session | UUID / session | Yes | S13 workspace model | View model | Published Dony configurable product base |
 | FR-002 | product/design/options/assets | IDs / configuration | Yes | compatibility and preview UUID | Object | Current rules, ownership, MIME and bounds; 422 incompatible |
 | FR-003 | configuration, versions, idempotency key | Object / integers / key | Yes | saved design ID/version and source_design_request_id | Object | Immutable provenance; stale/key conflict 409 |
 | FR-004 | page, filters, sort, tab, request_id, session | Integers / values / UUID / session | Optional | own designs or request status/detail | Paginated object / object | Owned requests only; no CRM notes; Saved/Delivered designs; empty success |
 | FR-005 | product UUID, session | UUID / session | Yes | S15 request form | View model | Published product; no fee amount or payment action |
 | FR-006 | product UUID, requirements, attachments, deadline, key | UUID / strings / assets / date / key | Yes | Submitted request ID/version and S17 route | Object | Requirements 20-5000; 0-5 attachments; deadline >=3 days; fee null |
-| FR-007 | request_id, action, complexity, rationale, fee_vnd or rejection_reason, expected_version, key | UUID / enum / text / integer VND / version / key | By action | UnderReview, Approved, FeeProposed or Rejected request | Object | Same-company Admin; rationale/rejection reason 1-500 chars; Simple 0; Complex 1..9999999999; proposal immutable |
+| FR-007 | request_id, action, complexity, rationale, fee_vnd or rejection_reason, expected_version, key | UUID / enum / text / integer VND / version / key | By action | UnderReview, Approved, FeeProposed or Rejected request | Object | Sales Admin; rationale/rejection reason 1-500 chars; Simple 0; Complex 1..9999999999; proposal immutable |
 | FR-008 | committed submission/assessment/acceptance/cancellation event | Internal event | Yes | durable notification | Object | In-app authoritative; event/recipient deduplicated; private S17/S18 link |
-| FR-009 | company/assignment/state filters, session | Values / session | Optional | authorized requests | Paginated object | Admin assessment queue; consultant assigned work only |
+| FR-009 | buyer_organization/assignment/state filters, session | Values / session | Optional | authorized requests | Paginated object | Dony Admin assessment queue; consultant assigned work only |
 | FR-010 | request/design/assets/version/key | IDs / values / key | Yes | Delivered immutable design with source_design_request_id | Object | Assigned/InProgress; current rules; stale 409 |
 | FR-011 | delivery event | Internal event | Yes | notification/outbox ID | UUID | Owner only; private expiring link |
 | FR-012 | request_id, proposal_version, accepted_fee_vnd, expected_version, key | UUID / integers / key | Yes | Approved request and acceptance evidence | Object | Owner; FeeProposed only; exact amount/version; repeat key replays; stale/state 409 |
@@ -233,9 +233,9 @@ sequenceDiagram
 
 | Entity | Attributes (from Input/Output fields) | Relationships |
 | --- | --- | --- |
-| Design | company/customer/product IDs, product/design versions, status, options, assets, preview, source_design_request_id nullable, timestamps | Immutable saved versions; owner/company scoped; server-derived provenance retained on copies; client cannot clear/replace it |
-| DesignRequest | company/customer/product, requirements, attachments, requested_deadline, committed_due_at, complexity, rationale/rejection_reason, assessed_by/at, fee_vnd, proposal_version, accepted_fee_version, accepted_fee_vnd, accepted_by/at, fee_order_id nullable, fee_allocation_version, state, assignee, version | Standalone until order creation; Approved before assignment; MFG-06 BR-008 owns fee allocation; optimistic versioning |
-| Consultation | company/customer/consultant, notes, related IDs, CRM status | Internal notes visible to assignee/Admin only |
+| Design | customer/product IDs and optional buyer_organization_id, product/design versions, status, options, assets, preview, source_design_request_id nullable, timestamps | Immutable saved versions; customer-owned and Dony staff-authorized; server-derived provenance retained on copies; client cannot clear/replace it |
+| DesignRequest | customer_id, buyer_organization_id?, product_id, requirements, attachments, requested_deadline, committed_due_at, complexity, rationale/rejection_reason, assessed_by/at, fee_vnd, proposal_version, accepted_fee_version, accepted_fee_vnd, accepted_by/at, fee_order_id nullable, fee_allocation_version, state, assignee, version | Standalone until order creation; optional organization identifies a Business Buyer or Reseller Shop but grants no authority; Approved before assignment; MFG-06 BR-008 owns fee allocation. |
+| Consultation | customer_id, buyer_organization_id?, sales_user_id, notes, related IDs, CRM status | Internal notes visible only to assigned Sales and Sales Admin. |
 | Notification | event/recipient/type/payload/delivery state | Deduplicated; in-app record authoritative |
 
 ## 7. Screens involved
@@ -246,7 +246,6 @@ sequenceDiagram
 | S13 | Product design workspace | Must | `screens/S13-product_design_tool_screen.md` |
 | S17 | Customer designs and requests | Must | `screens/S17-customer_designs_screen.md` |
 | S15 | Design service request | Could | `screens/S15-design_service_request_screen.md` |
-| S16 | Deprecated payment route; redirects to S17 | Could | `screens/S16-design_service_payment_screen.md` |
 | S18/S19 | Assessment queue and assignment | Could | `screens/S18-consultation_requests_and_customers_screen.md` |
 | S20/S21 | Consultant tasks and delivery | Could | `screens/S20-consultant_tasks_and_customers_screen.md` |
 | S22 | Order eligible design | Must | `screens/S22-create_order_screen.md` |
@@ -264,7 +263,7 @@ sequenceDiagram
 
 - DBIZ 3 classroom demo by Group B; no approver; demo business/contact data are fictional samples.
 - Self-design is Must; assessed design service and consultant workflow are Could.
-- Company Admin assesses; S17 owns acceptance/cancellation; S16 is deprecated with its historical PNG retained.
+- Sales Admin assesses; S17 owns acceptance/cancellation. There is no S16 screen or standalone design-service payment route; legacy URLs must not create payment side effects.
 - FR-007/F-DES-007 replaces obsolete settlement with assessment; FR-012/F-DES-012 adds fee acceptance; FR-013/F-DES-013 formalizes existing US-4/BR-002/BR-003 cancellation, not a second cancellation function.
 - No order means no collection; first-order fee allocation and subsequent-order rules are MFG-06 BR-008.
 - 2D preview is required; 3D preview is outside this scope.
@@ -284,7 +283,7 @@ Historical IDs are retained; external DBIZ2 comparison is not required.
 | Scope and actors | Function List MFG-05 | Rows 36–46 plus new rows 95–96; IDs appear in FR table |
 | Design/customize | UC-C02; F-DES-001..003 | S13; sections 3 and 5 |
 | Saved designs | UC-C03; F-DES-004 | S17; sections 3 and 5 |
-| Service request/delivery | UC-C04, UC-S03; F-DES-005..013 | S15/S17-S21; deprecated S16 redirect; SD-05B; sections 3 and 5 |
+| Service request/delivery | UC-C04, UC-S03; F-DES-005..013 | S15, S17-S21; SD-05B; sections 3 and 5 |
 
 ## Completion checklist
 

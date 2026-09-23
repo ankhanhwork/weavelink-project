@@ -78,7 +78,7 @@ sequenceDiagram
     end
 ```
 
-# UC-G02: Search products — SD-04 – Search and View Product Detail
+# UC-G02: Search products — SD-04: Search and View Product Detail
 
 ```mermaid
 sequenceDiagram
@@ -141,7 +141,7 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     actor Customer
-    actor CompanyAdmin as Company Admin
+    actor CompanyAdmin as Sales Admin
     participant RequestUI as S15 / S17
     participant AdminUI as S18
     participant DesignModule
@@ -203,28 +203,22 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     actor Customer
-    participant OrderUI
-    participant OrderController
-    participant OrderService
-    participant OrderDatabase
-    participant MergedOrderBatchDatabase
+    participant OrderUI as S22-S25
+    participant CheckoutService
+    participant Database
+    participant OutboxWorker
 
-    Customer->>OrderUI: submit order information (size, quantity, shipping info)
-    OrderUI->>OrderController: submit order
-    OrderController->>OrderService: validate order data
-    alt [merge selected]
-        Customer->>OrderUI: accept merge terms
-        OrderUI->>OrderController: confirm merge
-        OrderController->>OrderService: add to merge batch
-        OrderService->>MergedOrderBatchDatabase: save order reference
-    else [no merge]
-        OrderService->>OrderService: skip merge
-    end
-    OrderService->>OrderDatabase: save order (status = Pending Contract)
-    OrderDatabase-->>OrderService: order saved
-    OrderService-->>OrderController: order created
-    OrderController-->>OrderUI: return order summary
-    OrderUI-->>Customer: display order summary
+    Customer->>OrderUI: Enter quantities, VN delivery address and merge preference
+    OrderUI->>CheckoutService: Request server-priced quote
+    CheckoutService->>Database: Validate design/product/policy and save expiring quote
+    Database-->>CheckoutService: Immutable quote and commercial breakdown
+    CheckoutService-->>OrderUI: Quote for explicit review
+    Customer->>OrderUI: Submit current quote with idempotency key
+    OrderUI->>CheckoutService: Create made-to-order order
+    CheckoutService->>Database: Lock quote and create AwaitingDigitalApproval order
+    CheckoutService->>Database: Persist timeline and notification outbox
+    CheckoutService-->>OrderUI: Created order and next action S27
+    OutboxWorker-->>Customer: Notify digital-design approval required
 ```
 
 # UC-C09: View/Sign contract — SD-08: View and Sign Digital Contract
@@ -232,67 +226,56 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     actor Customer
-    participant ContractUI
-    participant ContractController
+    participant ContractUI as S34
     participant ContractService
-    participant ContractDatabase
+    participant Database
+    participant OutboxWorker
 
-    Customer->>ContractUI: view contract
-    ContractUI->>ContractController: request contract
-    ContractController->>ContractService: retrieve contract
-    ContractService->>ContractDatabase: get contract data
-    ContractDatabase-->>ContractService: contract data
-    ContractService-->>ContractController: contract data
-    ContractController-->>ContractUI: display contract
-    ContractUI-->>Customer: display contract
-    Customer->>ContractUI: click sign contract
-    ContractUI->>ContractController: submit signing action
-    ContractController->>ContractService: process signing
-    alt [signing successful]
-        ContractService->>ContractDatabase: update contract status = Signed
-        ContractDatabase-->>ContractService: update success
-        ContractService-->>ContractController: signing success
-        ContractController-->>ContractUI: return signed contract
-        ContractUI-->>Customer: display signed contract
-    else [signing failed]
-        ContractService-->>ContractController: signing failed
-        ContractController-->>ContractUI: return signing error
-        ContractUI-->>Customer: display error message
+    Customer->>ContractUI: Open current Ready contract
+    ContractUI->>ContractService: Request owned contract version
+    ContractService->>Database: Verify PendingContract and current Approved sample
+    Database-->>ContractService: PDF/hash, sample and deposit terms
+    ContractService-->>ContractUI: Authorized review model and signing challenge
+    Customer->>ContractUI: Consent, typed name, recent password and challenge
+    ContractUI->>ContractService: Sign current version with idempotency key
+    ContractService->>Database: Lock contract/order and revalidate version/hash/sample
+    alt Evidence valid
+        ContractService->>Database: Save evidence; Signed; order AwaitingDeposit
+        ContractService->>Database: Write notification outbox
+        ContractService-->>ContractUI: Signed receipt and deposit next action
+        OutboxWorker-->>Customer: Send authorized signed-copy notice
+    else Evidence stale or invalid
+        ContractService-->>ContractUI: Reject without signature or order transition
     end
 ```
 
-# UC-C12: Make payment — SD-09: Make Order Payment
+# UC-C12: Make payment — SD-09: Pay Deposit or Remaining Balance
 
 ```mermaid
 sequenceDiagram
     actor Customer
-    participant PaymentUI
-    participant PaymentController
+    participant PaymentUI as S35
     participant PaymentService
-    participant PaymentTransactionDatabase
-    participant OrderDatabase
-    participant PaymentGateway
+    participant Database
+    participant VNPay
 
-    Customer->>PaymentUI: click "Pay Order"
-    PaymentUI->>PaymentController: initiate payment
-    PaymentController->>PaymentService: create payment transaction
-    PaymentService->>PaymentTransactionDatabase: save payment (status = Pending)
-    PaymentService->>PaymentGateway: create payment request (API)
-    PaymentGateway-->>PaymentService: return payment URL
-    PaymentService-->>PaymentController: payment URL
-    PaymentController-->>PaymentUI: return payment URL
-    PaymentUI->>PaymentGateway: redirect user to payment page
-    alt [payment success]
-        PaymentGateway-->>PaymentService: payment callback received
-        PaymentService->>PaymentTransactionDatabase: update status = Success
-        PaymentService->>OrderDatabase: update order status = Ordered
-    else [payment failed]
-        PaymentGateway-->>PaymentService: payment failed callback
-        PaymentService->>PaymentTransactionDatabase: update status = Failed
-        PaymentService->>OrderDatabase: update status = Failed
+    Customer->>PaymentUI: Pay available DEPOSIT or BALANCE
+    PaymentUI->>PaymentService: order ID, purpose and idempotency key
+    PaymentService->>Database: Verify purpose-specific payable state and exact amount
+    PaymentService->>Database: Create/reuse one Pending attempt for order and purpose
+    PaymentService->>VNPay: Create signed hosted-payment request
+    VNPay-->>PaymentUI: Browser redirect/return is display only
+    VNPay->>PaymentService: Authoritative signed server callback
+    PaymentService->>Database: Verify merchant, reference, purpose, amount and uniqueness
+    alt Accepted DEPOSIT
+        PaymentService->>Database: Succeeded; AwaitingDeposit to Confirmed
+    else Accepted BALANCE
+        PaymentService->>Database: Succeeded; DeliveredAwaitingBalance to Completed
+    else Failure, mismatch or late cancelled receipt
+        PaymentService->>Database: Preserve order gate; audit and refund late captured money
     end
-    PaymentService-->>PaymentUI: notify payment result
-    PaymentUI-->>Customer: display payment result
+    PaymentUI->>PaymentService: Poll transaction status
+    PaymentService-->>PaymentUI: Authoritative purpose, amount, state and next action
 ```
 
 | Diagram | Participants | Arrows | Unreadable text |
@@ -304,11 +287,9 @@ sequenceDiagram
 | SD-05A | 5 | 9 | None |
 | SD-05B | 7 | 22 | None |
 | SD-06 | 5 | 8 | None |
-| SD-07 | 6 | 13 | None |
-| SD-08 | 5 | 19 | None |
-| SD-09 | 7 | 17 | None |
-
-The first return arrow in the `[payment success]` branch of SD-09 has no visible label in the source image.
+| SD-07 | 5 | 11 | None |
+| SD-08 | 5 | 13 | None |
+| SD-09 | 5 | 13 | None |
 
 # MFG-07: Track, cancel and fulfill order — SD-10
 
@@ -322,20 +303,20 @@ sequenceDiagram
     participant OutboxWorker as Outbox worker
     OrderActor->>OrderUI: Request own or authorized order view
     OrderUI->>OrderModule: Order ID and session
-    OrderModule->>Database: Enforce ownership/company scope, load snapshot and timeline
+    OrderModule->>Database: Enforce customer ownership or staff role/assignment scope, load snapshot and timeline
     Database-->>OrderModule: Authorized order history
     OrderModule-->>OrderUI: Snapshot, status and payment/refund summary
     alt Eligible cancellation
         OrderActor->>OrderModule: Reason, expected version and idempotency key
         OrderModule->>Database: Lock order, validate transition and persist cancellation
-        opt Paid order
-            OrderModule->>PaymentModule: Request full refund after commit
+        opt Captured refundable amount
+            OrderModule->>PaymentModule: Request policy-based refund after commit
         end
         OrderModule->>Database: Write notification outbox event
         OutboxWorker-->>OrderActor: Notify cancellation and refund status
-    else Fulfillment status update
-        OrderActor->>OrderModule: Next status and expected version
-        OrderModule->>Database: Validate role, transition and tracking data, commit
+    else Fulfillment, receipt or settlement event
+        OrderActor->>OrderModule: Authorized lifecycle event and expected version
+        OrderModule->>Database: Validate event owner, transition and evidence, commit
         OutboxWorker-->>OrderActor: Notify status and safe tracking link
     end
 ```
@@ -344,15 +325,15 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    actor CompanyAdmin as Company Admin
-    actor Consultant as Sales Consultant
+    actor CompanyAdmin as Sales Admin
+    actor Consultant as Sales
     participant ConsultationUI as S18-S21
     participant ConsultationModule as Consultation module
     participant Database as Database
     participant OutboxWorker as Outbox worker
-    CompanyAdmin->>ConsultationUI: Select same-company customer and consultant
+    CompanyAdmin->>ConsultationUI: Select Dony customer and consultant
     ConsultationUI->>ConsultationModule: Assignment change with expected version and key
-    ConsultationModule->>Database: Validate active membership and lock assignment
+    ConsultationModule->>Database: Validate active Dony StaffAccount and lock assignment
     Database-->>ConsultationModule: Current assignment and active requests
     ConsultationModule->>Database: Atomically change assignment and transfer active request ownership
     ConsultationModule->>Database: Append assignment history and outbox event
@@ -360,7 +341,7 @@ sequenceDiagram
     Consultant->>ConsultationUI: Open assigned customer
     ConsultationUI->>ConsultationModule: Request customer context
     ConsultationModule->>Database: Check active assignment and load permitted summaries
-    Database-->>ConsultationModule: Company-scoped context
+    Database-->>ConsultationModule: Authorized customer context and optional buyer organization
     ConsultationModule-->>ConsultationUI: Context and consultation timeline
     Consultant->>ConsultationModule: Update consultation status/notes with expected version
     ConsultationModule->>Database: Validate transition and append interaction event
@@ -372,7 +353,7 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     actor Customer as Customer
-    actor CompanyAdmin as Company Admin
+    actor CompanyAdmin as Sales Admin
     actor Scheduler as Trusted scheduler
     participant CheckoutModule as MFG-06 Checkout
     participant MergeModule as Merge module
@@ -383,25 +364,24 @@ sequenceDiagram
     MergeModule->>CheckoutModule: Save preference and accepted policy version
     CheckoutModule->>Database: Recompute discount and issue replacement quote
     Customer->>CheckoutModule: Submit current quote
-    CheckoutModule->>Database: Create PendingContract order and immutable snapshots
-    Note over OrderModule,MergeModule: Signing and verified payment make eligible order Confirmed
-    CompanyAdmin->>MergeModule: View candidates and request estimate
+    CheckoutModule->>Database: Create AwaitingDigitalApproval order and immutable snapshots
+    Note over OrderModule,MergeModule: Digital approval, physical sample approval, contract signing and verified deposit make an order Confirmed
+    CompanyAdmin->>MergeModule: View compatible candidate pool and estimate
     MergeModule->>Database: Recompute compatibility, limits and savings
-    MergeModule-->>CompanyAdmin: Candidates, exclusions and estimate
-    CompanyAdmin->>MergeModule: Create batch with acknowledgement, versions and key
-    MergeModule->>Database: Lock and create Planned batch with immutable membership
-    CompanyAdmin->>MergeModule: Start batch
-    MergeModule->>Database: Commit start and membership state
-    MergeModule->>OrderModule: Advance eligible orders to InProduction
+    MergeModule-->>CompanyAdmin: Candidates, exclusions, savings and deadlines
+    Scheduler->>MergeModule: Recompute and publish recommendations for compatible rolling 7-day pool
+    MergeModule-->>CompanyAdmin: Candidate groups, deadlines, exclusions and savings (including negative net)
+    CompanyAdmin->>MergeModule: Review selected members and explicitly start batch
+    MergeModule->>Database: Lock and revalidate eligibility, versions, quantity and deadline
+    MergeModule->>Database: Create InProduction batch with immutable membership and estimate
+    MergeModule->>OrderModule: Atomically advance all selected orders to InProduction
     OutboxWorker-->>Customer: Notify committed batch/status event
-    alt No batch after three calendar days
+    alt No Admin-started batch after rolling seven-day window
         Scheduler->>MergeModule: Process fallback
-        MergeModule->>Database: Lock eligible unbatched opted-in orders
-        MergeModule->>OrderModule: Advance to InProduction, retain price and due date
+        MergeModule->>OrderModule: Start Individual Production through MFG-07
         OutboxWorker-->>Customer: Notify individual production fallback
-    else Admin dissolves before start
-        CompanyAdmin->>MergeModule: Dissolve planned batch
-        MergeModule->>Database: Clear active links and retain membership history
+    else Admin declines recommendation
+        MergeModule->>Database: Keep order unreserved and eligible until its deadline
     end
 ```
 
@@ -409,7 +389,7 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    actor CompanyAdmin as Company Admin
+    actor CompanyAdmin as Sales Admin
     participant AnalyticsUI as S43
     participant AnalyticsModule as Analytics module
     participant AuthoritativeDB as Authoritative records
@@ -417,7 +397,7 @@ sequenceDiagram
     participant PrivateAssetStore as Private asset store
     CompanyAdmin->>AnalyticsUI: Select date range and metric
     AnalyticsUI->>AnalyticsModule: Request dashboard data
-    AnalyticsModule->>AuthoritativeDB: Validate company scope and date range
+    AnalyticsModule->>AuthoritativeDB: Validate Dony scope and date range
     AnalyticsModule->>AuthoritativeDB: Aggregate scoped orders and accepted payments/refunds
     AuthoritativeDB-->>AnalyticsModule: Source rows and refresh watermark
     AnalyticsModule-->>AnalyticsUI: Typed chart series, totals and refreshed_at

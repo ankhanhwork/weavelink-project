@@ -4,22 +4,24 @@
 |---|---|
 | Screen ID | `S19` |
 | Screen name | Consultation Assignment |
-| Actor | Company Admin |
+| Actor | Sales Admin |
 | Priority | P2 |
 | Belongs to module | [MFG-05](../specs/spec-MFG-05.md) |
 | Route | `/admin/design-requests/{request_id}/assignment` |
-| Mockup image | Don't have mockup |
+| Mockup image | img/S19-consultation_assignment_screen.png |
 | Status | Resolved implementation specification |
 
 ## 1. Purpose
 
-**Shown when:** The Company Admin assigns one eligible Approved, unassigned DesignRequest to an active Sales Consultant in the same company and records the committed due date. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
+**Shown when:** The Sales Admin assigns one eligible Approved, unassigned DesignRequest to an active Dony Sales employee and records Dony's committed due date. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
 
 **The user leaves this screen when:** An authorized action in section 5 succeeds, the user follows a role-allowed global route, or they return to the validated originating route.
 
 ## 2. Mockup
 
-Don't have mockup
+![Historical visual reference](img/S19-consultation_assignment_screen.png)
+
+Written behavior below takes precedence over obsolete sample content.
 
 ## 3. Element inventory
 
@@ -28,10 +30,10 @@ Don't have mockup
 | 1 | Screen heading | Heading | Consultation Assignment | Yes | Static route title. |
 | 2 | Route | Navigation target | /admin/design-requests/{request_id}/assignment | Yes | Access checked on server. |
 | 3 | request_id | Field / control | UUID path parameter | As specified | Request must be Approved (Simple or accepted Complex fee) and unassigned, or eligible for atomic reassignment. |
-| 4 | consultant_id | Field / control | UUID, required | As specified | Active Sales Consultant membership in same company. |
+| 4 | sales_user_id | Field / control | UUID, required | As specified | Must reference an Active Dony StaffAccount with the Sales role. |
 | 5 | committed_due_at | Field / control | UTC timestamp, required | As specified | Admin commitment at assignment; requested_deadline remains customer preference. |
 | 6 | expected_version | Field / control | integer, required | As specified | Stale request returns 409; assignment and due date save atomically. |
-| 7 | company_id / customer_id | Field / control | server-derived UUIDs | As specified | Never accepted as form input; scope comes from active company session. |
+| 7 | buyer_organization_id / customer_id | Field / control | server-derived UUIDs | As specified | Buyer organization is contextual customer data; authorization comes from the Dony staff role and assignment. |
 | 8 | API errors | Field / control | standard API error envelope | As specified | 400 malformed; 403 prohibited; 404 inaccessible; 409 stale/duplicate assignment; 422 invalid consultant/date. |
 | 9 | Assign consultant | Action | Atomic assign/reassign, record committed_due_at, notify after commit. | Available when authorized | Destination: S18 requests tab |
 | 10 | Cancel | Action | Leave request unchanged. | Available when authorized | Destination: S18 |
@@ -55,7 +57,7 @@ Don't have mockup
 | 1 | Assign consultant | Activate | Atomic assign/reassign, record committed_due_at, notify after commit. | S18 requests tab |
 | 2 | Cancel | Activate | Leave request unchanged. | S18 |
 
-Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Company Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales Consultant routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks role, company, membership, ownership and assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Company Admin, S20 for Sales Consultant, S41 for System Admin, and S01 for Guest.
+Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Sales Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks internal role, customer ownership and staff assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Sales Admin, S20 for Sales, S41 for System Admin, and S01 for Guest.
 
 ## 6. Screen-level rules
 
@@ -68,7 +70,7 @@ Home and public catalog are available to Guest and authenticated users. Customer
 
 ### Acceptance scenarios
 
-1. Assignment succeeds only for active same-company consultant and records committed_due_at atomically.
+1. Assignment succeeds only for active Dony Sales employee and records committed_due_at atomically.
 2. Concurrent/stale assignment returns 409 and does not create duplicate notices.
 3. Assignment locks/version-checks the request with customer assignment; if cancellation wins, return 409 without assignment or partial transfer.
 

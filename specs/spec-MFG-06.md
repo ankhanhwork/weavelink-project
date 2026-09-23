@@ -4,55 +4,89 @@
 | --- | --- |
 | Module ID | `MFG-06` |
 | Module name | Order & Payment |
-| Spec version | v1.1 |
+| Spec version | v2.0 |
 | Author (team member) | Group B |
-| Date | 2026-09-22 |
+| Date | 2026-09-23 |
 | Status | Draft |
 | Approved by (Client role) | No approver assigned |
-| DBIZ2 source | Historical IDs retained: Function List No. 47-52; `F-PAY-001` .. `F-PAY-006`; `UC-C05`, `UC-C12`; S16 (deprecated), S22-S25, S27, S34-S38. External DBIZ2 comparison is not required. |
+| DBIZ2 source | Historical IDs retained: Function List No. 47-52; `F-PAY-001` .. `F-PAY-006`; `UC-C05`, `UC-C12`; active screens S22-S29 and S33-S38. S16 is not an active payment step. |
 
 ---
 
 ## 1. Purpose and scope (mandatory)
 
-This MVP Must module quotes checkout, creates an order and handles VNPay payment initiation, verified settlement, reconciliation, receipt and full refund state. Customer identity/prices come from server session and immutable snapshots.
+MFG-06 manages the commercial lifecycle of a made-to-order Dony order. Dony does not sell ready-made inventory. Every order binds a Customer-owned digital design, garment specifications, size quantities, delivery details and an immutable price version.
 
-**In scope:** checkout one orderable design; quote quantities/address/merge preference; idempotently create PendingContract order; include accepted design fee; initiate ORDER payment; validate server notification; reconcile and show receipt/refund state.
+The required business sequence is:
 
-**Out of scope:** post-submission tracking/cancellation/fulfillment is MFG-07; contract generation/signing is MFG-09; design request creation/assessment is MFG-05.
+**approve digital design → prepare and send physical sample → approve received sample → sign the sample-bound contract → pay deposit → produce and deliver/receive goods → pay remaining balance → complete order.**
+
+The Customer may represent a Business Buyer ordering uniforms or garments for internal use, or a Reseller Shop commissioning Dony to manufacture the shop's own design for resale. Buyer Organization data is descriptive customer/billing information, not a tenant or authorization boundary.
+
+**In scope:** server quote; idempotent order creation; explicit digital-design approval; physical-sample preparation, dispatch, receipt, approval or revision; transition to contract; separate deposit and balance payment purposes; signed VNPay notification validation; reconciliation; refund of captured funds; customer receipt acknowledgement; payment receipt and order completion.
+
+**Out of scope:** authoring product rules is MFG-04; creating/delivering designs is MFG-05; production/shipping operations and cancellation are MFG-07; contract rendering/signature is MFG-09; merge matching is MFG-10. Sample manufacturing cost is included in the signed order price unless a later reviewed specification introduces a separate charge; there is no standalone sample or design-service payment screen.
 
 ## 2. Actors (mandatory)
 
 | Actor | Role in this module | Where it comes from |
 | --- | --- | --- |
-| Customer | Quotes/submits own design and pays own resource | MFG-06 resolved contract; UC-C05/UC-C12 |
-| VNPay | Hosts payment and sends signed server notification | MFG-06 payment integration contract |
-| Company Admin | Reconciles/refunds authorized same-company transactions | MFG-06 role boundary |
-| System | Locks, deduplicates, persists settlement and outbox | MFG-06 function contract |
+| Customer | Reviews quote; approves digital design and received physical sample; pays deposit and balance; confirms receipt | UC-C05/UC-C12 and confirmed business flow |
+| Sales Admin | Oversees all Dony orders, records sample preparation/dispatch evidence and reconciles/refunds payments | MFG-06/MFG-07 role boundary |
+| Assigned Sales | May record sample and fulfilment information only for assigned Customers | MFG-08 assignment boundary |
+| VNPay | Hosts each payment attempt and sends signed server notifications | Payment integration contract |
+| System | Locks versions, calculates amounts, deduplicates callbacks, persists state and sends outbox events | MFG-06 function contract |
+| MFG-09 | Generates and signs a contract only after physical-sample approval | Contract boundary |
 
 ## 3. User scenarios and acceptance criteria (mandatory)
 
-### US-1 (Must): Finalize order
+### US-1 (Must): Create order and approve the digital design
 
-1. Valid owned Saved/Delivered design, quantities/address and current rules produce one 30-minute quote with complete integer-VND breakdown.
-2. Submitting an unexpired quote atomically creates one PendingContract order with immutable product/design/address/price/merge snapshots; duplicate submit returns that order.
-3. Changed product/design/rules/capacity, fee allocation or expired quote requires requote and explicit review.
-4. First order from a delivered Complex request lineage claims the accepted fee atomically; additional orders wait until that order reaches InProduction or cancellation/refund releases the allocation. After InProduction, subsequent orders have design_fee_vnd 0.
-5. No order means no collection; Simple and self-design orders have design_fee_vnd 0.
+1. Given an owned orderable Saved or Delivered design, valid quantities, address and current rules, when the Customer requests a quote, then the server returns a complete integer-VND breakdown with 30-minute expiry; an opted-in eligible merge quote applies min(subtotal, 840,000 VND) once.
+2. Given a current quote, when submitted with an idempotency key, then one order is created as `AwaitingDigitalApproval` with immutable product, design, quantities, buyer-organization, address, price and policy snapshots.
+3. Given `AwaitingDigitalApproval`, when the Customer approves the exact design version, then the approval evidence and timestamp are recorded and the order becomes `DigitalDesignApproved`.
+4. If the design or price-driving rule changes before approval, the Customer must receive a replacement quote and explicitly review the new snapshot; the previous snapshot is never silently edited.
 
-### US-2 (Must): Make payment
+### US-2 (Must): Send and approve the physical sample
 
-1. ORDER payment is allowed only after signed contract moves the order to AwaitingPayment; its total includes the applicable accepted design fee. No standalone SERVICE transaction is supported.
-2. A valid signed VNPay server notification with matching merchant/reference/amount/currency settles once and changes the order to Confirmed.
-3. Browser return only reads/polls server state. Invalid/duplicate callbacks never double-confirm; failed attempt leaves resource payable.
-4. Late success for cancelled order records funds and starts full refund without resurrecting the resource.
+1. Given `DigitalDesignApproved`, when authorized Dony staff begins the sample, then one versioned sample record becomes `InPreparation` and the order becomes `SampleInPreparation`; duplicated commands replay the same result.
+2. When the sample is dispatched, carrier, tracking number, sent timestamp and the bound design version are required; the order becomes `SampleShipped`.
+3. When the Customer confirms receipt and approves the sample, the server records approval evidence and the approved sample/design version, then advances the order to `PendingContract`.
+4. When the Customer requests revision with a reason, the sample becomes `RevisionRequested`; no contract or payment can proceed. A revised immutable design and replacement quote must be explicitly approved before another physical sample is prepared.
+5. A sample tied to an obsolete design/order version cannot be approved; stale requests return 409 without a partial transition.
+
+### US-3 (Must): Sign contract and pay the deposit
+
+1. MFG-09 may generate a contract only for a `PendingContract` order whose current physical sample is Approved and whose contract snapshot references the same design, sample and total.
+2. Valid contract acknowledgement atomically changes the order from `PendingContract` to `AwaitingDeposit`.
+3. `deposit_due_vnd = floor(contract_total_vnd × deposit_percent / 100)`, where `deposit_percent` is a versioned integer policy snapshotted in the signed contract; the current classroom policy is 50%.
+4. A DEPOSIT payment can be initiated only for the owner of a Signed contract and an `AwaitingDeposit` order. One active Pending attempt exists for this purpose.
+5. A valid signed VNPay server notification with matching merchant, provider reference, purpose, amount and currency settles the deposit once and changes the order to `Confirmed`.
+6. Browser return only reads or polls server state. Failed/expired payment keeps `AwaitingDeposit` and permits a new attempt; duplicate callbacks never double-settle.
+
+### US-4 (Must): Deliver, collect the balance and complete
+
+1. After deposit settlement, MFG-07 owns `Confirmed → InProduction → Shipped` and requires production/shipping evidence.
+2. Given a Shipped order, when the Customer confirms receipt or authorized staff records verifiable proof of delivery, then `received_at` is stored and the order becomes `DeliveredAwaitingBalance`.
+3. `balance_due_vnd = contract_total_vnd − accepted_deposit_vnd − accepted_order_credit_vnd`. It must be at least zero and is calculated only from authoritative stored amounts.
+4. A BALANCE payment can be initiated only for the owner of a `DeliveredAwaitingBalance` order. A zero balance completes automatically without creating a provider attempt.
+5. A verified BALANCE settlement changes the order to `Completed` exactly once and issues a receipt showing contract total, deposit, credits, balance and total settled.
+6. If the contract-defined balance due date passes, the order remains `DeliveredAwaitingBalance` with payment substate `Overdue`; notifications escalate without falsely marking the order Completed.
+
+### US-5 (Must): Reconcile and refund captured payments
+
+1. Reconciliation treats DEPOSIT and BALANCE as separate purposes and never applies one callback to the other.
+2. Cancellation/refund returns no more than the sum of accepted captured amounts minus successful refunds. It never refunds an unpaid balance.
+3. A late successful payment for a Cancelled order records the received funds and starts an idempotent refund without resurrecting the order.
+4. Refund failure remains visible and retryable to Sales Admin; an email failure never rolls back payment/order state.
 
 ### Edge cases
 
-- Invalid address/options/capacity blocks quote/order without write.
-- One active Pending attempt exists per resource; repeated initiation reuses it.
-- Provider outage returns 503/no false payment; reconciliation queries unresolved attempts.
-- Refund failure remains visible and retryable.
+- Invalid address, quantities, sample evidence or stale versions return 422/409 without partial writes.
+- Design approval, sample approval, contract signing, deposit settlement, production start, cancellation and merge assignment lock the order/version so only one conflicting transition commits.
+- Provider outage returns 503 without a false success; unresolved attempts are reconciled.
+- Customer receipt confirmation is idempotent; a foreign order/sample/payment ID returns 404.
+- A Business Buyer or Reseller Shop name never grants access; Customer ownership comes from the authenticated session.
 
 ## 4. Flows (mandatory)
 
@@ -60,182 +94,177 @@ This MVP Must module quotes checkout, creates an order and handles VNPay payment
 
 ```mermaid
 flowchart LR
-  Design[Eligible design] --> Checkout[S22 Checkout]
-  Checkout --> Merge[S23 Merge preference]
-  Merge --> Summary[S25 Quote review]
-  Summary --> Order[PendingContract order]
-  Order --> Contract[S34 Contract/sign]
-  Contract --> Pay[S35 VNPay initiation]
-  Pay --> Return[Receipt/poll]
-  Return --> End[Confirmed or retry]
+  Quote[S22-S25 Server quote] --> Order[AwaitingDigitalApproval]
+  Order --> Digital[Customer approves digital design]
+  Digital --> Prepare[Sample InPreparation]
+  Prepare --> Send[SampleShipped]
+  Send --> SampleDecision{Customer approves received sample?}
+  SampleDecision -->|Revision| Revise[RevisionRequested and revised design/quote]
+  Revise --> Digital
+  SampleDecision -->|Approve| Contract[PendingContract]
+  Contract --> Sign[S34 Signed contract]
+  Sign --> Deposit[S35 DEPOSIT payment]
+  Deposit --> Confirmed[Confirmed]
+  Confirmed --> Production[InProduction]
+  Production --> Shipped[Shipped]
+  Shipped --> Received[DeliveredAwaitingBalance]
+  Received --> Balance[S35 BALANCE payment]
+  Balance --> Complete[Completed]
 ```
 
 ### 4.2 Sequence for the main flow
 
-# UC-C05: Finalize order — SD-07: Create Order
+The first sequence covers digital-design and physical-sample approval; section 4.3 continues with the two payment gates.
 
 ```mermaid
 sequenceDiagram
-    actor Customer
-    participant OrderUI
-    participant OrderController
-    participant OrderService
-    participant OrderDatabase
-    participant MergedOrderBatchDatabase
-
-    Customer->>OrderUI: submit order information (size, quantity, shipping info)
-    OrderUI->>OrderController: submit order
-    OrderController->>OrderService: validate order data
-    alt [merge selected]
-        Customer->>OrderUI: accept merge terms
-        OrderUI->>OrderController: confirm merge
-        OrderController->>OrderService: add to merge batch
-        OrderService->>MergedOrderBatchDatabase: save order reference
-    else [no merge]
-        OrderService->>OrderService: skip merge
-    end
-    OrderService->>OrderDatabase: save order (status = Pending Contract)
-    OrderDatabase-->>OrderService: order saved
-    OrderService-->>OrderController: order created
-    OrderController-->>OrderUI: return order summary
-    OrderUI-->>Customer: display order summary
+  actor Customer
+  actor Staff as Sales Admin or assigned Sales
+  participant UI as Order UI S25/S27/S29
+  participant Order as Order Service
+  participant DB as Order and Sample Store
+  Customer->>UI: Submit current quote
+  UI->>Order: quote version and idempotency key
+  Order->>DB: Create AwaitingDigitalApproval order and snapshots
+  Customer->>Order: Approve exact digital design version
+  Order->>DB: Record evidence; DigitalDesignApproved
+  Staff->>Order: Start and dispatch bound physical sample
+  Order->>DB: InPreparation then SampleShipped with tracking
+  Customer->>Order: Confirm receipt and approve or request revision
+  alt Approved
+    Order->>DB: Sample Approved; order PendingContract
+  else Revision requested
+    Order->>DB: Sample RevisionRequested; block contract/payment
+  end
 ```
 
-# UC-C12: Make payment — SD-09: Make Order Payment
+### 4.3 Sequence for deposit and balance payment
 
 ```mermaid
 sequenceDiagram
-    actor Customer
-    participant PaymentUI
-    participant PaymentController
-    participant PaymentService
-    participant PaymentTransactionDatabase
-    participant OrderDatabase
-    participant PaymentGateway
-
-    Customer->>PaymentUI: click "Pay Order"
-    PaymentUI->>PaymentController: initiate payment
-    PaymentController->>PaymentService: create payment transaction
-    PaymentService->>PaymentTransactionDatabase: save payment (status = Pending)
-    PaymentService->>PaymentGateway: create payment request (API)
-    PaymentGateway-->>PaymentService: return payment URL
-    PaymentService-->>PaymentController: payment URL
-    PaymentController-->>PaymentUI: return payment URL
-    PaymentUI->>PaymentGateway: redirect user to payment page
-    alt [payment success]
-        PaymentGateway-->>PaymentService: payment callback received
-        PaymentService->>PaymentTransactionDatabase: update status = Success
-        PaymentService->>OrderDatabase: update order status = Ordered
-    else [payment failed]
-        PaymentGateway-->>PaymentService: payment failed callback
-        PaymentService->>PaymentTransactionDatabase: update status = Failed
-        PaymentService->>OrderDatabase: update status = Failed
-    end
-    PaymentService-->>PaymentUI: notify payment result
-    PaymentUI-->>Customer: display payment result
+  actor Customer
+  participant UI as S35 Payment
+  participant Payment as Payment Service
+  participant DB as Order and Payment Store
+  participant Gateway as VNPay
+  Customer->>UI: Pay DEPOSIT for Signed/AwaitingDeposit order
+  UI->>Payment: order, purpose DEPOSIT, idempotency key
+  Payment->>DB: Create/reuse exact Pending DEPOSIT attempt
+  Payment->>Gateway: Create hosted request
+  Gateway-->>Payment: Signed server notification
+  Payment->>DB: Verify and settle once; order Confirmed
+  Note over DB: MFG-07 produces, ships and records receipt
+  Customer->>UI: Pay BALANCE for DeliveredAwaitingBalance order
+  UI->>Payment: order, purpose BALANCE, idempotency key
+  Payment->>DB: Create/reuse exact Pending BALANCE attempt
+  Payment->>Gateway: Create hosted request
+  Gateway-->>Payment: Signed server notification
+  Payment->>DB: Verify and settle once; order Completed
+  Payment-->>UI: Authoritative receipt/state
 ```
-
 
 ## 5. Functional requirements (mandatory)
 
-### 5.1 Input / Output contract
-
 | FR ID | DBIZ2 Subfunction ID | Requirement (system MUST ...) | Actor | Priority |
 | --- | --- | --- | --- | --- |
-| FR-001 | F-PAY-001 | Render checkout for the customer's eligible design and same-company Published product. | Customer | Must |
-| FR-002 | F-PAY-002 | Recompute quote from validated quantities, address and merge choice with 30-minute expiry; derive a separate design_fee_vnd from request provenance and allocation state. | Customer | Must |
-| FR-003 | F-PAY-003 | Atomically create one PendingContract order from a current quote with immutable snapshots and idempotency; lock/revalidate and claim any design-fee allocation under BR-008. | Customer | Must |
-| FR-004 | F-PAY-004 | Initiate one payable ORDER payment attempt and return hosted-provider redirect details. | Customer | Must |
-| FR-005 | F-PAY-005 | Verify and deduplicate ORDER provider notifications; settle once and support authorized reconciliation/full refund including design fee; release eligible allocation only after resolution. | VNPay / Company Admin / System | Must |
-| FR-006 | F-PAY-006 | Show the owner's ORDER receipt/state and design-fee breakdown with S35 navigation; browser return remains read-only. | Customer | Must |
+| FR-001 | F-PAY-001 | Render the Customer's made-to-order checkout and current order workflow, including digital-design, physical-sample, contract, deposit, delivery and balance gates. | Customer | Must |
+| FR-002 | F-PAY-002 | Recompute a 30-minute quote from authoritative product/design versions, quantities, address and MFG-10 v3 merge policy, including an 840,000 VND per-order discount capped at subtotal and deposit preview. | Customer | Must |
+| FR-003 | F-PAY-003 | Atomically create one `AwaitingDigitalApproval` order and control idempotent digital-design and physical-sample approval transitions using immutable versioned evidence. | Customer / Sales Admin / assigned Sales | Must |
+| FR-004 | F-PAY-004 | Initiate one payable DEPOSIT or BALANCE attempt only when the matching order gate is satisfied and return hosted-provider redirect details. | Customer | Must |
+| FR-005 | F-PAY-005 | Verify and deduplicate provider notifications by payment purpose; settle deposit/balance once and support authorized reconciliation/refund of captured funds. | VNPay / Sales Admin / System | Must |
+| FR-006 | F-PAY-006 | Show the owner authoritative workflow, payment, receipt, refund and outstanding-balance state; browser return remains read-only. | Customer | Must |
 
 ### 5.1 Input / Output contract
 
 | FR ID | Input field | Type | Required | Output field | Type | Notes / validation |
 | --- | --- | --- | --- | --- | --- | --- |
-| FR-001 | session, product/design UUID | Session / UUIDs | Yes | S22 checkout model | View model | Own Saved/Delivered design; Published same-company product |
-| FR-002 | quantities, VN address, merge choice/version | Integers / address / values | Yes | quote, breakdown, source_design_request_id nullable, accepted_fee_version nullable, fee_allocation_version nullable, expiry | Object | Capacity/provenance checked; design fee outside subtotal; 422 invalid; 409 stale/allocation conflict |
-| FR-003 | quote UUID/version, idempotency key, confirmation | UUID / integer / key / boolean | Yes | PendingContract order/snapshots | Object | Lock request/quote; validate allocation and consume; duplicate returns original; stale allocation requires reviewed replacement quote |
-| FR-004 | order_id, purpose=ORDER, key | UUID / enum / key | Yes | payment/provider reference, redirect, expiry | Object | Payable state; one pending attempt; provider failure 503 |
-| FR-005 | signed provider query or authorized reconcile/refund request | Query / IDs / version / key | Yes | acknowledged payment/refund state | Object | Verify signature, merchant, reference, amount, currency; full refund only |
-| FR-006 | authenticated owner, payment/transaction ID | Session / UUID | Yes | ORDER receipt status/amount/design_fee_vnd/next route S35 | View model | Browser return cannot settle; ownership check; unknown 404 |
+| FR-001 | session, product_id, design_id | Session / UUID / UUID | Yes | S22/S27 workflow model | ViewModel | Owned Saved/Delivered design; Published Dony product base; no ready-made stock. |
+| FR-002 | quantities, delivery address, merge choice/version, current design/product versions | Integers / address / values / versions | Yes | quote, price breakdown, deposit preview, expiry | Object | 30 minutes; all money integer VND; stale rules require replacement quote. |
+| FR-003 | action, order_id/quote_id, design/sample/order expected versions, evidence, tracking, Idempotency-Key | Enum / UUIDs / versions / object / key | By action | order, sample, timeline and next gate | Object | Actions: create_order, approve_digital, start_sample, dispatch_sample, approve_sample, request_revision; lock and revalidate atomically. |
+| FR-004 | order_id, purpose, expected order/payment versions, Idempotency-Key | UUID / DEPOSIT or BALANCE / versions / key | Yes | attempt_id, purpose, exact amount, expires_at, redirect | Object | DEPOSIT requires Signed/AwaitingDeposit; BALANCE requires DeliveredAwaitingBalance; one active Pending attempt per order/purpose. |
+| FR-005 | signed provider query or authorized reconcile/refund request | Query / IDs / versions / key | Yes | payment/refund state and order transition | Object | Verify signature, merchant, reference, purpose, amount and VND; refund captured funds only. |
+| FR-006 | order_id or attempt_id, session | UUID / session | Yes | workflow timeline, two-purpose payment summary, receipt/refund state | Object | Owner or authorized Dony staff; secrets omitted; browser return cannot settle. |
 
 ### 5.2 Business rules
 
 | Rule ID | Rule | Why it exists |
 | --- | --- | --- |
-| BR-001 | `subtotal_vnd = sum(quantity × (unit_price_vnd + option_surcharge_vnd))`; eligible opted-in `merge_discount_vnd = floor(subtotal_vnd × 5 / 100)` else 0; shipping default 30000, merge fee/tax default 0; `total_vnd = subtotal_vnd - merge_discount_vnd + shipping_vnd + merge_fee_vnd + tax_vnd + design_fee_vnd`. Design fee is separate from subtotal, never quantity-multiplied or discounted. | Define one server-authoritative quote formula. |
-| BR-002 | Quote expires in 30 minutes; payment redirect expires in 15 minutes. | Bound quote and provider attempt validity. |
-| BR-003 | Authoritative amounts remain consistent across S23, S25, S34 and S35; full breakdowns on S25/S34/S35 explicitly include the separate design_fee_vnd line. | Prevent inconsistent customer-visible totals. |
-| BR-004 | Order: PendingContract → AwaitingPayment only after signature → Confirmed only after verified full settlement including applicable design fee; no request payment transition. Failed payment does not change order state. | Enforce contract/payment gates. |
-| BR-005 | Payment attempt: Pending → Succeeded/Failed/Expired; verified late success may promote Failed/Expired and never downgrade Succeeded. | Handle callback races and late notifications. |
-| BR-006 | Refund: None → Pending → Succeeded/Failed; only full refund supported, including the design-fee component; allocation release follows BR-008. | Define supported refund lifecycle. |
-| BR-007 | Provider event/transaction IDs are permanently unique; idempotency keys are retained at least seven days. | Prevent replay and duplicate effects. |
-| BR-008 | Allocate the accepted Complex fee once to the first created order from its delivered design lineage; serialize allocation, block further orders until InProduction or resolved cancellation, and require reviewed requotes on allocation changes. | Prevent duplicate charges or fee bypass while preserving immutable snapshots. |
-
-The accepted fee attaches to the first successfully created order from the delivered request design or any derived version retaining source_design_request_id. First means the allocation transaction that commits under the request lock, not the first quote. Quote stores accepted_fee_version (null for self-design/Simple) and fee_allocation_version (null when no Complex allocation applies); order creation revalidates both and atomically writes fee_order_id, increments allocation version and snapshots the fee. Concurrent contenders receive 409 DESIGN_FEE_ALLOCATION_CONFLICT and must requote/review; never silently change a reviewed total.
-
-While the fee-bearing order has not reached InProduction, further orders from that Complex request lineage are blocked with 409 DESIGN_FEE_ORDER_PENDING, including while cancellation/payment/refund resolution is pending. Once it reaches InProduction, record the retained allocation; subsequent orders carry design_fee_vnd 0. If cancelled earlier, retain its immutable fee line and release the allocation only after all payment attempts are authoritatively resolved and any full refund succeeds. A subsequent late receipt is refunded against the cancelled order and never changes the released allocation. The next newly created order after release carries the fee; never retrofit another order. Simple requests and self-designs have fee 0 and no allocation restriction. No order means no invoice, transaction, revenue or collection. Admin cannot override/add another fee. All final amounts must be positive and <=9999999999 VND.
+| BR-001 | Order progression is `AwaitingDigitalApproval → DigitalDesignApproved → SampleInPreparation → SampleShipped → PendingContract → AwaitingDeposit → Confirmed → InProduction → Shipped → DeliveredAwaitingBalance → Completed`; sample revision returns through a new immutable design/quote approval cycle. | Make every customer and production commitment explicit. |
+| BR-002 | Digital approval binds the exact design/product versions. Physical-sample approval binds the exact sample and design versions; only then may a contract be generated. | Prevent production or payment against an unapproved design/sample. |
+| BR-003 | Contract signature moves `PendingContract → AwaitingDeposit`; verified deposit moves `AwaitingDeposit → Confirmed`; verified balance moves `DeliveredAwaitingBalance → Completed`. No other event may perform these transitions. | Separate legal acknowledgement, deposit and final settlement. |
+| BR-004 | Deposit uses the signed contract's versioned `deposit_percent` (current classroom value 50%). Balance is contract total less accepted deposit and accepted credits; the client never supplies either amount. | Prevent amount manipulation and rounding drift. |
+| BR-005 | DEPOSIT and BALANCE use distinct immutable attempts and provider references. One active Pending attempt exists per order/purpose; same key/payload replays and changed payload returns 409. | Prevent double collection and purpose confusion. |
+| BR-006 | Provider server notification and reconciliation are authoritative; browser return is read-only. Late success on a Cancelled order is recorded and refunded without restoring the order. | Preserve financial truth. |
+| BR-007 | Delivery means the Customer acknowledged receipt or Dony stored authorized proof of delivery. `Shipped` alone never enables BALANCE payment. | Match the required receive-then-pay flow. |
+| BR-008 | The accepted Complex design fee is allocated once to the first order from its delivered design lineage. It is included in `contract_total_vnd`, deposit and balance proportions; cancellation releases allocation only after captured funds and refunds resolve. | Prevent duplicate design-fee collection or bypass. |
+| BR-009 | There is no standalone SERVICE, sample or design payment. Active payment purposes are DEPOSIT and BALANCE for an Order. | Keep payment aligned with the agreed commercial flow and remove S16. |
+| BR-010 | Each committed lifecycle or financial transition appends an order timeline event and durable notifications; notification failure never rolls back the transition. | Provide traceability and reliable communication. |
+| BR-011 | Eligible merge opt-in uses the current MFG-10 policy snapshot: `merge_discount_vnd=min(subtotal_vnd, 840000)`; otherwise discount is zero. The discount applies only to merchandise subtotal, not shipping/design fee. Standard and merge `production_due_at` are 7 and 10 calendar days after verified deposit/`confirmed_at`; the values are immutable quote/order snapshots. | Keep quote, contract, and merge terms consistent and cap Dony's discount exposure. |
 
 ## 6. Key entities (mandatory)
 
 | Entity | Attributes (from Input/Output fields) | Relationships |
 | --- | --- | --- |
-| Quote | company/customer/product/design IDs+versions, quantities, address, merge/policy, price breakdown including design_fee_vnd, source_design_request_id nullable, accepted_fee_version nullable, fee_allocation_version nullable, expiry, version | Server-computed, owner-scoped, one-time consumed |
-| Order | UUID, immutable product/design/address/price snapshots, status, source_design_request_id, accepted_fee_version, design_fee_vnd in price snapshot, contract/batch IDs, version | One order per consumed quote; no checkout batch creation |
-| PaymentTransaction | resource purpose/id, amount, provider reference/transaction, state, expiry, version | Exactly one ORDER resource; settlement exactly once |
-| Refund | payment_id, full amount, state, provider reference, version | Never resurrects cancelled order |
+| Quote | id, customer_id, buyer_organization_id?, product/design IDs and versions, quantities, address, merge/policy, price breakdown, deposit preview, expiry, version | Server-computed, customer-owned and consumed once. Optional Buyer Organization is context, not authorization. |
+| Order | id, customer_id, buyer_organization_id?, design/product/quote versions, status, price/address/quantity snapshots, approved_sample_id?, contract_id?, deposit_percent, contract_total_vnd, accepted_deposit_vnd, accepted_order_credit_vnd, balance_due_vnd, received_at?, version, timestamps | Made-to-order aggregate linked to sample, contract, two payment purposes, fulfilment and optional merge batch. |
+| ProductionSample | id, order_id, design_id/version, status InPreparation/Shipped/Approved/RevisionRequested, carrier?, tracking_number?, sent_at?, received_at?, approved_at?, feedback?, evidence, version | One current version per sample cycle; contract must reference the Approved version. |
+| PaymentTransaction | id, order_id, customer_id, purpose DEPOSIT/BALANCE, amount_vnd, currency VND, status Pending/Succeeded/Failed/Expired, provider references, paid_at?, refund_status, version | One active Pending attempt per order/purpose; provider events deduplicated. |
+| OrderTimelineEvent | order_id, prior_status, target_status, actor/event source, evidence reference, occurred_at | Append-only audit of business transitions. |
 
 ## 7. Screens involved
 
 | Screen ID | Screen name | Priority | Screen Spec file |
 | --- | --- | --- | --- |
-| S22 | Create order/checkout | Must | `screens/S22-create_order_screen.md` |
-| S23 | Merge option | Must | `screens/S23-merge_option_screen.md` |
-| S24 | Merge terms | Must | `screens/S24-merge_terms_screen.md` |
-| S25 | Order summary and quote review | Must | `screens/S25-order_summary_screen.md` |
-| S34 | Contract handoff | Should | `screens/S34-contract_detail_screen_customer.md` |
-| S35 | Order payment and receipt | Must | `screens/S35-order_payment_screen.md` |
-| S16 | Deprecated route; redirects to S17, no payment | Could | `screens/S16-design_service_payment_screen.md` |
-| S27 | Customer refund state | Must | `screens/S27-customer_order_detail_screen.md` |
-| S36/S37 | Admin payment list/detail | Must | `screens/S36-payment_transaction_list_screen.md` |
-| S38 | Notifications | Should | `screens/S38-notification_panel_screen.md` |
+| S22 | Create made-to-order order and quote | Must | `screens/S22-create_order_screen.md` |
+| S25 | Quote and order summary | Must | `screens/S25-order_summary_screen.md` |
+| S26 | Customer order list with workflow status | Must | `screens/S26-customer_order_list_screen.md` |
+| S27 | Customer order detail, design/sample approval, receipt and payment gates | Must | `screens/S27-customer_order_detail_screen.md` |
+| S29 | Dony order detail, sample dispatch and fulfilment evidence | Must | `screens/S29-order_detail_admin_screen.md` |
+| S33-S34 | Sample-bound contract administration and customer signing | Should | MFG-09 boundary |
+| S35 | Deposit or balance payment | Must | `screens/S35-order_payment_screen.md` |
+| S36-S37 | Payment list, detail, reconciliation and refund | Must | Module screens |
+| S38 | Lifecycle/payment notifications | Must | Shared notification panel |
+
+S16 is retired and has no screen, image, redirect, or payment workflow. If a legacy S16 URL is encountered, return a non-mutating `410 Gone`; do not create a SERVICE transaction, invoice, refund, or provider session.
 
 ## 8. Success criteria (mandatory)
 
 | SC ID | Criterion | How it is measured |
 | --- | --- | --- |
-| SC-001 | Quote formula and amount remain consistent across review, contract and payment. | Compare rendered totals and stored snapshot amounts. |
-| SC-002 | Duplicate order/payment/callback operations cannot create duplicate business effects. | Replay idempotent submissions and provider callbacks. |
-| SC-003 | Browser return alone never marks payment successful; all six functions map one-to-one to FRs. | Verify return path is read-only and compare F-PAY IDs with FRs. |
+| SC-001 | No contract, deposit, production, balance or completion occurs before its preceding design/sample/delivery gate. | Exercise every transition and skipped-transition attempt. |
+| SC-002 | Deposit plus balance and credits reconcile exactly to the signed contract total without duplicate settlement. | Compare stored integer-VND amounts and provider events for success, retry, duplicate and refund cases. |
+| SC-003 | Every approved physical sample is traceable to the exact design and signed contract version used for production. | Compare sample, order and contract snapshot IDs/hashes. |
+| SC-004 | Delivery is recorded before balance collection, and Completed means the balance is zero and all accepted settlements are authoritative. | Test Shipped, receipt, zero-balance, successful, failed and overdue balance cases. |
 
 ## 9. Assumptions
 
-- DBIZ 3 classroom demo by Group B; no approver; business/contact data are fictional samples.
-- Accepted design fees are separate from subtotal and allocated by BR-008; no historical production-data migration is needed in this documentation-only project.
-- VNPay sandbox is used; merchant secrets are environment values and never documented.
-- Order/payment is MVP Must; MFG-09 contract is Should but the documented order lifecycle retains its signing gate.
+- Dony manufactures only after customer-specific design and physical-sample approval; no finished-goods inventory is sold.
+- Current classroom deposit policy is 50%, stored as a versioned contract snapshot rather than a hard-coded client value.
+- Physical-sample production/shipping cost is included in the signed order total; no separate sample payment is collected.
+- Contract balance due date comes from the signed contract; this specification does not invent a universal number of days.
+- VNPay sandbox/configured credentials and durable outbox/reconciliation workers are available.
 
 ## 10. Open questions
 
 | # | Question | Blocking? | Owner | Status |
 | --- | --- | --- | --- | --- |
-| 1 | Are any pricing, expiry, state, callback-authority, retry, reconciliation or refund decisions still undecided? | No | Group B | Resolved — no remaining open questions; sections 3–6 define the complete behavior. |
+| 1 | Is the required commercial order of digital approval, physical sample, deposit, delivery and balance payment decided? | No | Group B | Resolved in sections 1, 3 and 5.2. |
+| 2 | Is a separate sample/design-service payment required? | No | Group B | Resolved: no standalone payment; costs are represented in the order total. |
 
 ## 11. Traceability to DBIZ2
 
-Historical IDs are retained; external DBIZ2 comparison is not required.
-
 | Spec section | DBIZ2 source | Location |
 | --- | --- | --- |
-| Scope and actors | Function List MFG-06 | Rows 47–52; IDs appear in FR table |
-| Finalize order | UC-C05; F-PAY-001..003 | S22-S25; SD-07; sections 3 and 5 |
-| Make payment | UC-C12; F-PAY-004..006 | S35-S37; deprecated S16 redirect only; SD-09; sections 3 and 5 |
-| Contract handoff | MFG-09 signed event | S34; section 3 |
+| Scope and actors | MFG-06 Function List No. 47–52 | `F-PAY-001`–`F-PAY-006`; expanded with the confirmed sample/deposit/balance flow. |
+| Scenarios | UC-C05, UC-C12 | Order finalization and payment, now expressed as two payment purposes. |
+| Flow | SD-07 and SD-09 | Sections 4.1–4.3; companion architecture sequences require the same lifecycle. |
+| Requirements/entities | `F-PAY-001`–`F-PAY-006` | Sections 5–6 preserve all six historical function IDs. |
+| Screens | S22-S29, S33-S38 | Section 7; S16 is retired and has no route or screen. |
 
 ## Completion checklist
 
-- [x] Scope, actors, scenarios, flows and edge cases are defined.
-- [x] Pricing, state, idempotency, callback and refund contracts are explicit.
-- [x] Function/entity/screen/ID traceability and MVP assumptions are complete.
-- [x] No unresolved placeholders remain.
+- [x] Digital design, physical sample, contract, deposit, delivery and balance gates are explicit.
+- [x] Status transitions, evidence, retries, concurrency and failure outcomes are defined.
+- [x] DEPOSIT and BALANCE payment purposes reconcile to the signed contract total.
+- [x] Business Buyer and Reseller Shop remain Customer contexts rather than tenants.
+- [x] S16 and standalone SERVICE/sample payment are excluded.

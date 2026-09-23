@@ -4,22 +4,24 @@
 |---|---|
 | Screen ID | `S37` |
 | Screen name | Payment Transaction Detail |
-| Actor | Company Admin |
+| Actor | Sales Admin |
 | Priority | P2 |
 | Belongs to module | [MFG-06](../specs/spec-MFG-06.md) |
 | Route | `/admin/payments/{payment_id}` |
-| Mockup image | Don't have mockup |
+| Mockup image | img/S37-payment_transaction_detail_screen.png |
 | Status | Resolved implementation specification |
 
 ## 1. Purpose
 
-**Shown when:** The Company Admin inspects a same-company payment’s immutable provider and reconciliation details and may retry only an eligible full-amount refund. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
+**Shown when:** The Sales Admin inspects a Dony DEPOSIT or BALANCE transaction’s immutable provider and reconciliation details and may retry only an authorized refund amount that does not exceed captured refundable funds. All identifiers and permissions come from the server session.
 
 **The user leaves this screen when:** An authorized action in section 5 succeeds, the user follows a role-allowed global route, or they return to the validated originating route.
 
 ## 2. Mockup
 
-Don't have mockup
+![Historical visual reference](img/S37-payment_transaction_detail_screen.png)
+
+Written behavior below takes precedence over obsolete sample content.
 
 ## 3. Element inventory
 
@@ -27,13 +29,13 @@ Don't have mockup
 |---|---|---|---|---|---|
 | 1 | Screen heading | Heading | Payment Transaction Detail | Yes | Static route title. |
 | 2 | Route | Navigation target | /admin/payments/{payment_id} | Yes | Access checked on server. |
-| 3 | payment_id / company_id | Field / control | UUID / server-derived UUID | As specified | Payment belongs to current company; inaccessible ID returns 404. |
-| 4 | purpose / resource_id | Field / control | ORDER / UUID | As specified | Read-only link to originating order. |
-| 5 | amount_vnd / currency | Field / control | integer / VND | As specified | Immutable provider amount; show full value to authorized same-company admin. |
+| 3 | payment_id / buyer_organization_id | Field / control | UUID / optional server-derived UUID | As specified | Payment belongs to its Customer/order; buyer organization is contextual billing data and inaccessible IDs return 404. |
+| 4 | purpose / resource_id | Field / control | DEPOSIT or BALANCE / order UUID | As specified | Immutable purpose and read-only link to originating order. |
+| 5 | amount_vnd / currency | Field / control | integer / VND | As specified | Immutable provider amount; show full value to authorized Dony admin. |
 | 6 | provider_reference / transaction_id | Field / control | redacted text / UUID | As specified | Mask secrets and sensitive provider references. |
-| 7 | refund_status / refund_amount_vnd | Field / control | None, Pending, Succeeded, Failed / integer VND | As specified | Full original amount only; no partial input; successful refund is immutable. |
+| 7 | refund_status / refund_amount_vnd | Field / control | None, Pending, Succeeded, Failed / integer VND | As specified | Server derives the refundable amount from payment purpose and stored policy; it cannot exceed accepted captured funds. |
 | 8 | expected_version / Idempotency-Key | Field / control | integer / UUID | As specified | Refund initiation is idempotent; retry same key/payload only after eligible provider failure. |
-| 9 | Initiate/retry refund | Action | Full amount only; require eligible status; idempotently request provider; status remains Pending until verified. | Available when authorized | Destination: S37 |
+| 9 | Initiate/retry refund | Action | Use server-calculated refundable amount; idempotently request provider; status remains Pending until verified. | Available when authorized | Destination: S37 |
 | 10 | Open related order | Action | Navigate only if company and resource authorization passes. | Available when authorized | Destination: S29 |
 
 ## 4. States
@@ -52,10 +54,10 @@ Don't have mockup
 
 | # | Element | User action | System response | Goes to screen |
 |---|---|---|---|---|
-| 1 | Initiate/retry refund | Activate | Full amount only; require eligible status; idempotently request provider; status remains Pending until verified. | S37 |
+| 1 | Initiate/retry refund | Activate | Submit the server-calculated eligible amount; status remains Pending until verified. | S37 |
 | 2 | Open related order | Activate | Navigate only if company and resource authorization passes. | S29 |
 
-Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Company Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales Consultant routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks role, company, membership, ownership and assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Company Admin, S20 for Sales Consultant, S41 for System Admin, and S01 for Guest.
+Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Sales Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks internal role, customer ownership and staff assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Sales Admin, S20 for Sales, S41 for System Admin, and S01 for Guest.
 
 ## 6. Screen-level rules
 
@@ -68,8 +70,8 @@ Home and public catalog are available to Guest and authenticated users. Customer
 
 ### Acceptance scenarios
 
-1. Eligible full refund moves to Pending and succeeds only on verified provider result.
-2. Partial amount cannot be submitted; duplicate same-key request returns same refund operation.
+1. Eligible policy-based refund moves to Pending and succeeds only on a verified provider result.
+2. Client cannot choose the refund amount; an amount above captured refundable funds is impossible, and duplicate same-key request returns the same operation.
 
 ## 7. Linked requirements
 

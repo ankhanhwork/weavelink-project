@@ -1,42 +1,45 @@
-# Screen Spec: S42 Merge Console
+# Screen Spec: S42 Merge Recommendations and Batch Console
 
 | Field | Value |
 |---|---|
 | Screen ID | `S42` |
-| Screen name | Merge Console |
-| Actor | Company Admin |
+| Screen name | Merge Recommendations and Batch Console |
+| Actor | Sales Admin |
 | Priority | P2 |
 | Belongs to module | [MFG-10](../specs/spec-MFG-10.md) |
 | Route | `/admin/merge-batches` |
-| Mockup image | Don't have mockup |
+| Mockup image | img/S42-merge_console_screen.png |
 | Status | Resolved implementation specification |
 
 ## 1. Purpose
 
-**Shown when:** The Company Admin selects eligible same-company orders into a batch, reviews the explicit demo savings calculation and transitions batch state under atomic membership rules. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
+**Shown when:** The Sales Admin reviews system-recommended compatible Dony order groups, sees each group's savings estimate (including negative net savings), then explicitly starts or declines a proposed batch. The system cannot start a batch on the Admin's behalf. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
 
 **The user leaves this screen when:** An authorized action in section 5 succeeds, the user follows a role-allowed global route, or they return to the validated originating route.
 
 ## 2. Mockup
 
-Don't have mockup
+![Historical visual reference](img/S42-merge_console_screen.png)
+
+This screenshot is obsolete and must be recreated before submission: it depicts a 72-hour window, automatic scheduler batch start, and Planned-batch remove/dissolve actions. The current behavior below is authoritative: seven-day recommendations, Sales Admin final approval/start, and negative savings shown without blocking.
 
 ## 3. Element inventory
 
 | # | Element | Type | Content / data source | Required | Validation |
 |---|---|---|---|---|---|
-| 1 | Screen heading | Heading | Merge Console | Yes | Static route title. |
+| 1 | Screen heading | Heading | Merge Recommendations and Batch Console | Yes | Static route title. |
 | 2 | Route | Navigation target | /admin/merge-batches | Yes | Access checked on server. |
-| 3 | candidate filters | Field / control | company, product, material, color, print method, confirmed_at | As specified | Only confirmed, paid, signed-current-contract, opted-in, uncancelled, unbatched orders in same company and within 3 days. |
-| 4 | selected_order_ids | Field / control | UUID array, minimum 2 | As specified | Lock/revalidate atomically; total quantity <=10000; one batch per order. |
-| 5 | setup_cost_vnd | Field / control | integer, read-only | As specified | Demo assumption 100000; gross saving=(order_count-1)*100000. |
-| 6 | customer_discount_vnd / estimated_net_saving_vnd | Field / control | integer VND | As specified | Customer discounts=sum merge discounts; net=gross-discounts; show negative value and require acknowledgement. |
-| 7 | setup_minutes_saved | Field / control | integer, read-only estimate | As specified | (order_count-1)*30; does not alter customer deadline. |
-| 8 | batch_status | Field / control | Planned, InProduction, Completed | As specified | Only Planned may dissolve; membership immutable after production starts. |
-| 9 | Refresh candidates | Action | Query only opted-in Confirmed candidates with matching company, product, production compatibility, and merge window. | Available when authorized | Destination: S42 |
-| 10 | Estimate | Action | Compute gross/net savings and setup minutes; disclose negative net and require acknowledgement. | Available when authorized | Destination: S42 |
-| 11 | Create batch | Action | Require >=2; lock/revalidate all selected orders; create immutable membership. | Available when authorized | Destination: S42 |
-| 12 | Start/dissolve/complete | Action | Enforce batch state transitions; dissolution only Planned; production transitions atomic. | Available when authorized | Destination: S42 |
+| 3 | recommendations / filters | Field / control | product, material, colour, print method, confirmed_at | As specified | System recommends only confirmed-after-deposit, opted-in, uncancelled and unbatched Dony orders whose rolling seven-day windows overlap. Different buyer organizations may share a technically compatible batch. Suggestions reserve no orders. |
+| 4 | selected_order_ids | Field / control | UUID array, minimum 2 | As specified | Sales Admin explicitly selects members and starts; server locks/revalidates atomically; total quantity <=10000; all windows must be open; one batch per order. |
+| 5 | setup_cost_vnd | Field / control | integer, read-only | As specified | Planning assumption 2800000; selected-batch gross saving=(order_count-1)*2800000. |
+| 6 | selected_batch_discount_vnd / selected_batch_net_saving_vnd | Field / control | integer VND | As specified | Selected-batch discount is the sum of immutable member discounts (each ≤840000); selected-batch net=gross-discounts. Under stated assumptions, a compatible batch of at least two has nonnegative setup-only net before other operating costs. |
+| 7 | programme_to_date_gross_saving_vnd / discount_vnd / net_saving_vnd | KPI card | integer VND | As specified | Net=actual gross setup savings from started batches minus discounts for all opted-in orders reaching production, including individual fallback; this programme-level value can be negative and must be shown clearly without blocking batch start. |
+| 8 | merge_window / fallback status | Field / control | UTC datetime/status | As specified | Show confirmed_at + 7 days window end, earliest due date, live eligible pool and automatic individual-fallback status; no weekday cutoff. |
+| 9 | setup_minutes_saved | Field / control | integer, read-only estimate | As specified | Selected batch estimate=(order_count-1)*120; does not alter customer deadline. |
+| 10 | batch_status | Field / control | InProduction, Completed | As specified | A batch is created directly as InProduction only after Sales Admin explicitly starts it; membership is immutable after start. |
+| 11 | Refresh recommendations | Action | Recompute compatible opted-in Confirmed order groups in overlapping seven-day windows. | Available when authorized | Destination: S42 |
+| 12 | Estimate | Action | Compute selected-batch gross/net/discount, quantity and setup minutes; refresh programme-to-date gross/discount/net separately. | Available when authorized | Destination: S42 |
+| 13 | Start selected batch | Action | Sales Admin makes the final decision and starts the selected compatible group after reviewing members and savings. | At least two eligible orders selected; all windows open | Destination: S42 |
 
 ## 4. States
 
@@ -54,12 +57,11 @@ Don't have mockup
 
 | # | Element | User action | System response | Goes to screen |
 |---|---|---|---|---|
-| 1 | Refresh candidates | Activate | Query only opted-in Confirmed candidates with matching company, product, production compatibility, and merge window. | S42 |
-| 2 | Estimate | Activate | Compute gross/net savings and setup minutes; disclose negative net and require acknowledgement. | S42 |
-| 3 | Create batch | Activate | Require >=2; lock/revalidate all selected orders; create immutable membership. | S42 |
-| 4 | Start/dissolve/complete | Activate | Enforce batch state transitions; dissolution only Planned; production transitions atomic. | S42 |
+| 1 | Refresh recommendations | Activate | Query opted-in Confirmed candidates with matching Dony production key and overlapping rolling seven-day windows; no order is reserved. | S42 |
+| 2 | Estimate | Activate | Compute gross/net savings, discount total, quantity and setup minutes saved; negative result is shown but does not gate operation. | S42 |
+| 3 | Start selected batch | Activate | Revalidate Admin authority, all order versions, eligibility, quantity and window deadlines; atomically create an InProduction batch and advance all selected orders. | S42 |
 
-Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Company Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales Consultant routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks role, company, membership, ownership and assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Company Admin, S20 for Sales Consultant, S41 for System Admin, and S01 for Guest.
+Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Sales Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks internal role, customer ownership and staff assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Sales Admin, S20 for Sales, S41 for System Admin, and S01 for Guest.
 
 ## 6. Screen-level rules
 
@@ -68,13 +70,14 @@ Home and public catalog are available to Guest and authenticated users. Customer
 | SR-001 | Access and ownership are checked server-side; do not trust submitted customer, company, role, price, or provider status. Apply 401/403/404 behavior and the field rules above. | Authorization and data ownership requirements |
 | SR-002 | IDs are UUIDs; timestamps are UTC and displayed in Asia/Ho_Chi_Minh; money and quantities are integers. Mutations use expected_version; significant create/sign/pay/batch operations use idempotency keys. | Data representation and concurrency requirements |
 | SR-003 | Apply the module lifecycle and validation rules linked below; preserve immutable submitted snapshots. | Module specification |
-| SR-004 | Promise production_due_at at confirmation +7 calendar days for standard production and +10 for merge. Setup-time savings never shorten this customer promise; if no batch forms within 3 days, release individual production at the promised merge discount. | Project implementation assumptions |
+| SR-004 | Promise production_due_at at deposit +7 calendar days for standard production and +10 for merge. Setup-time savings never shorten this customer promise; if no Sales Admin-started batch includes the order within seven days of confirmed_at, scheduler starts individual production at the promised merge discount. | Project implementation assumptions |
 | SR-005 | Selected product and technical defaults are project implementation decisions; do not invent factual company, author, client-approval, or course identifiers. | Project implementation assumptions |
 
 ### Acceptance scenarios
 
-1. Batch creation atomically revalidates >=2 eligible same-company orders and total qty <=10000.
-2. Negative net savings are visible and require admin acknowledgement; no order price/deadline changes on dissolve.
+1. Recommendations do not reserve orders. Sales Admin is the only actor who can start a batch; starting atomically revalidates at least two eligible Dony orders and total quantity <=10000.
+2. Programme-to-date net savings include discounts on fallback orders; a negative value remains clearly visible and does not block batch start or require separate acknowledgement. Keep this distinct from selected-batch net savings.
+3. If no Admin-started batch includes an order by its seven-day window end, scheduler starts individual production; the opted-in discount and merge due-date snapshot remain unchanged.
 
 ## 7. Linked requirements
 

@@ -1,6 +1,17 @@
 # WeaveLink Platform
 
-WeaveLink is a web based client server platform for product browsing, product customization, design services, ordering, payment, contract management, sales consultation, order optimization, analytics, and system administration.
+WeaveLink is a web-based system for Dony, a made-to-order garment factory. Dony does not sell ready-made clothing from inventory: every commercial order is manufactured for a customer's selected garment specifications, artwork or design, quantity, and production requirements. WeaveLink supports product-base discovery, customization, design services, sample approval, ordering, payment, contract management, sales consultation, production optimization, analytics, and internal administration. The Customer experience is Dony's public storefront; Dony employees use a separate internal CRM and operations portal.
+
+## Dony business model
+
+Dony serves two closely related made-to-order customer models:
+
+- **B2B — Business Buyer:** a company commissions Dony to manufacture uniforms or other garments for its employees or internal use.
+- **B2B2C — Reseller Shop:** a clothing shop commissions Dony to manufacture garments from the shop's own design, brand requirements, or specifications, then sells those manufactured garments to the shop's customers.
+
+A Reseller Shop does **not** buy Dony ready-made stock for resale. In both models, Dony manufactures against a customer-specific order. The public Product Catalog therefore represents configurable garment bases, materials, colours, print or embroidery methods, and production rules; it is not an inventory of finished garments available for immediate purchase.
+
+WeaveLink is operated by one manufacturer, Dony. It is not a multi-tenant marketplace and does not provision other manufacturers or customer companies as system operators. A customer account may represent a Business Buyer or Reseller Shop, while `Sales`, `Sales Admin`, and `System Admin` are Dony employees. Information about a buyer's company or shop is customer and billing data, not a tenant or staff-authorization boundary. Customer pages share the storefront header/navigation and footer; employee pages use internal CRM navigation and must not reuse the customer-store shell. Customer authentication routes are `/sign-up`, `/login`, `/forgot-password`, and `/reset-password`; employee routes are `/staff/login`, `/staff/forgot-password`, and `/staff/reset-password`. Both use email/password only, with no Google, Facebook, or other third-party login.
 
 This repository contains the software design documentation for the DBIZ 3 Group B classroom project. It contains specifications, traceability tables, screen descriptions, mockups, and architecture diagrams; no application source code or runtime setup is included. The documents define the complete target system while the MVP scope below determines implementation priority.
 
@@ -12,18 +23,19 @@ This repository contains the software design documentation for the DBIZ 3 Group 
 | Use cases | 49 use cases with resolved actors, relationships, and functions | [`docs/architecture/use-case.md`](docs/architecture/use-case.md) |
 | Architecture | Context diagram, system configuration, and end-to-end usage flow | [`docs/architecture/`](docs/architecture/) |
 | Sequence diagrams | 10 sequences covering SD-01 through SD-09, including SD-05A and SD-05B | [`docs/architecture/sequence.md`](docs/architecture/sequence.md) |
-| Screen catalogue | 43 documented screen entries, including deprecated S16 | [`docs/screen-list.md`](docs/screen-list.md) |
-| Screen specifications | 43 detailed screen specs (S16 retained as deprecated); 17 have supplied PNG mockups and 26 explicitly record that no mockup is available | [`screens/`](screens/) |
+| Screen catalogue | 45 documented screen entries; S16 is intentionally retired, and Customer/employee authentication screens are separate | [`docs/screen-list.md`](docs/screen-list.md) |
+| Screen specifications | 45 detailed screen specs; S16 has no screen or image because design-service fees are not paid as a separate transaction | [`screens/`](screens/) |
 | Module specifications | Scope, actors, scenarios, flows, requirements, entities, business rules, success criteria, decisions, and traceability | [`specs/`](specs/) |
 
 ## Main actors
 
 - `Guest`: browses and searches products, registers, signs in, and requests account recovery.
 - `Member`: umbrella term for an authenticated user; manages profile, password, notifications, and logout.
-- `Customer`: owns designs and service requests, creates and tracks orders, acknowledges contracts, and pays.
-- `Sales Consultant`: works only on assigned consultations and permitted fulfillment records.
-- `Company Admin`: manages data belonging to one company, including products, assignments, orders, contracts, payments, batches, and analytics.
-- `System Admin`: provisions companies and staff and operates configuration, logs, backup, and restore.
+- `Customer`: the authorized representative of a Business Buyer or Reseller Shop; owns its designs and requests, approves samples, creates and tracks made-to-order production orders, acknowledges contracts, and pays.
+- Customer accounts register at `/sign-up` and sign in at `/login` through the storefront shell. Dony employees use the separate internal CRM at `/staff/login`; System Admin provisions staff accounts and invitations through MFG-03. Employees cannot self-register, and neither portal supports Google, Facebook, or other third-party sign-in.
+- `Sales`: a Dony employee who works only on assigned consultations, designs, customers, and permitted fulfilment records. Historical DBIZ2 material may call this role `Sales Consultant`.
+- `Sales Admin`: a Dony employee who manages Dony's product bases, customer requests, assignments, orders, contracts, payments, merge batches, and analytics. Historical DBIZ2 material may call this role `Company Admin`.
+- `System Admin`: a Dony employee who manages Dony staff accounts and operates configuration, logs, backup, and restore. This role does not provision customer companies as system tenants.
 - `Payment Gateway (VNPay)`: external gateway; verified server IPN and reconciliation results are authoritative.
 
 ## MFG modules
@@ -32,12 +44,12 @@ This repository contains the software design documentation for the DBIZ 3 Group 
 |---|---|---:|---:|---|
 | MFG-01 | Identity & Access | 11 | 5 | [`spec-MFG-01.md`](specs/spec-MFG-01.md) |
 | MFG-02 | Profile & Settings | 5 | 4 | [`spec-MFG-02.md`](specs/spec-MFG-02.md) |
-| MFG-03 | Company Accounts | 8 | 4 | [`spec-MFG-03.md`](specs/spec-MFG-03.md) |
+| MFG-03 | Dony Staff Accounts | 8 | 4 | [`spec-MFG-03.md`](specs/spec-MFG-03.md) |
 | MFG-04 | Product Catalog | 11 | 7 | [`spec-MFG-04.md`](specs/spec-MFG-04.md) |
 | MFG-05 | Product Design | 13 | 5 | [`spec-MFG-05.md`](specs/spec-MFG-05.md) |
 | MFG-06 | Order & Payment | 6 | 2 | [`spec-MFG-06.md`](specs/spec-MFG-06.md) |
 | MFG-07 | Order Management | 7 | 3 | [`spec-MFG-07.md`](specs/spec-MFG-07.md) |
-| MFG-08 | Sales Consultant | 8 | 3 | [`spec-MFG-08.md`](specs/spec-MFG-08.md) |
+| MFG-08 | Sales | 8 | 3 | [`spec-MFG-08.md`](specs/spec-MFG-08.md) |
 | MFG-09 | Contract Management | 9 | 6 | [`spec-MFG-09.md`](specs/spec-MFG-09.md) |
 | MFG-10 | Order Optimization (Merge) | 7 | 4 | [`spec-MFG-10.md`](specs/spec-MFG-10.md) |
 | MFG-11 | Data Analytics | 3 | 3 | [`spec-MFG-11.md`](specs/spec-MFG-11.md) |
@@ -50,7 +62,7 @@ The MVP scope is defined by feature priority. It does not remove lower-priority 
 
 | Priority | Feature / Item | MFG | Notes |
 |---|---|---|---|
-| **Must** | Role-based Authentication & Access (Customer, Sales Consultant, Company Admin) | MFG-01 | Foundation for secure role-aware access |
+| **Must** | Role-based Authentication & Access (Customer, Sales, Sales Admin) | MFG-01 | Foundation for secure role-aware access |
 | **Must** | Product Catalog (browse, search, view product detail) | MFG-04 | Entry point for choosing a base product |
 | **Must** | Product Design Workspace (self-design, upload artwork, preview, save design) | MFG-05 | Core customization workflow |
 | **Must** | Order & Payment (checkout, VNPay integration, order creation) | MFG-06 | Core revenue workflow |
@@ -58,9 +70,9 @@ The MVP scope is defined by feature priority. It does not remove lower-priority 
 | **Should** | Digital Contract Generation & E-signature acknowledgement | MFG-09 | Email or paper contract is an acceptable temporary launch fallback |
 | **Could** | Order Optimization / Merge | MFG-10 | Valuable after order volume increases |
 | **Could** | Assessed Design Service Request | MFG-05 | Simple work is free; accepted Complex fee is collected with the first order from the delivered design |
-| **Could** | Sales Consultant Assignment & Task Dashboard | MFG-08 | Needed when consultation volume requires a dedicated queue |
+| **Could** | Sales Assignment & Task Dashboard | MFG-08 | Needed when consultation volume requires a dedicated queue |
 | **Won't** | Data Analytics Dashboard & Data Export | MFG-11 | Deferred until sufficient order history exists |
-| **Won't** | Company Accounts & System Operations | MFG-03, MFG-12 | One configured admin is sufficient for the MVP |
+| **Won't** | Dony Staff Accounts & System Operations | MFG-03, MFG-12 | One configured internal admin is sufficient for the MVP |
 
 ### MVP Priority Summary
 
@@ -75,8 +87,8 @@ Use Case IDs use the format `UC-<actor initial><number>`:
 
 - `UC-G01` to `UC-G03`: Guest.
 - `UC-M01` to `UC-M08`: Member or unauthenticated account-access flow.
-- `UC-C01` to `UC-C27`: Customer or Company Admin; consult the actor column rather than inferring from the initial.
-- `UC-S01` to `UC-S11`: Sales Consultant or System Admin; consult the actor column rather than inferring from the initial.
+- `UC-C01` to `UC-C27`: Customer or Sales Admin; consult the actor column rather than inferring from the initial.
+- `UC-S01` to `UC-S11`: Sales or System Admin; consult the actor column rather than inferring from the initial.
 
 The authoritative actor association is recorded in [`docs/architecture/use-case.md`](docs/architecture/use-case.md). Because MFG-07 and MFG-08 both inherit `F-ORD-*` IDs, cross-module references always include the module, for example `MFG-07/F-ORD-003` and `MFG-08/F-ORD-003`.
 

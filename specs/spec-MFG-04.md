@@ -15,7 +15,7 @@
 
 ## 1. Purpose and scope (mandatory)
 
-Provide public discovery of Published products from Active companies and company-scoped catalog/design-rule administration. Catalog browsing/search/detail is Must for MVP.
+Provide public discovery of Dony's Published configurable garment bases and Dony-scoped catalog/design-rule administration. Dony is a made-to-order garment factory: catalogue entries describe garment types, supported materials, colours, print or embroidery methods, price rules and production constraints. They are not finished garments held in stock or available for immediate delivery. Catalog browsing/search/detail is Must for MVP.
 
 **In scope:** browse/search/detail; create/edit/archive; publish/hide; configure supported options, print areas and finite per-order capacity.
 
@@ -26,14 +26,14 @@ Provide public discovery of Published products from Active companies and company
 | Actor | Role in this module | Where it comes from |
 | --- | --- | --- |
 | Guest/Member | Browses/searches Published products | MFG-04 resolved contract; UC-G01/UC-G02 |
-| Company Admin | Manages own-company products and rules | MFG-04 role boundary |
+| Sales Admin | Manages Dony's configurable garment bases and design rules | MFG-04 role boundary |
 | System | Validates assets, versions and visibility | MFG-04 function contract |
 
 ## 3. User scenarios and acceptance criteria (mandatory)
 
 ### US-1 (Must): View product catalog
 
-Valid page/filter returns only Published Active-company products with integer-VND prices and accurate pagination; empty data returns an empty list.
+Valid page/filter returns only Dony's Published configurable garment bases with integer-VND quote inputs and accurate pagination; empty data returns an empty list. The UI does not claim that a finished item is in stock or ready to ship.
 
 ### US-2 (Must): Search products
 
@@ -41,11 +41,11 @@ Search accepts a trimmed keyword up to 100 characters plus allowlisted category/
 
 ### US-3 (Post-MVP administration): Add product
 
-Company Admin creates a Draft with validated fields/assets and idempotency. Duplicate company SKU conflicts; incomplete Draft is allowed.
+Sales Admin creates a Draft with validated fields/assets and idempotency. Duplicate SKU anywhere in Dony's single catalogue conflicts; incomplete Draft is allowed.
 
 ### US-4 (Post-MVP administration): Update product info
 
-Same-company update uses allowlisted fields and expected version. Any update increases the product version. Rule-affecting changes lazily invalidate unconsumed quotes during checkout without editing quote records directly; submitted order snapshots remain unchanged.
+Dony product-base updates use allowlisted fields and expected version. Any update increases the product version. Rule-affecting changes lazily invalidate unconsumed quotes during checkout without editing quote records directly; submitted order snapshots remain unchanged.
 
 ### US-5 (Post-MVP administration): Delete product
 
@@ -64,7 +64,7 @@ S10-S14 expose permission-derived actions and optimistic concurrency. Product/de
 - Foreign/missing/nonpublic product UUID returns 404 for the relevant actor.
 - Unsafe or oversized image is rejected before reference persistence.
 - Quantity beyond `max_units_per_order` returns 422 `CAPACITY_EXCEEDED`.
-- Suspended/Deleted company products cannot start new design/order/payment work.
+- Hidden or Archived product bases cannot start new design/order/payment work.
 
 ## 4. Flows (mandatory)
 
@@ -76,7 +76,7 @@ flowchart LR
   Catalog --> Search[Filter/search]
   Search --> Detail[S09 Detail]
   Detail --> Design[Start design]
-  Admin[Company Admin] --> Manage[S10 Manage]
+  Admin[Sales Admin] --> Manage[S10 Manage]
   Manage --> Draft[S11 Create Draft]
   Manage --> Edit[S12 Edit]
   Edit --> Rules[S14 Rules/capacity]
@@ -146,17 +146,17 @@ sequenceDiagram
 
 | FR ID | DBIZ2 Subfunction ID | Requirement (system MUST ...) | Actor | Priority |
 | --- | --- | --- | --- | --- |
-| FR-001 | F-PROD-001 | Return a paginated grid of Published products from Active companies using allowlisted category and sort values. | Guest/Member | Must |
+| FR-001 | F-PROD-001 | Return a paginated grid of Dony's Published configurable garment bases using allowlisted category and sort values. | Guest/Member | Must |
 | FR-002 | F-PROD-002 | Return a product detail and options for a canonical product UUID; nonpublic products return 404. | Guest/Member | Must |
 | FR-003 | F-PROD-003 | Search using bounded keywords and allowlisted filters without broadening invalid queries. | Guest/Member | Must |
-| FR-004 | F-PROD-004 | Show management actions only for same-company Company Admins. | Company Admin | Won't |
-| FR-005 | F-PROD-005 | Render product creation form and upload constraints. | Company Admin | Won't |
-| FR-006 | F-PROD-006 | Save a validated Draft product with idempotency and company-scoped SKU uniqueness. | Company Admin | Won't |
-| FR-007 | F-PROD-007 | Render an authorized product edit model with current version. | Company Admin | Won't |
-| FR-008 | F-PROD-008 | Update allowlisted product fields atomically with expected-version checks. | Company Admin | Won't |
-| FR-009 | F-PROD-009 | Require explicit confirmation before archiving a product. | Company Admin | Won't |
-| FR-010 | F-PROD-010 | Soft-archive a product while retaining historical references, or hard-delete if it is a Draft that has never been published. | Company Admin | Won't |
-| FR-011 | F-PROD-011 | Change product visibility to an explicitly requested valid state. | Company Admin | Won't |
+| FR-004 | F-PROD-004 | Show management actions only for Dony Sales Admins. | Sales Admin | Won't |
+| FR-005 | F-PROD-005 | Render product creation form and upload constraints. | Sales Admin | Won't |
+| FR-006 | F-PROD-006 | Save a validated Draft product with idempotency and Dony-scoped SKU uniqueness. | Sales Admin | Won't |
+| FR-007 | F-PROD-007 | Render an authorized product edit model with current version. | Sales Admin | Won't |
+| FR-008 | F-PROD-008 | Update allowlisted product fields atomically with expected-version checks. | Sales Admin | Won't |
+| FR-009 | F-PROD-009 | Require explicit confirmation before archiving a product. | Sales Admin | Won't |
+| FR-010 | F-PROD-010 | Soft-archive a product while retaining historical references, or hard-delete if it is a Draft that has never been published. | Sales Admin | Won't |
+| FR-011 | F-PROD-011 | Change product visibility to an explicitly requested valid state. | Sales Admin | Won't |
 
 ### 5.1 Input / Output contract
 
@@ -165,12 +165,12 @@ sequenceDiagram
 | FR-001 | category, page, page_size, sort | Allowlisted values / integers | Optional | Published product grid | Paginated object | page >=1; size 1-100 |
 | FR-002 | product UUID | UUID | Yes | product detail/options | Object | Nonpublic product 404 |
 | FR-003 | keyword, filters, price range, page | String / allowlisted values | Optional | search results | Paginated object | Keyword <=100; invalid values rejected |
-| FR-004 | same-company Company Admin session | Session | Yes | S10 management list/actions | View model | Foreign-company data inaccessible |
+| FR-004 | authenticated Dony Sales Admin session | Session | Yes | S10 management list/actions | View model | Non-Dony-admin access prohibited |
 | FR-005 | authorized session | Session | Yes | S11 creation model | View model | Includes upload constraints |
 | FR-006 | name, SKU, volume_pricing_tiers, attributes, capacity, image UUIDs, key | Fields / array / key | Yes | Draft UUID/version | Object | Bounds specified in source contract; 422 invalid; 409 duplicate SKU |
-| FR-007 | same-company product UUID/session | UUID / session | Yes | S12 edit model/version | View model | Foreign product inaccessible |
+| FR-007 | Dony product UUID / Sales Admin session | UUID / session | Yes | S12 edit model/version | View model | Foreign product inaccessible |
 | FR-008 | allowlisted changes, expected version | Values / integer | Yes | updated product/version | Object | Atomic; stale 409; relevant quote invalidation |
-| FR-009 | same-company product/version | UUID / integer | Yes | confirmation/impact model | View model | Explicit confirmation |
+| FR-009 | Dony product UUID/version | UUID / integer | Yes | confirmation/impact model | View model | Explicit confirmation |
 | FR-010 | product UUID, confirmation, version | UUID / boolean / integer | Yes | archived product or 204 No Content | Object or None | Soft archive; hard delete if Draft; repeated success |
 | FR-011 | product UUID, target state, version | UUID / enum / integer | Yes | visibility state | Object | Archived is terminal |
 
@@ -178,7 +178,7 @@ sequenceDiagram
 
 | Rule ID | Rule | Why it exists |
 | --- | --- | --- |
-| BR-001 | SKU is unique within company; canonical public route uses globally unique UUID. | Avoid duplicate company catalog entries and ambiguous routes. |
+| BR-001 | SKU is unique across Dony's single product catalogue; canonical public route uses globally unique UUID. Buyer companies and Reseller Shops do not own separate product catalogues. | Avoid duplicate Dony catalog entries without implying multi-tenant product ownership. |
 | BR-002 | Amounts/surcharges are nonnegative integer VND; capacity is integer 1-10000. | Keep pricing and capacity bounded and deterministic. |
 | BR-003 | Publish requires name, SKU, volume_pricing_tiers, category, safe image, sizes, colors, materials and capacity. | Prevent incomplete public products. |
 | BR-004 | Images are PNG/JPEG/WebP, actual MIME checked/scanned, <=10 MiB each and <=5/request. | Protect users and storage. |
@@ -190,8 +190,8 @@ sequenceDiagram
 
 | Entity | Attributes (from Input/Output fields) | Relationships |
 | --- | --- | --- |
-| Product | id, company_id, name, sku, description, category, volume_pricing_tiers, options, design_rules, capacity, images, status, version | Company-scoped SKU; immutable ordered snapshot; tiers must have at least one entry starting at quantity 1 |
-| Asset | id, owner/company, MIME, scan status, storage key | Private; served by authorized expiring URL |
+| Product | id, name, sku, description, category, volume_pricing_tiers, options, design_rules, capacity, images, status, version | Dony-owned configurable garment base; Dony-wide unique SKU; immutable ordered snapshot; tiers must have at least one entry starting at quantity 1. It is not finished-goods inventory. |
+| Asset | id, owner_user_id or Dony ownership, MIME, scan status, storage key | Private; customer artwork requires ownership, while Dony catalogue assets require staff authorization; served by expiring URL. |
 | ProductVersion | product_id, version, rule/price snapshot | Quotes reference current version |
 
 ## 7. Screens involved
@@ -212,7 +212,7 @@ sequenceDiagram
 | --- | --- | --- |
 | SC-001 | MVP users can browse, search and view only eligible products. | Verify Published/Active filtering and empty results. |
 | SC-002 | Publish/archive/version/capacity behavior is deterministic under retry/concurrency. | Exercise lifecycle, version and capacity boundaries. |
-| SC-003 | Unsafe assets and cross-company access are blocked; all eleven functions map to FRs. | Test asset validation and authorization; compare F-PROD IDs with FRs. |
+| SC-003 | Unsafe assets and unauthorized access are blocked; all eleven functions map to FRs. | Test asset validation and authorization; compare F-PROD IDs with FRs. |
 
 ## 9. Assumptions
 

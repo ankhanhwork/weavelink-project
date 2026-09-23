@@ -4,22 +4,24 @@
 |---|---|
 | Screen ID | `S14` |
 | Screen name | Product Design Rules |
-| Actor | Company Admin |
+| Actor | Sales Admin |
 | Priority | P2 |
 | Belongs to module | [MFG-04](../specs/spec-MFG-04.md) |
 | Route | `/admin/products/{product_id}/design-rules` |
-| Mockup image | Don't have mockup |
+| Mockup image | img/S14-product_design_rules_screen.png |
 | Status | Resolved implementation specification |
 
 ## 1. Purpose
 
-**Shown when:** The Company Admin edits the selected product’s supported sizes, colors, materials, print methods, bounded 2D print area and option surcharges. Saving versions the rules and invalidates unconsumed quotes for review. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
+**Shown when:** The Sales Admin edits the selected product’s supported sizes, colors, materials, print methods, bounded 2D print area and option surcharges. Saving versions the rules and invalidates unconsumed quotes for review. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
 
 **The user leaves this screen when:** An authorized action in section 5 succeeds, the user follows a role-allowed global route, or they return to the validated originating route.
 
 ## 2. Mockup
 
-Don't have mockup
+![Historical visual reference](img/S14-product_design_rules_screen.png)
+
+Written behavior below takes precedence over obsolete sample content.
 
 ## 3. Element inventory
 
@@ -54,7 +56,7 @@ Don't have mockup
 | 1 | Save rules | Activate | Validate supported options/area/surcharges, increment product version; old quotes require review. | S10 |
 | 2 | Cancel | Activate | Discard changes. | S10 |
 
-Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Company Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales Consultant routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks role, company, membership, ownership and assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Company Admin, S20 for Sales Consultant, S41 for System Admin, and S01 for Guest.
+Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Sales Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks internal role, customer ownership and staff assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Sales Admin, S20 for Sales, S41 for System Admin, and S01 for Guest.
 
 ## 6. Screen-level rules
 

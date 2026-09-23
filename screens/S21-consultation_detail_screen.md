@@ -4,22 +4,24 @@
 |---|---|
 | Screen ID | `S21` |
 | Screen name | Consultation Detail |
-| Actor | Assigned Consultant/Company Admin |
+| Actor | Assigned Consultant/Sales Admin |
 | Priority | P2 |
 | Belongs to module | [MFG-08](../specs/spec-MFG-08.md) |
 | Route | `/consultant/design-requests/{request_id}` |
-| Mockup image | Don't have mockup |
+| Mockup image | img/S21-consultation_detail_screen.png |
 | Status | Resolved implementation specification |
 
 ## 1. Purpose
 
-**Shown when:** The Company Admin or currently assigned consultant sees one authorized consultation, its customer requirements, internal notes, deadline and design delivery controls. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
+**Shown when:** The Sales Admin or currently assigned consultant sees one authorized consultation, its customer requirements, internal notes, deadline and design delivery controls. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
 
 **The user leaves this screen when:** An authorized action in section 5 succeeds, the user follows a role-allowed global route, or they return to the validated originating route.
 
 ## 2. Mockup
 
-Don't have mockup
+![Historical visual reference](img/S21-consultation_detail_screen.png)
+
+Written behavior below takes precedence over obsolete sample content.
 
 ## 3. Element inventory
 
@@ -27,7 +29,7 @@ Don't have mockup
 |---|---|---|---|---|---|
 | 1 | Screen heading | Heading | Consultation Detail | Yes | Static route title. |
 | 2 | Route | Navigation target | /consultant/design-requests/{request_id} | Yes | Access checked on server. |
-| 3 | request_id | Field / control | UUID | As specified | request_id: UUID; consultant must be assigned or Company Admin in same company. |
+| 3 | request_id | Field / control | UUID | As specified | The current Sales employee must be assigned to the Customer/request, or the actor must be Sales Admin. |
 | 4 | requirements / attachment_ids | Field / control | read-only request snapshot | As specified | Show requirements and authorized 10-minute private asset links; do not expose public URLs. |
 | 5 | internal_notes | Field / control | staff-only text | As specified | internal_notes: staff-only text; never returned to customer APIs. |
 | 6 | final_design | Field / control | validated product options and safe private assets | As specified | final_design: validated product options and safe private assets; validate file type, size, scan result, ownership, and compatibility before private storage. |
@@ -35,7 +37,7 @@ Don't have mockup
 | 8 | API errors | Field / control | standard API error envelope | As specified | 400 malformed; 422 invalid fields; 409 stale/duplicate; 429 rate limit; 503 dependency failure |
 | 9 | Update consultation | Action | Apply permitted CRM transition with version check; notes remain staff-only. | Available when authorized | Destination: S21 |
 | 10 | Deliver design | Action | Validate assets/options; create immutable version; notify owner after commit. | Available when authorized | Destination: S20 |
-| 11 | Reopen closed CRM | Action | Company Admin only; set InProgress with audit. | Available when authorized | Destination: S21 |
+| 11 | Reopen closed CRM | Action | Sales Admin only; set InProgress with audit. | Available when authorized | Destination: S21 |
 
 ## 4. States
 
@@ -55,9 +57,9 @@ Don't have mockup
 |---|---|---|---|---|
 | 1 | Update consultation | Activate | Apply permitted CRM transition with version check; notes remain staff-only. | S21 |
 | 2 | Deliver design | Activate | Validate assets/options; create immutable version; notify owner after commit. | S20 |
-| 3 | Reopen closed CRM | Activate | Company Admin only; set InProgress with audit. | S21 |
+| 3 | Reopen closed CRM | Activate | Sales Admin only; set InProgress with audit. | S21 |
 
-Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Company Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales Consultant routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks role, company, membership, ownership and assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Company Admin, S20 for Sales Consultant, S41 for System Admin, and S01 for Guest.
+Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Sales Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks internal role, customer ownership and staff assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Sales Admin, S20 for Sales, S41 for System Admin, and S01 for Guest.
 
 ## 6. Screen-level rules
 

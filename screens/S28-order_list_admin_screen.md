@@ -4,22 +4,24 @@
 |---|---|
 | Screen ID | `S28` |
 | Screen name | Order List (Admin) |
-| Actor | Company Admin / Assigned Consultant |
+| Actor | Sales Admin / Assigned Sales |
 | Priority | P2 |
 | Belongs to module | [MFG-07](../specs/spec-MFG-07.md) |
 | Route | `/admin/orders` |
-| Mockup image | Don't have mockup |
+| Mockup image | img/S28-order_list_admin_screen.png |
 | Status | Resolved implementation specification |
 
 ## 1. Purpose
 
-**Shown when:** The Company Admin sees orders for the active company and may filter by status, date, product and assigned consultant. The assigned consultant has access only to assigned orders and permitted actions. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
+**Shown when:** The Sales Admin sees Dony orders and may filter by status, date, product and assigned Sales employee. Assigned Sales has access only to assigned-customer orders and permitted actions. All identifiers and permissions come from the server session.
 
 **The user leaves this screen when:** An authorized action in section 5 succeeds, the user follows a role-allowed global route, or they return to the validated originating route.
 
 ## 2. Mockup
 
-Don't have mockup
+![Historical visual reference](img/S28-order_list_admin_screen.png)
+
+Written behavior below takes precedence over obsolete sample content.
 
 ## 3. Element inventory
 
@@ -27,20 +29,20 @@ Don't have mockup
 |---|---|---|---|---|---|
 | 1 | Screen heading | Heading | Order List (Admin) | Yes | Static route title. |
 | 2 | Route | Navigation target | /admin/orders | Yes | Access checked on server. |
-| 3 | page / page_size / filters | Field / control | paginated query | As specified | Use positive bounded paging; allow only status, date, product and customer filters. |
-| 4 | Rows company-scoped | Field / control | order_id, customer display name, status, total_vnd, created_at, version. | As specified | Rows company-scoped: order_id, customer display name, status, total_vnd, created_at, version. |
-| 5 | company_or_assignment_scope | Field / control | server-derived | As specified | Company Admin sees same-company rows; consultant sees assigned-customer rows; System Admin has no implicit access. |
+| 3 | page / page_size / filters | Field / control | paginated query | As specified | Use positive bounded paging; allow only canonical design/sample/contract/payment/production status, date, product and customer filters. |
+| 4 | Rows Dony-scoped | Field / control | order_id, customer display name, status, total_vnd, created_at, version. | As specified | Rows Dony-scoped: order_id, customer display name, status, total_vnd, created_at, version. |
+| 5 | staff_or_assignment_scope | Field / control | server-derived | As specified | Sales Admin sees Dony rows; Sales sees assigned-customer rows; System Admin has no implicit operational access. |
 | 6 | API errors | Field / control | standard API error envelope | As specified | 400 malformed; 422 invalid fields; 409 stale/duplicate; 429 rate limit; 503 dependency failure |
-| 7 | Open order | Action | Company Admin opens any same-company order; consultant opens assigned order only. | Available when authorized | Destination: S29 |
-| 8 | Update status | Action | Company Admin or assigned consultant may advance allowed production status; consultant cannot cancel or manage merge/contract operations. | Available when authorized | Destination: S29 |
-| 9 | Merge console | Action | Company Admin only; open eligible merge candidates. | Available when authorized | Destination: S42 |
+| 7 | Open order | Action | Sales Admin opens any Dony order; Sales opens an assigned-customer order only. | Available when authorized | Destination: S29 |
+| 8 | Manage next lifecycle action | Action | Sales Admin or assigned Sales may perform the allowed sample/production/shipping action; neither role may fake Customer approval, receipt, deposit or balance settlement. | Available when authorized | Destination: S29 |
+| 9 | Merge console | Action | Sales Admin only; open eligible merge candidates. | Available when authorized | Destination: S42 |
 
 ## 4. States
 
 | State | What the user sees | Trigger |
 |---|---|---|
 | Loading | Labelled progress/skeleton; disable duplicate submit. | Request starts |
-| Empty | Show no company orders or orders assigned to this consultant; preserve filters where present and explain eligibility/filter conditions. | Successful query returns no rows |
+| Empty | Show no Dony orders or no orders assigned to this Sales employee; preserve filters and explain the result. | Successful query returns no rows |
 | Forbidden/not found | Safe message without revealing inaccessible identifiers. | 401/403/404 |
 | Error | Show code, message, field_errors, request_id; preserve entered values. | Request failure |
 | Retry | Retry reads on transient failure; reuse the same idempotency key only for mutations that require one for the documented mutation. | Recoverable failure |
@@ -51,11 +53,11 @@ Don't have mockup
 
 | # | Element | User action | System response | Goes to screen |
 |---|---|---|---|---|
-| 1 | Open order | Activate | Company Admin opens any same-company order; consultant opens assigned order only. | S29 |
-| 2 | Update status | Activate | Company Admin or assigned consultant may advance allowed production status; consultant cannot cancel or manage merge/contract operations. | S29 |
-| 3 | Merge console | Activate | Company Admin only; open eligible merge candidates. | S42 |
+| 1 | Open order | Activate | Sales Admin opens any Dony order; Sales opens an assigned-customer order only. | S29 |
+| 2 | Manage next lifecycle action | Activate | Open the order with server-derived allowed actions. | S29 |
+| 3 | Merge console | Activate | Sales Admin only; open eligible merge candidates. | S42 |
 
-Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Company Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales Consultant routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks role, company, membership, ownership and assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Company Admin, S20 for Sales Consultant, S41 for System Admin, and S01 for Guest.
+Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Sales Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks internal role, customer ownership and staff assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Sales Admin, S20 for Sales, S41 for System Admin, and S01 for Guest.
 
 ## 6. Screen-level rules
 
@@ -68,9 +70,9 @@ Home and public catalog are available to Guest and authenticated users. Customer
 
 ### Acceptance scenarios
 
-1. Company Admin list filters cannot return another company's order or financial data.
+1. Sales Admin list filters cannot return a different system operator's order or financial data.
 2. Allowlisted status/date filter returns stable pagination and preserves filter state on detail/back.
-3. Assigned Consultant sees only assigned-customer orders and fulfillment actions; merge, cancellation, contract and financial-administration actions stay hidden and are rejected server-side.
+3. Assigned Sales sees only assigned-customer orders and fulfillment actions; merge, cancellation, contract and financial-administration actions stay hidden and are rejected server-side.
 
 ## 7. Linked requirements
 

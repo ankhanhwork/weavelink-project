@@ -13,15 +13,15 @@
 
 ## 1. Purpose
 
-**Shown when:** The landing page queries only currently Published products and configured public company contacts. It keeps sign-up, sign-in, catalog browsing and named information panels available without exposing staff data. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
+**Shown when:** The landing page queries only currently Published products and configured public Dony contacts. It keeps sign-up, sign-in, catalog browsing and named information panels available without exposing staff data. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
 
 **The user leaves this screen when:** An authorized action in section 5 succeeds, the user follows a role-allowed global route, or they return to the validated originating route.
 
 ## 2. Mockup
 
-![S01 historical reference](img/S01-home_page.png)
+![Dony made-to-order customer storefront](img/S01-home_page.png)
 
-Written behavior below takes precedence over obsolete sample content.
+The homepage's informational process copy must match MFG-06: digital-design approval, physical-sample shipment and approval, contract/deposit, production/delivery, then balance payment. Merge copy must use the versioned MFG-10 discount and timeline; it must not claim a percentage promotion or immediate stock availability.
 
 ## 3. Element inventory
 
@@ -57,7 +57,7 @@ Written behavior below takes precedence over obsolete sample content.
 | 2 | Start customization/request | Activate | Preserve intended route through sign-in when needed. | S13 or S15 |
 | 3 | About/contact/help/policies | Activate | Open named content panel on S01; show configured contacts only. | S01 panel |
 
-Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Company Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales Consultant routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks role, company, membership, ownership and assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Company Admin, S20 for Sales Consultant, S41 for System Admin, and S01 for Guest.
+Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Sales Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks internal role, customer ownership and staff assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Sales Admin, S20 for Sales, S41 for System Admin, and S01 for Guest.
 
 ## 6. Screen-level rules
 
@@ -71,7 +71,7 @@ Home and public catalog are available to Guest and authenticated users. Customer
 ### Acceptance scenarios
 
 1. When no published products exist, show an honest empty catalog panel and continue navigation.
-2. When no company contact is configured, hide contact/social links and render no fabricated values.
+2. When no Dony public contact is configured, hide contact/social links and render no fabricated values.
 
 ## 7. Linked requirements
 

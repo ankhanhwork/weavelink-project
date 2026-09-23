@@ -3,17 +3,17 @@
 | Field | Value |
 |---|---|
 | Screen ID | `S03` |
-| Screen name | Log In |
-| Actor | Guest; invited staff; existing Member accepting staff invitation |
+| Screen name | Customer Storefront Log In |
+| Actor | Guest / Customer |
 | Priority | P1 |
 | Belongs to module | [MFG-01](../specs/spec-MFG-01.md) |
-| Route | `/login` |
+| Route | `/login` (Customer storefront only) |
 | Mockup image | img/S03-login_screen.png |
 | Status | Resolved implementation specification |
 
 ## 1. Purpose
 
-**Shown when:** The form has two explicit modes: email/password authentication and staff invitation acceptance. Invitation acceptance uses the documented existing-account or new-account invitation path. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
+**Shown when:** A Guest or Customer opens the Dony storefront sign-in route `/login`. This screen always uses the public store's shared utility bar, Dony store navigation header, and storefront footer. It never shows CRM navigation, staff invitation controls, employee branding, or social sign-in. Dony employee sign-in and invitation acceptance are handled only by S44 at `/staff/login`.
 
 **The user leaves this screen when:** An authorized action in section 5 succeeds, the user follows a role-allowed global route, or they return to the validated originating route.
 
@@ -28,18 +28,17 @@ Written behavior below takes precedence over obsolete sample content.
 | # | Element | Type | Content / data source | Required | Validation |
 |---|---|---|---|---|---|
 | 1 | Screen heading | Heading | Log In | Yes | Static route title. |
-| 2 | Route | Navigation target | /login | Yes | Access checked on server. |
-| 3 | mode | Field / control | enum, required | As specified | Login or staff invitation acceptance. resolved identity rule |
+| 2 | Route / portal | Navigation target | /login Customer storefront | Yes | Portal is route-derived; never accept a client-supplied role. |
+| 3 | mode | Field / control | Customer sign-in | Yes | Staff invitation onboarding is not available here. |
 | 4 | email | Field / control | string, required | As specified | Trim and case-normalize; global uniqueness. |
 | 5 | password | Field / control | secret, required for login | As specified | Verify hash; never log or echo. |
 | 6 | return_to | Field / control | internal URL, optional | As specified | Allowlisted route only; reject external redirects. |
-| 7 | invitation_token | Field / control | secret, required in invitation mode | As specified | Hashed, single use, 48-hour expiry. |
-| 8 | full_name / new_password | Field / control | string/secret, required for invited new staff | As specified | full_name 1..100; password 12..128; existing account authenticates then accepts invite. |
+| 7 | Create account | Action | Open Customer registration | Yes | Destination: S02 |
 | 9 | failed attempts | Field / control | server counter | As specified | Limit 5 per account/IP within 15 minutes; return 429. |
-| 10 | Authenticate | Action | Verify hash/rate limit, set secure session cookie, redirect to allowlisted return_to or authenticated role documented role default. | Available when authorized | Destination: return_to or role default |
-| 11 | Accept invitation | Action | Existing identity authenticates then accepts; new invitee supplies full_name/password; consume invite and activate membership atomically. | Available when authorized | Destination: S41 completion, then role default |
-| 12 | Forgot password | Action | Open recovery. | Available when authorized | Destination: S04 |
-| 13 | Register | Action | Open registration. | Available when authorized | Destination: S02 |
+| 8 | failed attempts | Field / control | server counter | As specified | Limit 5 per account/IP within 15 minutes; return 429. |
+| 9 | Authenticate | Action | Verify hash/rate limit, set secure session cookie, redirect to allowlisted Customer route or S08. | Available when authorized | Destination: return_to or S08 |
+| 11 | Forgot password | Action | Open Customer recovery. | Available when authorized | Destination: S04 |
+| 12 | Social sign-in | Action | Not available; omit Google/Facebook and other provider controls. | Never available | None |
 
 ## 4. States
 
@@ -58,11 +57,10 @@ Written behavior below takes precedence over obsolete sample content.
 | # | Element | User action | System response | Goes to screen |
 |---|---|---|---|---|
 | 1 | Authenticate | Activate | Verify hash/rate limit, set secure session cookie, redirect to allowlisted return_to or authenticated role documented role default. | return_to or role default |
-| 2 | Accept invitation | Activate | Existing identity authenticates then accepts; new invitee supplies full_name/password; consume invite and activate membership atomically. | S41 completion, then role default |
-| 3 | Forgot password | Activate | Open recovery. | S04 |
-| 4 | Register | Activate | Open registration. | S02 |
+| 2 | Forgot password | Activate | Open Customer recovery. | S04 |
+| 3 | Create account | Activate | Open Customer registration. | S02 |
 
-Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Company Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales Consultant routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks role, company, membership, ownership and assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Company Admin, S20 for Sales Consultant, S41 for System Admin, and S01 for Guest.
+Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Sales Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks internal role, customer ownership and staff assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Sales Admin, S20 for Sales, S41 for System Admin, and S01 for Guest.
 
 ## 6. Screen-level rules
 
@@ -77,7 +75,9 @@ Home and public catalog are available to Guest and authenticated users. Customer
 
 1. With valid credentials, establish secure HttpOnly SameSite=Lax session and use only internal return route.
 2. After five failed attempts per account/IP in 15m, reject further login attempts with 429.
-3. Given a valid staff invitation, an existing identity must authenticate before atomic membership activation; a new invitee supplies name/password, consumes the invite once, and reaches the invited role's default route.
+3. Customer portal exposes registration; employee sign-in and invitation acceptance are isolated to S44.
+4. Customer login always renders storefront header/navigation/footer and never CRM staff controls.
+5. No Google/Facebook or other social/third-party login controls or flows are present.
 
 ## 7. Linked requirements
 

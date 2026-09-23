@@ -1,41 +1,44 @@
-# Screen Spec: S33 Contract Detail (Company Admin)
+# Screen Spec: S33 Contract Detail (Sales Admin)
 
 | Field | Value |
 |---|---|
 | Screen ID | `S33` |
-| Screen name | Contract Detail (Company Admin) |
-| Actor | Company Admin |
+| Screen name | Contract Detail (Sales Admin) |
+| Actor | Sales Admin |
 | Priority | P2 |
 | Belongs to module | [MFG-09](../specs/spec-MFG-09.md) |
 | Route | `/admin/contracts/{contract_id}` |
-| Mockup image | Don't have mockup |
+| Mockup image | img/S33-contract_detail_company_admin_screen.png |
 | Status | Resolved implementation specification |
 
 ## 1. Purpose
 
-**Shown when:** The Company Admin sees the authorized company contract, status history, generated private PDF and permitted void/supersede controls. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
+**Shown when:** The Sales Admin sees a Dony contract whose order has a current Customer-approved physical sample, together with status history, generated private PDF and permitted void/supersede controls. All identifiers and permissions come from the server session.
 
 **The user leaves this screen when:** An authorized action in section 5 succeeds, the user follows a role-allowed global route, or they return to the validated originating route.
 
 ## 2. Mockup
 
-Don't have mockup
+![Historical visual reference](img/S33-contract_detail_company_admin_screen.png)
+
+Written behavior below takes precedence over obsolete sample content.
 
 ## 3. Element inventory
 
 | # | Element | Type | Content / data source | Required | Validation |
 |---|---|---|---|---|---|
-| 1 | Screen heading | Heading | Contract Detail (Company Admin) | Yes | Static route title. |
+| 1 | Screen heading | Heading | Contract Detail (Sales Admin) | Yes | Static route title. |
 | 2 | Route | Navigation target | /admin/contracts/{contract_id} | Yes | Access checked on server. |
-| 3 | contract_id / order_id | Field / control | UUID / UUID | As specified | Both belong to active company; inaccessible IDs return 404. |
+| 3 | contract_id / order_id | Field / control | UUID / UUID | As specified | Both belong to Dony; inaccessible IDs return 404. |
 | 4 | status | Field / control | Draft, Ready, Signed, Superseded, Voided | As specified | Controls appear only when allowed by contract state and role. |
-| 5 | template_version / content_hash | Field / control | integer / SHA-256 | As specified | Generated from immutable order/customer snapshot and selected template version. |
+| 5 | template_version / content_hash | Field / control | integer / SHA-256 | As specified | Generated from immutable order/customer/design/sample/payment-policy snapshots and selected template version. |
 | 6 | pdf_asset_id | Field / control | private UUID, nullable until generated | As specified | Private PDF; download uses access-checked expiring URL. |
 | 7 | ready_at / signed_at | Field / control | nullable UTC timestamps | As specified | Server-set after PDF storage or signature commit. |
 | 8 | expected_version | Field / control | integer, required on mutation | As specified | Stale replacement/void returns 409; Signed version cannot be edited. |
 | 9 | Generate PDF/publish Ready | Action | Generate and store PDF first; transition only on success, queue notice after commit. | Available when authorized | Destination: S34 |
-| 10 | Replace unsigned contract | Action | Create new version; supersede prior unsigned version and notify. | Available when authorized | Destination: S33 |
+| 10 | Replace unsigned contract | Action | Create a new version only from the same approved sample/commercial snapshot; supersede prior unsigned version and notify. | Available when authorized | Destination: S33 |
 | 11 | Download PDF | Action | Issue authorized expiring URL. | Available when authorized | Destination: S33 |
+| 12 | Approved sample/payment terms | Read-only evidence | design version, sample ID/version, approval time, total, deposit percent/amount and balance formula | Yes | Must match current Approved sample and immutable policy snapshot; no manual amount override. |
 
 ## 4. States
 
@@ -57,7 +60,7 @@ Don't have mockup
 | 2 | Replace unsigned contract | Activate | Create new version; supersede prior unsigned version and notify. | S33 |
 | 3 | Download PDF | Activate | Issue authorized expiring URL. | S33 |
 
-Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Company Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales Consultant routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks role, company, membership, ownership and assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Company Admin, S20 for Sales Consultant, S41 for System Admin, and S01 for Guest.
+Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Sales Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks internal role, customer ownership and staff assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Sales Admin, S20 for Sales, S41 for System Admin, and S01 for Guest.
 
 ## 6. Screen-level rules
 
@@ -70,8 +73,9 @@ Home and public catalog are available to Guest and authenticated users. Customer
 
 ### Acceptance scenarios
 
-1. Ready is published only after private PDF generation/storage succeeds; then notification enters outbox.
-2. Signed contract cannot be edited/replaced; failed PDF leaves prior state and allows retry.
+1. Generation is rejected unless the order is `PendingContract` and its current physical sample is Approved.
+2. Ready is published only after private PDF generation/storage succeeds and binds exact sample/deposit/balance terms; then notification enters outbox.
+3. Signed contract cannot be edited/replaced; failed PDF leaves prior state and allows retry.
 
 ## 7. Linked requirements
 

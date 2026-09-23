@@ -3,36 +3,38 @@
 | Field | Value |
 |---|---|
 | Screen ID | `S04` |
-| Screen name | Forgot Password |
+| Screen name | Customer Storefront Forgot Password |
 | Actor | Guest |
 | Priority | P3 |
 | Belongs to module | [MFG-01](../specs/spec-MFG-01.md) |
-| Route | `/forgot-password` |
-| Mockup image | Don't have mockup |
+| Route | `/forgot-password` (Customer storefront only) |
+| Mockup image | img/S04-forgot_password_screen.png |
 | Status | Resolved implementation specification |
 
 ## 1. Purpose
 
-**Shown when:** Password recovery returns the same confirmation for known and unknown email addresses. Eligible requests queue a single-use reset link and invalidate the previous link. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
+**Shown when:** A Customer requests account recovery from the Dony storefront. This page retains the storefront utility bar, customer navigation header and footer. Password recovery returns the same confirmation for known and unknown email addresses. Eligible requests queue a single-use Customer-bound reset link and invalidate the previous Customer link. Staff recovery is isolated to S45; no social-provider recovery is offered.
 
 **The user leaves this screen when:** An authorized action in section 5 succeeds, the user follows a role-allowed global route, or they return to the validated originating route.
 
 ## 2. Mockup
 
-Don't have mockup
+![Historical visual reference](img/S04-forgot_password_screen.png)
+
+Written behavior below takes precedence over obsolete sample content.
 
 ## 3. Element inventory
 
 | # | Element | Type | Content / data source | Required | Validation |
 |---|---|---|---|---|---|
 | 1 | Screen heading | Heading | Forgot Password | Yes | Static route title. |
-| 2 | Route | Navigation target | /forgot-password | Yes | Access checked on server. |
+| 2 | Route | Navigation target | /forgot-password or /staff/forgot-password | Yes | Portal is explicit and retained through recovery. |
 | 3 | email | Field / control | string required, normalized | As specified | email: string required, normalized; do not indicate whether it exists. |
 | 4 | Link request | Field / control | max 3 per account/IP/hour | As specified | Link request: max 3 per account/IP/hour; resend invalidates prior link. |
 | 5 | Response | Field / control | same neutral confirmation for existing and absent accounts. | As specified | Response: same neutral confirmation for existing and absent accounts. |
 | 6 | API errors | Field / control | standard API error envelope | As specified | 400 malformed; 422 invalid fields; 409 stale/duplicate; 429 rate limit; 503 dependency failure |
 | 7 | Request reset | Action | Apply generic response and queue email only if eligible; invalidate prior link. | Available when authorized | Destination: S03 |
-| 8 | Resend | Action | Enforce request limit and queue latest link. | Available when authorized | Destination: S04 |
+| 8 | Resend | Action | Enforce request limit and queue latest link for the same portal. | Available when authorized | Destination: S04 |
 
 ## 4. States
 
@@ -53,7 +55,7 @@ Don't have mockup
 | 1 | Request reset | Activate | Apply generic response and queue email only if eligible; invalidate prior link. | S03 |
 | 2 | Resend | Activate | Enforce request limit and queue latest link. | S04 |
 
-Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Company Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales Consultant routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks role, company, membership, ownership and assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Company Admin, S20 for Sales Consultant, S41 for System Admin, and S01 for Guest.
+Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Sales Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks internal role, customer ownership and staff assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Sales Admin, S20 for Sales, S41 for System Admin, and S01 for Guest.
 
 ## 6. Screen-level rules
 
@@ -66,7 +68,7 @@ Home and public catalog are available to Guest and authenticated users. Customer
 
 ### Acceptance scenarios
 
-1. For existing and unknown emails, show identical confirmation text and response shape.
+1. For existing and unknown emails, show identical confirmation text and response shape in each portal.
 2. At fourth request within an hour, return 429 without sending another link.
 
 ## 7. Linked requirements

@@ -15,9 +15,9 @@
 
 ## 1. Purpose and scope (mandatory)
 
-This module provides registration, verification, authentication, sign-out and password recovery. Public registration creates Customer capability only. Staff and System Admin access is provisioned by MFG-03.
+This module provides Customer registration, verification, email/password authentication, sign-out and password recovery through separate Customer storefront and Dony employee CRM portal entry points. Customer screens use the public storefront shell and navigation; staff screens use the internal Dony CRM shell and never show store/cart navigation. Public registration creates Customer capability only. A Customer may represent a company commissioning uniforms for internal use or a Reseller Shop commissioning garments from the shop's own designs for resale. This organization context does not grant an internal Dony role. Sales, Sales Admin and System Admin access is provisioned only by MFG-03. Google, Facebook and other external identity-provider login are not supported.
 
-**In scope:** register and verify a Customer; sign in with server-resolved capabilities; revoke a session; request and complete email recovery.
+**In scope:** register and verify a Customer; authenticate existing Customers and invited/active Dony employees through their respective portal routes; revoke a session; request and complete portal-bound email recovery.
 
 **Out of scope:** profile maintenance is MFG-02; staff provisioning is MFG-03; phone/SMS verification is disabled.
 
@@ -28,6 +28,7 @@ This module provides registration, verification, authentication, sign-out and pa
 | Actor | Role in this module | Where it comes from |
 | --- | --- | --- |
 | Guest | Registers, verifies, signs in and recovers access | MFG-01 resolved contract; UC-G03/UC-M01/UC-M02/UC-M03 |
+| Invited Dony employee | Accepts a token-bound invitation, signs in and recovers access through the employee portal | MFG-01/MFG-03 boundary |
 | Member | Authenticated active user; signs out | MFG-01 resolved contract; UC-M04 |
 | Customer | Capability created by public registration | MFG-01 role boundary |
 | System | Issues tokens, sends email and enforces limits | MFG-01 function contract |
@@ -45,6 +46,7 @@ This module provides registration, verification, authentication, sign-out and pa
 1. **Given** a verified active user, **when** credentials are correct, **then** create a revocable session with active capabilities.
 2. **Given** invalid credentials, **when** attempts one through five occur in 15 minutes, **then** return generic 401; later attempts in the account/IP window return 429.
 3. **Given** an external redirect, **when** login succeeds, **then** discard it and use an allowlisted internal route.
+4. Customer accounts use `/login` on the Dony storefront; Dony employees use `/staff/login` on the separate internal CRM. Employee accounts cannot use public registration and have no Google/Facebook or other provider sign-in.
 
 ### US-3 (Must): Forgot password
 
@@ -58,7 +60,7 @@ This module provides registration, verification, authentication, sign-out and pa
 
 ### US-5 (Must): Log out
 
-1. **Given** an active session, **when** logout runs, **then** revoke it, clear the cookie and route to S03.
+1. **Given** an active Customer session, **when** logout runs, **then** revoke it, clear the cookie and route to S03; an employee session returns to S44.
 2. **Given** an already-revoked session, **when** repeated, **then** succeed as an idempotent no-op.
 
 ### Edge cases
@@ -154,7 +156,7 @@ sequenceDiagram
 | FR-001 | F-USER-001 | Render the registration form and verification guidance. | Guest | Must |
 | FR-002 | F-USER-002 | Validate fields and atomically create one pending Customer. | Guest | Must |
 | FR-003 | F-USER-003 | Issue a hashed verification token and durable email event. | Guest / System | Must |
-| FR-004 | F-USER-004 | Render login and recovery entry. | Guest | Must |
+| FR-004 | F-USER-004 | Render separate Customer and Dony Employee email/password portal modes, portal-specific recovery and invitation onboarding; do not offer external identity providers. | Guest / invited employee | Must |
 | FR-005 | F-USER-005 | Authenticate, rate-limit and establish a secure server session. | Guest | Must |
 | FR-006 | F-USER-006 | Revoke the current session idempotently. | Member | Must |
 | FR-007 | F-USER-007 | Render the email-only recovery form. | Guest / Member | Must |
@@ -184,18 +186,20 @@ sequenceDiagram
 | Rule ID | Rule | Why it exists |
 | --- | --- | --- |
 | BR-001 | Email is case-normalized and globally unique. | Prevent duplicate identities. |
-| BR-002 | Client-supplied role, user ID or company membership is never authority. | Prevent privilege escalation. |
+| BR-002 | Client-supplied role, user ID or buyer-organization identifier is never authority; internal Dony roles come only from an active StaffAccount created through MFG-03. | Prevent privilege escalation. |
 | BR-003 | Password is 12-128 characters, spaces allowed, stored only as a hash. | Protect credentials. |
 | BR-004 | Sessions use Secure, HttpOnly, SameSite=Lax cookies, CSRF protection, 30-minute idle and 24-hour absolute expiry. | Bound session exposure. |
 | BR-005 | Tokens are random, hashed, purpose-bound, single-use and replaced on resend. | Prevent token replay/leakage. |
 | BR-006 | UUIDs, UTC timestamps, version checks and idempotency apply. | Make retries and concurrency deterministic. |
+| BR-007 | Customer and employee recovery routes use generic responses and hashed single-use 30-minute tokens; each token is bound to the portal that issued it and returns there after reset. | Prevent enumeration and portal confusion. |
+| BR-008 | Authentication is first-party email/password only. Google, Facebook and other social/third-party sign-in flows are unsupported. | Match the registration, invitation and recovery model. |
 
 ## 6. Key entities (mandatory)
 
 | Entity | Attributes (from Input/Output fields) | Relationships |
 | --- | --- | --- |
 | User | id, email, full_name, password_hash, customer_capability, verified_at, active, version | No single global staff role |
-| Membership | id, company_id, user_id, role, active, version | Per-company Company Admin or Sales Consultant |
+| StaffAccount | id, user_id, work_email, role, status, version | Internal Dony employee role (`Sales`, `Sales Admin` or `System Admin`) provisioned by MFG-03; separate from Customer registration. |
 | SystemCapability | user_id, role, active | System Admin is separate |
 | Session | id, user_id, token_hash, expiries, revoked_at | Raw token not stored/logged |
 | OneTimeToken | user_id, purpose, token_hash, expires_at, consumed_at | Single-use and purpose-bound |
@@ -205,9 +209,12 @@ sequenceDiagram
 | Screen ID | Screen name | Priority | Screen Spec file |
 | --- | --- | --- | --- |
 | S02 | Registration | Must | `screens/S02-sign_up_screen.md` |
-| S03 | Login and invitation acceptance | Must | `screens/S03-login_screen.md` |
-| S04 | Recovery request | Must | `screens/S04-forgot_password_screen.md` |
-| S05 | Password reset | Must | `screens/S05-reset_password_screen.md` |
+| S03 | Customer storefront login | Must | `screens/S03-login_screen.md` |
+| S04 | Customer storefront recovery request | Must | `screens/S04-forgot_password_screen.md` |
+| S05 | Customer storefront password reset | Must | `screens/S05-reset_password_screen.md` |
+| S44 | Dony employee CRM login and invitation acceptance | Must | `screens/S44-staff_login_screen.md` |
+| S45 | Dony employee CRM recovery request | Must | `screens/S45-staff_forgot_password_screen.md` |
+| S46 | Dony employee CRM password reset | Must | `screens/S46-staff_reset_password_screen.md` |
 | S06 | Session entry/logout | Must | `screens/S06-user_profile_screen.md` |
 | S08 | Safe default catalog destination | Must | `screens/S08-product_catalog_screen.md` |
 
@@ -239,9 +246,9 @@ Historical IDs are retained for continuity; external DBIZ2 comparison is not req
 | Spec section | DBIZ2 source | Location |
 | --- | --- | --- |
 | Registration | `UC-G03`; `F-USER-001` .. `003` | S02; Sections 3 and 5 |
-| Login | `UC-M01`; `F-USER-004` .. `005` | S03; Sections 3 and 5 |
+| Login | `UC-M01`; `F-USER-004` .. `005` | S03 (Customer), S44 (employee); Sections 3 and 5 |
 | Logout | `UC-M04`; `F-USER-006` | S06; Sections 3 and 5 |
-| Recovery | `UC-M02`, `UC-M03`; `F-USER-007` .. `011` | S04-S05; Sections 3 and 5 |
+| Recovery | `UC-M02`, `UC-M03`; `F-USER-007` .. `011` | S04-S05 (Customer), S45-S46 (employee); Sections 3 and 5 |
 
 ## Completion checklist
 

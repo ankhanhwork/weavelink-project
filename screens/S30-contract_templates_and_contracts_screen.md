@@ -4,22 +4,24 @@
 |---|---|
 | Screen ID | `S30` |
 | Screen name | Contract Templates and Contracts |
-| Actor | Company Admin |
+| Actor | Sales Admin |
 | Priority | P2 |
 | Belongs to module | [MFG-09](../specs/spec-MFG-09.md) |
 | Route | `/admin/contracts?tab=templates,contracts` |
-| Mockup image | Don't have mockup |
+| Mockup image | img/S30-contract_templates_and_contracts_screen.png |
 | Status | Resolved implementation specification |
 
 ## 1. Purpose
 
-**Shown when:** The Company Admin switches between versioned contract templates and company contracts. Signed contract versions are immutable and template changes create a new version. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
+**Shown when:** The Sales Admin switches between versioned contract templates and company contracts. Signed contract versions are immutable and template changes create a new version. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
 
 **The user leaves this screen when:** An authorized action in section 5 succeeds, the user follows a role-allowed global route, or they return to the validated originating route.
 
 ## 2. Mockup
 
-Don't have mockup
+![Historical visual reference](img/S30-contract_templates_and_contracts_screen.png)
+
+Written behavior below takes precedence over obsolete sample content.
 
 ## 3. Element inventory
 
@@ -30,7 +32,7 @@ Don't have mockup
 | 3 | tab | Field / control | enum: templates or contracts; default templates | As specified | Templates show template_id, name, current version and active status; contracts show contract_id, order_id, version and lifecycle status. |
 | 4 | status | Field / control | enum filtered by tab | As specified | Template statuses Draft, Active, Archived; contract statuses Draft, Ready, Signed, Superseded, Voided. |
 | 5 | query / page / page_size | Field / control | trimmed text / integer / integer | As specified | Search template name or contract/order ID; positive bounded paging and allowlisted sort. |
-| 6 | company_id | Field / control | server-derived UUID | As specified | All templates/contracts are scoped to the active Company Admin membership. |
+| 6 | buyer_organization_id | Field / control | optional server-derived UUID | As specified | Templates are Dony-owned; a contract may snapshot the Business Buyer or Reseller Shop legal details from its order. |
 | 7 | version | Field / control | integer | As specified | Template edits create a new version; a Signed contract and its PDF snapshot cannot be edited. |
 | 8 | API errors | Field / control | standard API error envelope | As specified | 400 malformed; 422 invalid filters; 403 prohibited action; 404 inaccessible contract; 409 stale version/state; 503 dependency failure. |
 | 9 | Create template | Action | Open safe template form. | Available when authorized | Destination: S31 |
@@ -63,7 +65,7 @@ Don't have mockup
 | 5 | Open contract | Activate | Show status and generated PDF. | S33 |
 | 6 | Switch tabs | Activate | Templates and contracts tabs are same routed screen. | S30 tab |
 
-Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Company Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales Consultant routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks role, company, membership, ownership and assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Company Admin, S20 for Sales Consultant, S41 for System Admin, and S01 for Guest.
+Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Sales Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks internal role, customer ownership and staff assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Sales Admin, S20 for Sales, S41 for System Admin, and S01 for Guest.
 
 ## 6. Screen-level rules
 
@@ -76,7 +78,7 @@ Home and public catalog are available to Guest and authenticated users. Customer
 
 ### Acceptance scenarios
 
-1. Templates and contracts tabs show company-scoped versions and status filters.
+1. Templates and contracts tabs show Dony-scoped versions and status filters.
 2. Signed contract exposes no edit/version replacement action.
 
 ## 7. Linked requirements

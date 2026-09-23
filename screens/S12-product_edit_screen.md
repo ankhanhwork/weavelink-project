@@ -4,22 +4,24 @@
 |---|---|
 | Screen ID | `S12` |
 | Screen name | Product Edit |
-| Actor | Company Admin |
+| Actor | Sales Admin |
 | Priority | P2 |
 | Belongs to module | [MFG-04](../specs/spec-MFG-04.md) |
 | Route | `/admin/products/{product_id}/edit` |
-| Mockup image | Don't have mockup |
+| Mockup image | img/S12-product_edit_screen.png |
 | Status | Resolved implementation specification |
 
 ## 1. Purpose
 
-**Shown when:** Product edits are version-checked against the current company-owned product. Publishing requires all required product fields; submitted order snapshots remain unchanged. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
+**Shown when:** A Sales Admin edits a Dony-owned configurable garment base using version checks. Publishing requires all required production and design-rule fields; submitted order snapshots remain unchanged. The record is not finished-goods inventory. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
 
 **The user leaves this screen when:** An authorized action in section 5 succeeds, the user follows a role-allowed global route, or they return to the validated originating route.
 
 ## 2. Mockup
 
-Don't have mockup
+![Historical visual reference](img/S12-product_edit_screen.png)
+
+Written behavior below takes precedence over obsolete sample content.
 
 ## 3. Element inventory
 
@@ -27,8 +29,8 @@ Don't have mockup
 |---|---|---|---|---|---|
 | 1 | Screen heading | Heading | Product Edit | Yes | Static route title. |
 | 2 | Route | Navigation target | /admin/products/{product_id}/edit | Yes | Access checked on server. |
-| 3 | product_id | Field / control | UUID, required | As specified | Current company-owned product. |
-| 4 | name/sku/category | Field / control | string, required | As specified | Same constraints as S11; SKU unique within company. |
+| 3 | product_id | Field / control | UUID, required | As specified | Current Dony-owned product base. |
+| 4 | name/sku/category | Field / control | string, required | As specified | Same constraints as S11; SKU unique across Dony's single product catalogue. |
 | 5 | unit_price_vnd | Field / control | integer, required | As specified | Nonnegative integer VND. |
 | 6 | supported options/capacity | Field / control | arrays/integer | As specified | Current product rules; max_units_per_order 1..10000. |
 | 7 | expected_version | Field / control | version, required | As specified | Stale edit returns 409. |
@@ -57,7 +59,7 @@ Don't have mockup
 | 2 | Edit design rules | Activate | Open rules editor. | S14 |
 | 3 | Cancel | Activate | Discard edits. | S10 |
 
-Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Company Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales Consultant routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks role, company, membership, ownership and assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Company Admin, S20 for Sales Consultant, S41 for System Admin, and S01 for Guest.
+Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Sales Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks internal role, customer ownership and staff assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Sales Admin, S20 for Sales, S41 for System Admin, and S01 for Guest.
 
 ## 6. Screen-level rules
 
