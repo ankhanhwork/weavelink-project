@@ -5,7 +5,7 @@
 | Screen ID | `S33` |
 | Screen name | Contract Detail (Sales Admin) |
 | Actor | Sales Admin |
-| Priority | P2 |
+| Priority | P1 |
 | Belongs to module | [MFG-09](../specs/spec-MFG-09.md) |
 | Route | `/admin/contracts/{contract_id}` |
 | Mockup image | img/S33-contract_detail_company_admin_screen.png |

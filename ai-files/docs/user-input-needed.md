@@ -21,20 +21,20 @@ The MVP scope is defined by priority and mapped to the corresponding MFG (Module
 | Priority | Feature / Item | MFG | Notes |
 |---|---|---|---|
 | **Must** | Role-based Authentication & Access (Customer, Sales, Sales Admin) | MFG-01 | Foundation - every other feature depends on secure, role-aware access |
-| **Must** | Product Catalog (browse, search, view product detail) | MFG-04 | Entry point for customers to find a base product to customize |
-| **Must** | Product Design Workspace (self-design, upload artwork, preview, save design) | MFG-05 | Core value proposition - replaces scattered email/chat design specifications |
-| **Must** | Order & Payment (checkout, VNPay integration, order creation) | MFG-06 | Core revenue flow - must work before "design & order" has any value |
-| **Should** | Order Tracking & Status Updates (customer order list/detail, admin status update) | MFG-07 | Solves the reactive customer service pain point, but early orders can still be tracked manually |
-| **Should** | Digital Contract Generation & E-signature | MFG-09 | Builds trust for business clients, but an emailed/paper contract is an acceptable stopgap at launch |
-| **Could** | Order Optimization / Merge (batch small orders into one production run) | MFG-10 | Directly targets high operational overhead, but only pays off once order volume exists |
-| **Could** | Assessed Design Service Request (Simple free; accepted Complex fee collected with order) | MFG-05 | Alternative to self-design for complex custom-design clients |
-| **Could** | Sales Assignment & Task Dashboard | MFG-08 | Only needed once consultation volume justifies a dedicated queue |
+| **Must** | Product Catalog (browse, search, view product detail) | MFG-04 | Seed at least one complete Published product base with variants, option rules, prices and assets; CRUD UI is not required in MVP. |
+| **Must** | Product Design Workspace (self-design, upload artwork, preview, save design) | MFG-05 | Self-design/save is Must; assessed Complex design service is a separate Could capability. |
+| **Must** | Order & Payment (standard checkout, VNPay deposit and balance, order creation) | MFG-06 | Standard order only; MVP merge_opt_in=false and merge_discount_vnd=0. Requires minimum sample, contract and fulfillment slices. |
+| **Should** | Order Tracking & Status Updates | MFG-07 | Full module is Should; MVP requires Customer sample/receipt approvals and manual Sales Admin sample, production and shipping updates. |
+| **Should** | Digital Contract Generation & E-signature acknowledgement | MFG-09 | Full module is Should; MVP requires one fixed template and Customer acknowledgement before deposit. |
+| **Could** | Order Optimization / Merge (batch small orders into one production run) | MFG-10 | Deferred from MVP; v3 rules activate only when MFG-10 is implemented. |
+| **Could** | Assessed Design Service Request (Simple free; accepted Complex fee collected with order) | MFG-05 | Separate from Must self-design; defer assessment/assignment/fee workflows. |
+| **Could** | Sales Assignment & Task Dashboard | MFG-08 | Only needed once consultation volume justifies a dedicated queue. |
 | **Won't** | Data Analytics Dashboard & Data Export | MFG-11 | Out of scope for MVP; revisit once there is sufficient order history to analyze |
-| **Won't** | Dony Staff Accounts & System Operations (internal staff administration, system logs, backup/restore) | MFG-03, MFG-12 | A single internal admin login is sufficient at launch; defer full staff/system administration |
+| **Won't** | Dony Staff Accounts & System Operations (internal staff administration, system logs, backup/restore) | MFG-03, MFG-12 | Pre-provision Sales Admin, Sales, System Admin and verified Customer identities; defer staff-management and system-operations screens. |
 
 ## MVP Priority Summary
 
-- **Must:** MFG-01, MFG-04, MFG-05, MFG-06
-- **Should:** MFG-07, MFG-09
-- **Could:** MFG-05, MFG-08, MFG-10
+- **Must:** MFG-01, MFG-04, self-design in MFG-05, and MFG-06
+- **Should:** full MFG-07/MFG-09 modules; MVP-critical path slices are mandatory
+- **Could:** assessed design service in MFG-05, MFG-08, MFG-10
 - **Won't:** MFG-03, MFG-11, MFG-12

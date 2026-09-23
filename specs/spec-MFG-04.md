@@ -217,7 +217,7 @@ sequenceDiagram
 ## 9. Assumptions
 
 - DBIZ 3 classroom demo by Group B; no approver assigned; demo company/contact data are fictional samples.
-- Catalog browsing/search/detail is MVP Must; administration remains specified for later operation.
+- Catalog browsing/search/detail is MVP Must; pre-seed at least one complete Published Dony product base with valid sizes/variants, materials/colours/print options, pricing, media assets and compatible design rules. Product CRUD and design-rule administration remain specified for later operation.
 - Capacity is a validation ceiling and does not represent stock.
 
 ## 10. Open questions

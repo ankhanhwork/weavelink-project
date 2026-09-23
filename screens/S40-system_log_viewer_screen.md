@@ -5,7 +5,7 @@
 | Screen ID | `S40` |
 | Screen name | System Log Viewer |
 | Actor | System Admin |
-| Priority | P2 |
+| Priority | P3 |
 | Belongs to module | [MFG-12](../specs/spec-MFG-12.md) |
 | Route | `/system/logs` |
 | Mockup image | img/S40-system_log_viewer_screen.png |

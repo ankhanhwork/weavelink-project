@@ -5,7 +5,7 @@
 | Screen ID | `S46` |
 | Screen name | Dony Staff CRM Reset Password |
 | Actor | Dony employee with single-use staff token |
-| Priority | Must |
+| Priority | P1 |
 | Belongs to module | [MFG-01](../specs/spec-MFG-01.md) |
 | Route | `/staff/reset-password?token={token}` |
 | Mockup image | img/S46-staff_reset_password_screen.png |

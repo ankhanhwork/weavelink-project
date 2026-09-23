@@ -5,7 +5,7 @@
 | Screen ID | `S29` |
 | Screen name | Order Detail (Admin) |
 | Actor | Sales Admin / Assigned Sales |
-| Priority | P2 |
+| Priority | P1 |
 | Belongs to module | [MFG-07](../specs/spec-MFG-07.md) |
 | Route | `/admin/orders/{order_id}` |
 | Mockup image | img/S29-order_detail_admin_screen.png |

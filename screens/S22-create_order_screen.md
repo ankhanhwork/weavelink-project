@@ -21,7 +21,7 @@
 
 ![S22 historical reference](img/S22-create_order_screen.png)
 
-Written behavior below takes precedence over obsolete sample content.
+Written behavior below takes precedence over obsolete sample content. MVP does not show the historical merge action or merge controls; merge becomes available only after MFG-10 activation.
 
 ## 3. Element inventory
 
@@ -42,7 +42,7 @@ Written behavior below takes precedence over obsolete sample content.
 | 13 | expected_version / Idempotency-Key | Field / control | version and UUID, required for mutation | As specified | Reject stale state; financially significant order create is idempotent. |
 | 14 | capacity | Field / control | server-derived integer | As specified | Reject quote if total exceeds product max_units_per_order with 422 CAPACITY_EXCEEDED. |
 | 15 | Get quote | Action | Server computes amounts for design/options/quantities/address; no order created yet. | Available when authorized | Destination: S25 |
-| 16 | Select merge | Action | Continue to explicit opt-in/terms. | Available when authorized | Destination: S23 |
+| 16 | Select merge | Post-MVP action | Continue to explicit opt-in/terms after MFG-10 activation. | Post-MVP only | Destination: S23; omit from MVP UI and API input. |
 | 17 | Select design | Action | Return to owned designs. | Available when authorized | Destination: S17 |
 
 ## 4. States
@@ -62,7 +62,7 @@ Written behavior below takes precedence over obsolete sample content.
 | # | Element | User action | System response | Goes to screen |
 |---|---|---|---|---|
 | 1 | Get quote | Activate | Server computes amounts for design/options/quantities/address; no order created yet. | S25 |
-| 2 | Select merge | Activate | Continue to explicit opt-in/terms. | S23 |
+| 2 | Select merge | Post-MVP only | Available after MFG-10 activation; not rendered in MVP. | S23 |
 | 3 | Select design | Activate | Return to owned designs. | S17 |
 
 Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Sales Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks internal role, customer ownership and staff assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Sales Admin, S20 for Sales, S41 for System Admin, and S01 for Guest.

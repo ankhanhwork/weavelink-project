@@ -5,7 +5,7 @@
 | Screen ID | `S37` |
 | Screen name | Payment Transaction Detail |
 | Actor | Sales Admin |
-| Priority | P2 |
+| Priority | P1 |
 | Belongs to module | [MFG-06](../specs/spec-MFG-06.md) |
 | Route | `/admin/payments/{payment_id}` |
 | Mockup image | img/S37-payment_transaction_detail_screen.png |

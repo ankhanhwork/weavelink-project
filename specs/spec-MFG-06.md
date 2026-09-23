@@ -27,6 +27,8 @@ The Customer may represent a Business Buyer ordering uniforms or garments for in
 
 **Out of scope:** authoring product rules is MFG-04; creating/delivering designs is MFG-05; production/shipping operations and cancellation are MFG-07; contract rendering/signature is MFG-09; merge matching is MFG-10. Sample manufacturing cost is included in the signed order price unless a later reviewed specification introduces a separate charge; there is no standalone sample or design-service payment screen.
 
+**MVP boundary:** merge is not part of the MFG-06 MVP path. For every MVP quote/order, `merge_opt_in=false`, `merge_discount_vnd=0`, and no merge policy acceptance/version is requested or applied. FR-002 remains Must for the standard quote; its MFG-10 v3 merge branch is dormant until MFG-10 is implemented after the MVP. Do not render merge choices or discounts in MVP checkout.
+
 ## 2. Actors (mandatory)
 
 | Actor | Role in this module | Where it comes from |
@@ -42,7 +44,7 @@ The Customer may represent a Business Buyer ordering uniforms or garments for in
 
 ### US-1 (Must): Create order and approve the digital design
 
-1. Given an owned orderable Saved or Delivered design, valid quantities, address and current rules, when the Customer requests a quote, then the server returns a complete integer-VND breakdown with 30-minute expiry; an opted-in eligible merge quote applies min(subtotal, 840,000 VND) once.
+1. Given an owned orderable Saved or Delivered design, valid quantities, address and current rules, when the Customer requests a quote, then the server returns a complete integer-VND breakdown with 30-minute expiry. In MVP, merge is always opted out and discount is zero; after MFG-10 activation, an opted-in eligible merge quote applies min(subtotal, 840,000 VND) once.
 2. Given a current quote, when submitted with an idempotency key, then one order is created as `AwaitingDigitalApproval` with immutable product, design, quantities, buyer-organization, address, price and policy snapshots.
 3. Given `AwaitingDigitalApproval`, when the Customer approves the exact design version, then the approval evidence and timestamp are recorded and the order becomes `DigitalDesignApproved`.
 4. If the design or price-driving rule changes before approval, the Customer must receive a replacement quote and explicitly review the new snapshot; the previous snapshot is never silently edited.
@@ -168,7 +170,7 @@ sequenceDiagram
 | FR ID | DBIZ2 Subfunction ID | Requirement (system MUST ...) | Actor | Priority |
 | --- | --- | --- | --- | --- |
 | FR-001 | F-PAY-001 | Render the Customer's made-to-order checkout and current order workflow, including digital-design, physical-sample, contract, deposit, delivery and balance gates. | Customer | Must |
-| FR-002 | F-PAY-002 | Recompute a 30-minute quote from authoritative product/design versions, quantities, address and MFG-10 v3 merge policy, including an 840,000 VND per-order discount capped at subtotal and deposit preview. | Customer | Must |
+| FR-002 | F-PAY-002 | Recompute a 30-minute quote from authoritative product/design versions, quantities and address, with deposit preview. MVP quotes always set `merge_opt_in=false` and `merge_discount_vnd=0`; the dormant post-MVP MFG-10 v3 branch applies an 840,000 VND per-order discount capped at subtotal only after MFG-10 activation. | Customer | Must |
 | FR-003 | F-PAY-003 | Atomically create one `AwaitingDigitalApproval` order and control idempotent digital-design and physical-sample approval transitions using immutable versioned evidence. | Customer / Sales Admin / assigned Sales | Must |
 | FR-004 | F-PAY-004 | Initiate one payable DEPOSIT or BALANCE attempt only when the matching order gate is satisfied and return hosted-provider redirect details. | Customer | Must |
 | FR-005 | F-PAY-005 | Verify and deduplicate provider notifications by payment purpose; settle deposit/balance once and support authorized reconciliation/refund of captured funds. | VNPay / Sales Admin / System | Must |
@@ -179,7 +181,7 @@ sequenceDiagram
 | FR ID | Input field | Type | Required | Output field | Type | Notes / validation |
 | --- | --- | --- | --- | --- | --- | --- |
 | FR-001 | session, product_id, design_id | Session / UUID / UUID | Yes | S22/S27 workflow model | ViewModel | Owned Saved/Delivered design; Published Dony product base; no ready-made stock. |
-| FR-002 | quantities, delivery address, merge choice/version, current design/product versions | Integers / address / values / versions | Yes | quote, price breakdown, deposit preview, expiry | Object | 30 minutes; all money integer VND; stale rules require replacement quote. |
+| FR-002 | quantities, delivery address, current design/product versions; post-MVP only: merge choice/version | Integers / address / versions / optional post-MVP values | Yes | quote, price breakdown, deposit preview, expiry | Object | MVP: no merge input; persist `merge_opt_in=false`, `merge_discount_vnd=0`, no merge policy version. Post-MVP MFG-10 activation: quote uses its immutable policy snapshot. 30 minutes; money is integer VND; stale rules require replacement quote. |
 | FR-003 | action, order_id/quote_id, design/sample/order expected versions, evidence, tracking, Idempotency-Key | Enum / UUIDs / versions / object / key | By action | order, sample, timeline and next gate | Object | Actions: create_order, approve_digital, start_sample, dispatch_sample, approve_sample, request_revision; lock and revalidate atomically. |
 | FR-004 | order_id, purpose, expected order/payment versions, Idempotency-Key | UUID / DEPOSIT or BALANCE / versions / key | Yes | attempt_id, purpose, exact amount, expires_at, redirect | Object | DEPOSIT requires Signed/AwaitingDeposit; BALANCE requires DeliveredAwaitingBalance; one active Pending attempt per order/purpose. |
 | FR-005 | signed provider query or authorized reconcile/refund request | Query / IDs / versions / key | Yes | payment/refund state and order transition | Object | Verify signature, merchant, reference, purpose, amount and VND; refund captured funds only. |
@@ -199,7 +201,7 @@ sequenceDiagram
 | BR-008 | The accepted Complex design fee is allocated once to the first order from its delivered design lineage. It is included in `contract_total_vnd`, deposit and balance proportions; cancellation releases allocation only after captured funds and refunds resolve. | Prevent duplicate design-fee collection or bypass. |
 | BR-009 | There is no standalone SERVICE, sample or design payment. Active payment purposes are DEPOSIT and BALANCE for an Order. | Keep payment aligned with the agreed commercial flow and remove S16. |
 | BR-010 | Each committed lifecycle or financial transition appends an order timeline event and durable notifications; notification failure never rolls back the transition. | Provide traceability and reliable communication. |
-| BR-011 | Eligible merge opt-in uses the current MFG-10 policy snapshot: `merge_discount_vnd=min(subtotal_vnd, 840000)`; otherwise discount is zero. The discount applies only to merchandise subtotal, not shipping/design fee. Standard and merge `production_due_at` are 7 and 10 calendar days after verified deposit/`confirmed_at`; the values are immutable quote/order snapshots. | Keep quote, contract, and merge terms consistent and cap Dony's discount exposure. |
+| BR-011 | MVP: merge is disabled, `merge_opt_in=false`, merge policy version is absent and `merge_discount_vnd=0`. Only after MFG-10 activation may an eligible opt-in use the canonical MFG-10 policy snapshot: `merge_discount_vnd=min(subtotal_vnd, 840000)`; otherwise discount is zero. The discount applies only to merchandise subtotal, not shipping/design fee. Standard and (post-MVP) merged `production_due_at` are 7 and 10 calendar days after verified deposit/`confirmed_at`; values are immutable snapshots. | Keep MVP single-order checkout independent of deferred merge capability and protect price consistency. |
 
 ## 6. Key entities (mandatory)
 
@@ -220,7 +222,7 @@ sequenceDiagram
 | S26 | Customer order list with workflow status | Must | `screens/S26-customer_order_list_screen.md` |
 | S27 | Customer order detail, design/sample approval, receipt and payment gates | Must | `screens/S27-customer_order_detail_screen.md` |
 | S29 | Dony order detail, sample dispatch and fulfilment evidence | Must | `screens/S29-order_detail_admin_screen.md` |
-| S33-S34 | Sample-bound contract administration and customer signing | Should | MFG-09 boundary |
+| S33-S34 | MVP minimum: fixed-template contract generation/review and Customer acknowledgement after sample approval | Must (MVP slice; full MFG-09 is Should) | MFG-09 boundary |
 | S35 | Deposit or balance payment | Must | `screens/S35-order_payment_screen.md` |
 | S36-S37 | Payment list, detail, reconciliation and refund | Must | Module screens |
 | S38 | Lifecycle/payment notifications | Must | Shared notification panel |

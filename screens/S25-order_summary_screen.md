@@ -13,7 +13,7 @@
 
 ## 1. Purpose
 
-**Shown when:** The customer reviews an unexpired server quote with integer VND line amounts, delivery address, selected merge policy and expiry before submitting the order. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
+**Shown when:** The customer reviews an unexpired server quote with integer VND line amounts, delivery address and expiry before submitting the order. In MVP this is a standard quote with no merge choice and zero merge discount; the merge rows/actions below are post-MFG-10 only. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
 
 **The user leaves this screen when:** An authorized action in section 5 succeeds, the user follows a role-allowed global route, or they return to the validated originating route.
 
@@ -21,7 +21,7 @@
 
 ![S25 historical reference](img/S25-order_summary_screen.png)
 
-Written behavior below takes precedence over obsolete sample content.
+Written behavior below takes precedence over obsolete sample content. MVP omits merge preference controls and always displays merge discount as zero; the historical mockup is not an MVP implementation reference for merge or promotional controls.
 
 ## 3. Element inventory
 
@@ -31,13 +31,13 @@ Written behavior below takes precedence over obsolete sample content.
 | 2 | Route | Navigation target | /orders/summary?quote_id={id} | Yes | Access checked on server. |
 | 3 | quote_id | Field / control | UUID | As specified | quote_id: UUID; server quote lasts 30 minutes and binds product/design/policy versions. |
 | 4 | subtotal_vnd | Field / control | sum(quantity*(unit_price_vnd+option_surcharge_vnd)), integer. | As specified | subtotal_vnd: sum(quantity*(unit_price_vnd+option_surcharge_vnd)), integer. |
-| 5 | merge_discount_vnd | Field / control | min(subtotal, 840000 VND) when opted in to eligible MFG-10 v3 merge | As specified | Discount is fixed at 840000 VND per order (30% of setup-cost assumption), capped at subtotal; otherwise 0. |
-| 6 | price_breakdown | Field / control | integer VND, read-only | As specified | Show snapshotted subtotal, discount, shipping, merge fee, tax, separate design_fee_vnd and total; default shipping is 30000, merge fee/tax are 0; design fee is outside subtotal and never discounted or quantity-multiplied. |
+| 5 | merge_discount_vnd | Post-MVP field | MFG-10 v3 amount | No | MVP always displays 0 and has no opt-in control; after MFG-10 activation show `min(subtotal_vnd, 840000)` when opted in, otherwise 0. |
+| 6 | price_breakdown | Read-only quote breakdown | integer VND | Yes | MVP shows subtotal, zero merge discount, shipping, tax, separate design_fee_vnd and total; merge fee is 0. Design fee is outside subtotal and never discounted or quantity-multiplied. |
 | 7 | quote_id / expected_version / Idempotency-Key | Field / control | required submission contract | As specified | Never submit a client total; an expired/superseded quote returns to requote and explicit review. |
 | 8 | API errors | Field / control | standard API error envelope | As specified | 400 malformed; 422 invalid fields; 409 stale/duplicate; 429 rate limit; 503 dependency failure |
 | 9 | Submit order | Action | Revalidate quote and fee-allocation versions; atomically claim any fee allocation and create an `AwaitingDigitalApproval` order with immutable snapshots and idempotency. | Available when authorized | Destination: S27 |
 | 10 | Edit quantities/address | Action | Requote and show changed breakdown before submit. | Available when authorized | Destination: S22 |
-| 11 | Change merge preference | Action | Requote with explicit preference. | Available when authorized | Destination: S23 |
+| 11 | Change merge preference | Post-MVP action | Requote with explicit preference only after MFG-10 activation. | Post-MVP only | Destination: S23; omit from MVP UI and API input. |
 
 ## 4. States
 
@@ -57,7 +57,7 @@ Written behavior below takes precedence over obsolete sample content.
 |---|---|---|---|---|
 | 1 | Submit order | Activate | Revalidate quote and fee-allocation versions; atomically claim any fee allocation and create an `AwaitingDigitalApproval` order with immutable snapshots. | S27 |
 | 2 | Edit quantities/address | Activate | Requote and show changed breakdown before submit. | S22 |
-| 3 | Change merge preference | Activate | Requote with explicit preference. | S23 |
+| 3 | Change merge preference | Post-MVP only | Available after MFG-10 activation; not rendered in MVP. | S23 |
 
 Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Sales Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks internal role, customer ownership and staff assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Sales Admin, S20 for Sales, S41 for System Admin, and S01 for Guest.
 

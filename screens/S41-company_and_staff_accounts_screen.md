@@ -5,7 +5,7 @@
 | Screen ID | `S41` |
 | Screen name | Dony Staff Accounts |
 | Actor | System Admin |
-| Priority | P2 |
+| Priority | P3 |
 | Belongs to module | [MFG-03](../specs/spec-MFG-03.md) |
 | Route | `/system/staff` |
 | Mockup image | img/S41-company_and_staff_accounts_screen.png |

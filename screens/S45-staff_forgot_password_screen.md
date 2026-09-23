@@ -5,7 +5,7 @@
 | Screen ID | `S45` |
 | Screen name | Dony Staff CRM Forgot Password |
 | Actor | Guest / Dony employee |
-| Priority | Must |
+| Priority | P1 |
 | Belongs to module | [MFG-01](../specs/spec-MFG-01.md) |
 | Route | `/staff/forgot-password` |
 | Mockup image | img/S45-staff_forgot_password_screen.png |

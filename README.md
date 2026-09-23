@@ -84,7 +84,7 @@ The MVP scope is defined by feature priority. It does not remove lower-priority 
 **MVP implementation slice:** “Should” describes the full MFG-07/MFG-09 modules, not permission to omit their order-critical minimums. Implement one end-to-end standard order path in this sequence:
 
 1. **Bootstrap and access:** pre-provision the seed identities listed above; support Customer, Sales and Sales Admin authentication/authorization. Sales Admin is the MVP operational owner and can perform required Dony sample, contract and order updates without MFG-08 assignment queues. System Admin is bootstrap-only; MFG-03/MFG-12 management screens are not MVP deliverables.
-2. **Catalog and design:** deliver Published product-base browsing and Customer self-design/save from MFG-04/MFG-05. Exclude assessed design service and merge opt-in/discounts from the MVP checkout.
+2. **Catalog and design:** seed at least one complete, Published Dony product base with valid variants, size/colour/material/print options, prices, assets and compatible design rules before release; Customers browse it and self-design/save through MFG-04/MFG-05. MVP does not require product-admin CRUD screens. Exclude assessed design service and merge opt-in/discounts from MVP checkout.
 3. **Quote, order and physical sample:** create a standard quote and order; Customer approves the digital design; Sales Admin manually records sample preparation and dispatch evidence/tracking; Customer records sample receipt and approval. A requested revision returns to a new design/quote approval cycle.
 4. **Contract and deposit:** generate the Customer's immutable contract from one fixed Dony template after sample approval. Record consent, authenticated Customer acceptance/name, contract version and timestamp before allowing the exact VNPay deposit. This application acknowledgement is not represented as a certified digital signature.
 5. **Production, delivery and balance:** Sales Admin manually advances the paid order through InProduction and Shipped with required evidence/tracking; Customer confirms receipt; only then allow the exact VNPay balance. Verified deposit/balance notifications, cancellation/refund protections and final order completion remain mandatory; staff cannot mark an order paid manually.
@@ -110,6 +110,8 @@ The authoritative actor association is recorded in [`docs/architecture/use-case.
 ## Traceability
 
 The documents retain the original identifier layers: `MFG-*`, `UC-*`, `F-*`, module-local `FR-*`, 45 active screen IDs (`S01`–`S15` and `S17`–`S46`; S16 is retired), `SD-*`, and `ILF-*`. Each module spec maps its scenarios, requirements, screens, entities, business rules, and success criteria back to these identifiers.
+
+For implementation scope, the `MVP` column in [`docs/screen-list.md`](docs/screen-list.md) is authoritative at screen level; a `Yes` may identify only an MVP subset of a mixed-purpose screen. Screen `P1/P2/P3` and function-list `High/Medium/Low` are artefact-local rankings and do not replace the project MoSCoW scope.
 
 ## Open clarification areas
 

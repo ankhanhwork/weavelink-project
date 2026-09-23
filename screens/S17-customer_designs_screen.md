@@ -5,7 +5,7 @@
 | Screen ID | `S17` |
 | Screen name | Customer Designs |
 | Actor | Customer owner |
-| Priority | P3 |
+| Priority | P1 |
 | Belongs to module | [MFG-05](../specs/spec-MFG-05.md) |
 | Route | `/designs` |
 | Mockup image | img/S17-customer_designs_screen.png |

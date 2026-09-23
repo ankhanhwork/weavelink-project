@@ -5,7 +5,7 @@
 | Screen ID | `S04` |
 | Screen name | Customer Storefront Forgot Password |
 | Actor | Guest |
-| Priority | P3 |
+| Priority | P1 |
 | Belongs to module | [MFG-01](../specs/spec-MFG-01.md) |
 | Route | `/forgot-password` (Customer storefront only) |
 | Mockup image | img/S04-forgot_password_screen.png |

@@ -5,7 +5,7 @@
 | Screen ID | `S05` |
 | Screen name | Customer Storefront Reset Password |
 | Actor | Guest with single-use token |
-| Priority | P3 |
+| Priority | P1 |
 | Belongs to module | [MFG-01](../specs/spec-MFG-01.md) |
 | Route | `/reset-password?token={token}` (Customer storefront only) |
 | Mockup image | img/S05-reset_password_screen.png |

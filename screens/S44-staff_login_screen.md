@@ -5,7 +5,7 @@
 | Screen ID | `S44` |
 | Screen name | Dony Staff CRM Log In and Invitation Acceptance |
 | Actor | Invited Dony employee / active StaffAccount |
-| Priority | Must |
+| Priority | P1 |
 | Belongs to module | [MFG-01](../specs/spec-MFG-01.md), [MFG-03](../specs/spec-MFG-03.md) |
 | Route | `/staff/login` |
 | Mockup image | img/S44-staff_login_screen.png |
@@ -21,6 +21,8 @@
 
 ![Dony staff CRM login](img/S44-staff_login_screen.png)
 
+MVP supports staff sign-in only for pre-provisioned identities; invitation acceptance is a later MFG-03 capability and is not part of the MVP UI.
+
 ## 3. Element inventory
 
 | # | Element | Type | Content / data source | Required | Validation |
@@ -30,7 +32,7 @@
 | 3 | Password | Secret field | Password | Yes | Verify stored hash; never echo or log. |
 | 4 | Sign in | Action | Authenticate active StaffAccount and create secure session | Yes | Route is fixed to staff portal; allowlisted internal redirect only. |
 | 5 | Forgot password | Link | Staff recovery route | Yes | Destination: S45. |
-| 6 | Invitation acceptance | Token-bound state | Staff invitation token | Invitation link only | Single use, 48-hour expiry; existing identity authenticates before acceptance. |
+| 6 | Invitation acceptance | Post-MVP token-bound state | Staff invitation token | No (MVP) | Later MFG-03 capability: single use, 48-hour expiry; existing identity authenticates before acceptance. |
 | 7 | Failed attempts | System state | Account/IP rate-limit counter | Yes | Five attempts per 15 minutes, then 429. |
 
 ## 4. States
