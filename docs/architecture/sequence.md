@@ -38,7 +38,7 @@ sequenceDiagram
     else [email already registered]
         UserAccountDatabase-->>AuthService: no mutation
     end
-    Note over AuthService,AuthUI: Both paths return the same 202 response and generic acknowledgement; never reveal whether the address exists.
+    Note over AuthService,AuthUI: Both paths return the same 202 response and generic acknowledgement, never reveal whether the address exists.
     AuthService-->>AuthController: registration accepted (same response shape)
     AuthController-->>AuthUI: HTTP 202 generic acknowledgement
     AuthUI-->>Guest: display generic next-step message
@@ -231,7 +231,7 @@ sequenceDiagram
     ContractUI->>ContractService: Sign current version with idempotency key
     ContractService->>Database: Lock contract/order and revalidate version/hash/sample
     alt Evidence valid
-        ContractService->>Database: Save evidence; Signed; order AwaitingDeposit
+        ContractService->>Database: Save evidence, Signed, order AwaitingDeposit
         ContractService->>Database: Write notification outbox
         ContractService-->>ContractUI: Signed receipt and deposit next action
         OutboxWorker-->>Customer: Send authorized signed-copy notice
@@ -259,11 +259,11 @@ sequenceDiagram
     VNPay->>PaymentService: Authoritative signed server callback
     PaymentService->>Database: Verify merchant, reference, purpose, amount and uniqueness
     alt Accepted DEPOSIT
-        PaymentService->>Database: Succeeded; AwaitingDeposit to Confirmed
+        PaymentService->>Database: Succeeded, AwaitingDeposit to Confirmed
     else Accepted BALANCE
-        PaymentService->>Database: Succeeded; DeliveredAwaitingBalance to Completed
+        PaymentService->>Database: Succeeded, DeliveredAwaitingBalance to Completed
     else Failure, mismatch or late cancelled receipt
-        PaymentService->>Database: Preserve order gate; audit and refund late captured money
+        PaymentService->>Database: Preserve order gate, audit and refund late captured money
     end
     PaymentUI->>PaymentService: Poll transaction status
     PaymentService-->>PaymentUI: Authoritative purpose, amount, state and next action
