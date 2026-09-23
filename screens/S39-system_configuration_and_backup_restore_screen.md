@@ -34,7 +34,7 @@ Written behavior below takes precedence over obsolete sample content.
 | 5 | SMTP/VNPay secret references | Field / control | write-only secret-reference strings | As specified | Show configured/not configured only; never reveal secret values. |
 | 6 | design_service_fee_vnd | Field / control | integer | As specified | Suggested Complex assessment fee: range 1..9999999999 VND; default 200000. Changes affect future assessments only; Simple uses 0 and existing proposals/accepted fees remain unchanged. |
 | 7 | shipping_vnd | Field / control | integer | As specified | Configurable nonnegative VND; default 30000. |
-| 8 | merge_discount_percent | Field / control | integer, read-only in v1 | As specified | Fixed at 5 despite broader allowlist in later configuration; fixed release rule. |
+| 8 | merge_discount_policy | Read-only policy summary | MFG-10 policy version | Yes | Display v3 as `min(order_subtotal_vnd, 840000)` per opted-in order; do not present a percentage. MFG-10 owns the canonical formula and constants; this screen only displays the active policy version. |
 | 9 | standard_production_days / merge_extra_days | Field / control | integer, read-only in v1 | As specified | Fixed at 7 / 3 days; customer promise is production_due_at, not carrier delivery. |
 | 10 | daily_backup_time | Field / control | HH:mm, editable | As specified | Asia/Ho_Chi_Minh; default 02:00. |
 | 11 | daily_retention_count / weekly_retention_count | Field / control | integers, editable | As specified | Daily 1..30 default 7; weekly 1..12 default 4; retain required transaction logs/assets for all retained bases. |

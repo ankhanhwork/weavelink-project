@@ -17,7 +17,7 @@
 
 Customers can view their made-to-order orders and follow every commitment from digital-design approval through sample, deposit, production, receipt and final settlement. Sales Admins and an assigned Sales employee can perform the operational transitions assigned to Dony; an owning Customer or Sales Admin can cancel only when the lifecycle permits. This module consumes design/sample, contract, payment, refund and batch events; it does not price orders, settle payments, or generate contracts.
 
-MVP priority: **Should**, per the project MVP Scope. The module is documented for the complete system. Order creation/payment belongs to MFG-06; contract generation/signature to MFG-09; production batches to MFG-10. MFG-07 function IDs must be qualified with `MFG-07/` because MFG-08 independently reuses `F-ORD-001`–`F-ORD-007`.
+MVP priority: **Should** for the complete module, per the project MVP Scope. The MVP still includes only the order-critical minimum: Customer sample receipt/approval and delivery receipt, plus manual Sales Admin transitions through InProduction and Shipped; MFG-06 retains payment gating and cancellation/refund rules. Advanced fulfillment automation and assignment queues are deferred. Order creation/payment belongs to MFG-06; contract generation/signature to MFG-09; production batches to MFG-10. MFG-07 function IDs must be qualified with `MFG-07/` because MFG-08 independently reuses `F-ORD-001`–`F-ORD-007`.
 
 ## 2. Actors (mandatory)
 
@@ -192,7 +192,7 @@ FR identifiers are local to MFG-07. Access is server-checked: customers require 
 
 - Orders are made to order; cancellation does not restock inventory.
 - MFG-06 is authoritative for settlement/refunds, and MFG-10 is authoritative for batch membership.
-- MVP prioritizes this module as Should; manual tracking remains an acceptable operational fallback.
+- The complete module remains Should, but the minimum transitions needed to finish the MFG-06 MVP order path are required in the MVP implementation slice in README. Manual Sales Admin updates are the defined MVP behavior, not an optional fallback.
 
 ## 10. Open questions
 

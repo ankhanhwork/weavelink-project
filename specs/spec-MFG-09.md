@@ -17,7 +17,7 @@
 
 Sales Admins manage versioned templates and generate or regenerate an order contract only after the Customer has approved the received physical sample. Customers review and sign only their own current contract. The contract binds the approved digital-design version, physical-sample evidence, commercial total, deposit percentage and remaining-balance formula. The system generates PDFs and records an auditable application acknowledgement; it does not claim a certified digital signature. Successful signing atomically advances the order from `PendingContract` to `AwaitingDeposit`. MFG-06 owns order creation and payment; MFG-07 owns fulfillment/cancellation.
 
-MVP priority: **Should**. The complete-system contract lifecycle, template management and signature evidence are specified here.
+MVP priority: **Should** for the complete module. The MVP includes one fixed-template contract snapshot and Customer acknowledgement after physical-sample approval, as a required MFG-06 dependency; full template administration, regeneration tooling and stronger signature workflows remain deferred. This acknowledgement is not a certified digital signature. The complete-system contract lifecycle is specified here.
 
 ## 2. Actors (mandatory)
 
@@ -185,7 +185,7 @@ Contract amounts must match the quote/payment screens using the same VND snapsho
 
 - Sales Admin and customer authorization are resolved server-side.
 - PDF assets are private; URLs expire after authorization.
-- MVP priority is Should; no certified digital-signature claim is made.
+- Full MFG-09 priority is Should; its fixed-template and Customer-acceptance minimum is required by the README MVP implementation slice. No certified digital-signature claim is made.
 
 ## 10. Open questions
 

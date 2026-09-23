@@ -126,6 +126,19 @@ for (let number = 1; number <= 46; number++) {
 }
 
 check(read('README.md').includes('## MVP Scope'), 'README: MVP Scope missing');
+const readme = read('README.md');
+const mergeSpec = read('specs/spec-MFG-10.md');
+const s35 = read('screens/S35-order_payment_screen.md');
+const s39 = read('screens/S39-system_configuration_and_backup_restore_screen.md');
+const acceptance = read('ai-files/docs/acceptance-checklist.md');
+check(readme.includes('one `Sales Admin` for order/sample/contract operations') && readme.includes('one `Sales` identity') && readme.includes('one `System Admin` bootstrap identity') && readme.includes('one verified Customer test account'), 'README: MVP seed identities must name operational and bootstrap roles');
+check(/\*\*MVP implementation slice:\*\*[\s\S]*fixed Dony template[\s\S]*Sales Admin manually/.test(readme), 'README: MVP vertical slice must include minimum contract and fulfillment steps');
+check(mergeSpec.includes('canonical source for MFG-10 policy numbers and formulas') && mergeSpec.includes('840,000 VND') && mergeSpec.includes('2,800,000 VND') && mergeSpec.includes('seven calendar days'), 'MFG-10: canonical v3 policy values missing');
+check(s35.includes('min(subtotal_vnd, 840000)') && !/5\s*\/\s*100|5%/.test(s35), 'S35: merge discount must match the MFG-10 v3 capped-amount formula');
+check(s39.includes('min(order_subtotal_vnd, 840000)') && !/merge_discount_percent|Fixed at 5/.test(s39), 'S39: displayed merge policy must match MFG-10 v3');
+check(acceptance.includes('Worked price-policy v3 examples') && !acceptance.includes('price-policy v1'), 'Acceptance checklist: pricing examples must use policy v3');
+check(!/another-company staff|company with open work is deleted/i.test(acceptance), 'Acceptance checklist: obsolete multi-tenant scenarios remain');
+check(readme.includes('45 active screen IDs (`S01`–`S15` and `S17`–`S46`; S16 is retired)'), 'README: active screen range must match the catalogue');
 check(read('README.md').includes('## Open clarification areas'), 'README: original clarification-area section missing');
 check(/^\| ID \| Screen name \| Screen Overview \|/m.test(screenCatalogue), 'screen-list: original three-column header missing');
 check(/^# Function List$/m.test(functionCatalogue), 'function-list: original title missing');

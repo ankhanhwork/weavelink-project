@@ -21,7 +21,7 @@ Dony is one made-to-order garment factory. A company buying uniforms and a Resel
 
 **In scope:** list and inspect Dony staff; invite a new employee; assign an allowed internal role; activate, suspend or reactivate an employee; update allowlisted profile and role fields; require work reassignment before deactivation; soft-delete an eligible staff account; revoke affected sessions and retain audit history.
 
-**Out of scope:** customer self-registration (MFG-01), customer organization and billing information (MFG-02/MFG-06), product/order mutations, creation of external companies, company provisioning, tenant memberships and customer-managed employee accounts. This full administration module is outside MVP; one seeded internal admin is sufficient for MVP.
+**Out of scope:** customer self-registration (MFG-01), customer organization and billing information (MFG-02/MFG-06), product/order mutations, creation of external companies, company provisioning, tenant memberships and customer-managed employee accounts. The full staff-account administration UI is outside MVP. MVP identities are pre-provisioned: one active Sales Admin (operational owner), one active Sales employee (role/assignment testing), one active System Admin (bootstrap/recovery only), and one verified Customer test account. No employee self-registration or invitation-management UI is required for this seed setup.
 
 ## 2. Actors (mandatory)
 
@@ -175,7 +175,7 @@ sequenceDiagram
 - A Business Buyer orders made-to-order uniforms or garments for internal use.
 - A Reseller Shop supplies its own design, branding or requirements for Dony to manufacture, then sells the resulting garments to the shop's customers; it does not resell Dony ready-made inventory.
 - Legal, organization and contact values used in the classroom demo are fictional samples.
-- MVP uses one seeded internal admin login; full MFG-03 remains documented for a later release.
+- MVP uses the pre-provisioned role-specific accounts listed in the project README; Sales Admin owns the minimum operational order path, while System Admin is bootstrap/recovery-only. Full MFG-03 remains documented for a later release.
 
 ## 10. Open questions
 

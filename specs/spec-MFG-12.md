@@ -193,7 +193,7 @@ Configuration notices list changed key names, actor, version and time only; secr
 
 - System Admin identity and recent reauthentication are available from the shared identity service.
 - Scheduler, private asset storage and durable job queue are available in complete-system deployment.
-- MVP priority is Won't; a single admin login is sufficient at MVP launch.
+- MVP priority is Won't; role-specific Sales Admin, Sales, System Admin and verified Customer identities are pre-provisioned as listed in README. The System Admin identity is bootstrap/recovery-only; Sales Admin operates the MVP order path.
 
 ## 10. Open questions
 

@@ -2,7 +2,7 @@
 
 These are concrete acceptance requirements for the future application, not runtime tests already executed. Module specs supply the detailed per-function cases. [D01–D12](system-decisions.md) govern; [validation report](validation-report.md) distinguishes documentation checks from application testing.
 
-## Worked price-policy v1 examples
+## Worked price-policy v3 examples
 
 All values are integer VND. Apply surcharge per unit, then merge discount=min(subtotal, 840000 VND) once on the total subtotal (30% of the 2,800,000 VND setup-cost planning assumption). Shipping below uses the demo default; real quotes snapshot configured shipping. The documentation validator independently checks these rows.
 
@@ -13,7 +13,7 @@ All values are integer VND. Apply surcharge per unit, then merge discount=min(su
 | Rounding | 3 | 100001 | 2 | Yes | 30000 | 300009 | 300009 | 30000 |
 | Small subtotal | 1 | 1 | 0 | Yes | 30000 | 1 | 1 | 30000 |
 
-These examples use design_fee_vnd 0. A Complex first order adds its accepted fee outside subtotal: the Merge example with design fee 200000 has unchanged discount 840000 and total 9390000. Tax and merge fee are zero under v1 demo policy. Promo codes are not active. Quantity over product max_units_per_order or 10000 is rejected, even if the price calculation would succeed. Values beyond the payment adapter's bound are rejected before order/payment creation. S23/S25/S34/S35 must show identical stored totals for the submitted snapshot.
+These examples use design_fee_vnd 0. A Complex first order adds its accepted fee outside subtotal: the Merge example with design fee 200000 has unchanged discount 840000 and total 9390000. Tax and merge fee are zero under v3 demo policy. Promo codes are not active. Quantity over product max_units_per_order or 10000 is rejected, even if the price calculation would succeed. Values beyond the payment adapter's bound are rejected before order/payment creation. S23/S25/S34/S35 must show identical stored totals for the submitted snapshot.
 
 ## End-to-end scenarios
 
@@ -31,17 +31,17 @@ These examples use design_fee_vnd 0. A Complex first order adds its accepted fee
 | E2E-09 | Customer cancels while a deposit callback arrives | Row locking selects a coherent order; cancellation retains Cancelled and creates the policy-based refund if funds arrive; no resurrection |
 | E2E-10 | Two eligible opt-in orders are recommended; Admin start races cancellation | Admin-only start atomically commits all members or rejects; no recommendation reserves an order; no partial batch/cancelled member |
 | E2E-11 | Seven-day merge window expires without an Admin-started batch | Scheduler starts Individual Production through MFG-07 automatically; discount and due date stay snapshotted |
-| E2E-12 | Sales Admin reviews and starts a compatible group with negative estimated net savings | Negative amount remains visible; no acknowledgment gate; batch starts only after explicit authorized Admin action |
+| E2E-12 | Programme-to-date net savings are negative while the selected compatible batch has its own estimate | Programme-level negative amount remains visible; selected-batch estimate is shown separately; no acknowledgement gate; batch starts only after explicit authorized Sales Admin action |
 | E2E-13 | Assigned Sales ships an InProduction order; Customer confirms receipt | Carrier/tracking/time required; unauthorized Sales cannot act; Shipped does not expose BALANCE until receipt evidence advances to DeliveredAwaitingBalance |
-| E2E-14 | Another-company staff guesses order, PDF, export or design UUID | No content disclosure or mutation; object guard returns 404 |
+| E2E-14 | An unassigned Dony employee guesses an order, PDF, export or design UUID | No content disclosure or mutation; object authorization returns 404 |
 | E2E-15 | A new Dony employee accepts a System Admin-issued invitation | StaffAccount activates exactly once; token is consumed; staff password is never generated or emailed; no customer company or tenant is created |
-| E2E-16 | Last active admin is demoted or company with open work is deleted | Operation rejected, access remains recoverable; no orphan work |
+| E2E-16 | Last active Dony System Admin is demoted, or a Dony employee with open work is deactivated without reassignment | Operation rejected; Dony access remains recoverable and no customer/order/request work is orphaned |
 | E2E-17 | Duplicate/late payment is received and refunded | Reconciliation balance records both events; neither inflates accepted sales revenue; only eligible original-sale refunds reduce revenue |
 | E2E-18 | Export requested with dashboard filters and malicious text cell | Same watermark/totals/company scope; CSV/XLSX treats formula-leading content as text |
 | E2E-19 | Old backup selected, later transactions exist and callbacks arrive during recovery | Verified log replay reconstructs committed watermark, queued provider events replay once, no lost orders or duplicate refunds; missing log chain blocks activation |
 | E2E-20 | Email service fails during payment/signing/config changes | Business commit and in-app inbox survive; retryable delivery failure is visible in operations |
 | E2E-21 | Customer cancels in each preassignment state, including after fee acceptance, while Admin assigns/assesses | Eligible cancellation has no refund; one race winner; stale/state 409; Assigned/InProgress/Delivered/Rejected cannot cancel; repeated cancellation replays |
-| E2E-22 | Customer accepts stale/wrong Complex fee; another-company actor assesses | No acceptance/approval or disclosure; exact current proposal and ownership required; proposals cannot be edited after publication |
+| E2E-22 | Customer accepts stale/wrong Complex fee; an unassigned Dony employee attempts assessment | No acceptance/approval or disclosure; exact current proposal and authorized Dony role required; proposals cannot be edited after publication |
 | E2E-23 | Two first orders from delivered Complex design/copies race | One claims accepted fee; other conflicts; source provenance retained; stale allocation requires reviewed requote; fee outside subtotal and discount |
 | E2E-24 | Additional order attempted before fee-bearing order InProduction, then after | Before: 409 DESIGN_FEE_ORDER_PENDING; after: new order design_fee_vnd 0; no duplicate charge |
 | E2E-25 | Fee-bearing order cancelled with pending/failed refund, then fully resolved | Allocation remains blocked until attempts/refund resolved; release then charges next new order; no signed snapshot changes; late receipts refunded without reclaiming allocation |

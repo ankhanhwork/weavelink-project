@@ -62,24 +62,32 @@ The MVP scope is defined by feature priority. It does not remove lower-priority 
 
 | Priority | Feature / Item | MFG | Notes |
 |---|---|---|---|
-| **Must** | Role-based Authentication & Access (Customer, Sales, Sales Admin) | MFG-01 | Foundation for secure role-aware access |
+| **Must** | Role-based Authentication & Access (Customer, Sales, Sales Admin) | MFG-01 | Required login/authorization roles; initial Dony staff identities are pre-provisioned because staff-account administration is deferred |
 | **Must** | Product Catalog (browse, search, view product detail) | MFG-04 | Entry point for choosing a base product |
 | **Must** | Product Design Workspace (self-design, upload artwork, preview, save design) | MFG-05 | Core customization workflow |
-| **Must** | Order & Payment (checkout, VNPay integration, order creation) | MFG-06 | Core revenue workflow |
-| **Should** | Order Tracking & Status Updates | MFG-07 | Manual tracking is an acceptable temporary launch fallback |
-| **Should** | Digital Contract Generation & E-signature acknowledgement | MFG-09 | Email or paper contract is an acceptable temporary launch fallback |
-| **Could** | Order Optimization / Merge | MFG-10 | Valuable after order volume increases |
+| **Must** | Order & Payment (standard checkout, VNPay deposit and balance, order creation) | MFG-06 | MVP uses the standard single-order path; merge pricing/batching is deferred with MFG-10. The order path also requires the minimum MFG-07/MFG-09 slices below before the MVP is complete. |
+| **Should** | Order Tracking & Status Updates | MFG-07 | Full tracking automation is deferred; the MVP-required slice uses authenticated Dony staff to record sample preparation/dispatch, production and shipment, with Customer sample approval and receipt confirmation. |
+| **Should** | Digital Contract Generation & E-signature acknowledgement | MFG-09 | Full template administration/signature enhancements are deferred; the MVP-required slice uses one fixed contract template, immutable order/sample terms, and a recorded Customer acceptance before deposit. |
+| **Could** | Order Optimization / Merge | MFG-10 | Valuable after order volume increases; MFG-10 v3 is the canonical source for merge-policy formulas and numeric assumptions. |
 | **Could** | Assessed Design Service Request | MFG-05 | Simple work is free; accepted Complex fee is collected with the first order from the delivered design |
 | **Could** | Sales Assignment & Task Dashboard | MFG-08 | Needed when consultation volume requires a dedicated queue |
 | **Won't** | Data Analytics Dashboard & Data Export | MFG-11 | Deferred until sufficient order history exists |
-| **Won't** | Dony Staff Accounts & System Operations | MFG-03, MFG-12 | One configured internal admin is sufficient for the MVP |
+| **Won't** | Dony Staff Account Administration & System Operations | MFG-03, MFG-12 | Invitation/role-management UI, configurable operations, logs, backup and restore are deferred. Pre-provision one `Sales Admin` for order/sample/contract operations, one `Sales` identity for role/assignment checks, and one `System Admin` bootstrap identity; also seed one verified Customer test account. These are demo identities, not self-registration or live credentials. |
 
 ### MVP Priority Summary
 
 - **Must:** MFG-01, MFG-04, self-design in MFG-05, and MFG-06.
-- **Should:** MFG-07 and MFG-09.
+- **Should:** Full MFG-07 and MFG-09 capabilities beyond the minimum order-completion slices required for the MVP vertical path.
 - **Could:** assessed design service in MFG-05, MFG-08, and MFG-10.
 - **Won't:** MFG-03, MFG-11, and MFG-12 for the MVP release.
+
+**MVP implementation slice:** “Should” describes the full MFG-07/MFG-09 modules, not permission to omit their order-critical minimums. Implement one end-to-end standard order path in this sequence:
+
+1. **Bootstrap and access:** pre-provision the seed identities listed above; support Customer, Sales and Sales Admin authentication/authorization. Sales Admin is the MVP operational owner and can perform required Dony sample, contract and order updates without MFG-08 assignment queues. System Admin is bootstrap-only; MFG-03/MFG-12 management screens are not MVP deliverables.
+2. **Catalog and design:** deliver Published product-base browsing and Customer self-design/save from MFG-04/MFG-05. Exclude assessed design service and merge opt-in/discounts from the MVP checkout.
+3. **Quote, order and physical sample:** create a standard quote and order; Customer approves the digital design; Sales Admin manually records sample preparation and dispatch evidence/tracking; Customer records sample receipt and approval. A requested revision returns to a new design/quote approval cycle.
+4. **Contract and deposit:** generate the Customer's immutable contract from one fixed Dony template after sample approval. Record consent, authenticated Customer acceptance/name, contract version and timestamp before allowing the exact VNPay deposit. This application acknowledgement is not represented as a certified digital signature.
+5. **Production, delivery and balance:** Sales Admin manually advances the paid order through InProduction and Shipped with required evidence/tracking; Customer confirms receipt; only then allow the exact VNPay balance. Verified deposit/balance notifications, cancellation/refund protections and final order completion remain mandatory; staff cannot mark an order paid manually.
 
 ## Use Case ID convention
 
@@ -101,7 +109,7 @@ The authoritative actor association is recorded in [`docs/architecture/use-case.
 
 ## Traceability
 
-The documents retain the original identifier layers: `MFG-*`, `UC-*`, `F-*`, module-local `FR-*`, `S01` through `S43`, `SD-*`, and `ILF-*`. Each module spec maps its scenarios, requirements, screens, entities, business rules, and success criteria back to these identifiers.
+The documents retain the original identifier layers: `MFG-*`, `UC-*`, `F-*`, module-local `FR-*`, 45 active screen IDs (`S01`–`S15` and `S17`–`S46`; S16 is retired), `SD-*`, and `ILF-*`. Each module spec maps its scenarios, requirements, screens, entities, business rules, and success criteria back to these identifiers.
 
 ## Open clarification areas
 
