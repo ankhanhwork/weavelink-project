@@ -11,7 +11,7 @@
 | UC-M06 | Manage profile | Member | UC-M05, UC-M07, UC-M08 | MFG-02/F-PROF-001, MFG-02/F-PROF-002, MFG-02/F-PROF-003, MFG-02/F-PROF-004, MFG-02/F-PROF-005 |
 | UC-M07 | Edit Profile | Member | None | MFG-02/F-PROF-002, MFG-02/F-PROF-003 |
 | UC-M08 | Change password | Member | None | MFG-02/F-PROF-004, MFG-02/F-PROF-005 |
-| UC-C01 | Design product | Customer | UC-C02 | MFG-05/F-DES-001, MFG-05/F-DES-002, MFG-05/F-DES-003 |
+| UC-C01 | Design product | Customer | None | MFG-05/F-DES-001, MFG-05/F-DES-002, MFG-05/F-DES-003 |
 | UC-C02 | Product Customization | Customer | Includes UC-C01, UC-C03, UC-C04 | MFG-05/F-DES-001, MFG-05/F-DES-002, MFG-05/F-DES-003 |
 | UC-C03 | View saved design | Customer | None | MFG-05/F-DES-004 |
 | UC-C04 | Request design service | Customer | Sales Admin (complexity assessment); System (notifications) | MFG-05/F-DES-005, MFG-05/F-DES-006, MFG-05/F-DES-007, MFG-05/F-DES-008, MFG-05/F-DES-012, MFG-05/F-DES-013 |
@@ -19,8 +19,8 @@
 | UC-C06 | Choose merge option | Customer | None | MFG-10/F-MER-001, MFG-10/F-MER-002, MFG-10/F-MER-003 |
 | UC-C07 | Cancel order | Customer | None | MFG-07/F-ORD-003, MFG-07/F-ORD-004 |
 | UC-C08 | Track order status | Customer | None | MFG-07/F-ORD-001, MFG-07/F-ORD-002 |
-| UC-C10 | View contract | Customer | UC-C11 | MFG-09/F-CONTR-008, MFG-09/F-CONTR-009 |
-| UC-C09 | View/Sign contract | Customer | UC-C10, UC-C11 | MFG-09/F-CONTR-008, MFG-09/F-CONTR-009 |
+| UC-C09 | View/Sign contract | Customer | UC-C10, UC-C11 | None; composite use case |
+| UC-C10 | Receive Ready contract notice | Customer | None | MFG-09/F-CONTR-005 |
 | UC-C11 | Sign contract | Customer | None | MFG-09/F-CONTR-008, MFG-09/F-CONTR-009 |
 | UC-C12 | Make payment | Customer | None | MFG-06/F-PAY-004, MFG-06/F-PAY-005, MFG-06/F-PAY-006 |
 | UC-S01 | View assignment | Sales | None | MFG-08/F-ORD-005, MFG-08/F-ORD-006 |

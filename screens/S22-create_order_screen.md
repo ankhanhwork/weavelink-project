@@ -13,7 +13,7 @@
 
 ## 1. Purpose
 
-**Shown when:** The customer enters exact recipient name, phone and full delivery address (address line, ward and province), chooses positive integer quantities by supported size, and requests a server-priced quote for an owned eligible design. The server enforces product max_units_per_order. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
+**Shown when:** The customer enters exact recipient name, phone and full delivery address (address line, ward and province), chooses positive integer quantities by supported size, identifies the purchase as Individual, Business Buyer or Reseller Shop, and requests a server-priced quote for an owned eligible design. Business Buyer and Reseller Shop must also enter legal name, tax ID and billing address; these are commercial snapshots, not tenant or authorization data. The server enforces product MOQ and max_units_per_order. All identifiers and permissions come from the server session; recoverable failures preserve entered values.
 
 **The user leaves this screen when:** An authorized action in section 5 succeeds, the user follows a role-allowed global route, or they return to the validated originating route.
 
@@ -31,19 +31,21 @@ Written behavior below takes precedence over obsolete sample content. MVP does n
 | 2 | Route | Navigation target | /orders/new?design_id={id} | Yes | Access checked on server. |
 | 3 | design_id | Field / control | UUID, required | As specified | Customer-owned Saved self-design or Delivered consultant design. |
 | 4 | design_version / product_version | Field / control | UUID/version, required | As specified | Must match current product rule; changed rules require explicit review. |
-| 5 | quantity_by_size | Field / control | object map, required | As specified | Supported size keys; each value positive integer; total quantity 1..10000. |
+| 5 | quantity_by_size | Field / control | object map, required | As specified | Supported size keys; each value positive integer; aggregate quantity must be at least product MOQ and at most 10000; MVP seed MOQ is 10 across all sizes. |
 | 6 | recipient_name | Field / control | string, required | As specified | Trimmed, 1..100 characters. |
 | 7 | phone | Field / control | string, required | As specified | 8..15 digits, optional leading +. |
 | 8 | address_line | Field / control | string, required | As specified | Trimmed, 1..250 characters. |
 | 9 | ward | Field / control | string, required | As specified | Trimmed, 1..100 characters. |
 | 10 | province | Field / control | string, required | As specified | Trimmed, 1..100 characters. |
 | 11 | country | Field / control | enum, required | As specified | Exactly VN. |
-| 12 | client customer_id/buyer_organization_id/unit_price/total | Field / control | prohibited | As specified | Resolve Customer ownership and any saved buyer organization on the server; the organization is not a tenant selector; server calculates all prices and total. |
-| 13 | expected_version / Idempotency-Key | Field / control | version and UUID, required for mutation | As specified | Reject stale state; financially significant order create is idempotent. |
-| 14 | capacity | Field / control | server-derived integer | As specified | Reject quote if total exceeds product max_units_per_order with 422 CAPACITY_EXCEEDED. |
-| 15 | Get quote | Action | Server computes amounts for design/options/quantities/address; no order created yet. | Available when authorized | Destination: S25 |
-| 16 | Select merge | Post-MVP action | Continue to explicit opt-in/terms after MFG-10 activation. | Post-MVP only | Destination: S23; omit from MVP UI and API input. |
-| 17 | Select design | Action | Return to owned designs. | Available when authorized | Destination: S17 |
+| 12 | buyer_type | Selector | Individual, Business Buyer, Reseller Shop | Yes | Describes this purchase only; it is not an account role or tenant boundary. Default Individual. |
+| 13 | buyer_legal_name / buyer_tax_id / billing_address | Conditional fields | Required for Business Buyer and Reseller Shop; omitted for Individual | Conditional | Trimmed strings; legal name 1..200, tax ID 1..50, billing address 1..250. Values are snapshotted to quote/order/contract; no tax-registry verification is claimed. |
+| 14 | client customer_id/buyer_organization_id/unit_price/total | Prohibited client authority | Server-derived | Yes | Resolve Customer session; never trust client organization ID, unit price or total. The organization is descriptive commercial data, not tenant authority. |
+| 15 | expected_version / Idempotency-Key | Version / UUID | Required for mutation | Yes | Reject stale state; financially significant order create is idempotent. |
+| 16 | capacity | Server-derived integer | Product max_units_per_order | Yes | Reject quote if aggregate quantity exceeds capacity with 422 CAPACITY_EXCEEDED. |
+| 17 | Get quote | Action | Server applies volume tier to aggregate quantity and per-garment option surcharges, then adds shipping/tax/design-fee lines; no order is created yet. | Available when authorized | Destination: S25 |
+| 18 | Select merge | Post-MVP action | Continue to explicit opt-in/terms after MFG-10 activation. | Post-MVP only | Destination: S23; omit from MVP UI and API input. |
+| 19 | Select design | Action | Return to owned designs. | Available when authorized | Destination: S17 |
 
 ## 4. States
 

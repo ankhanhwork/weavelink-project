@@ -44,7 +44,7 @@ An owning Customer or Sales Admin can cancel in an allowed state. A Sales Admin 
 
 1. **Given** an order is in a pre-deposit state from `AwaitingDigitalApproval` through `AwaitingDeposit`, **when** an authorized actor cancels it, **then** it becomes `Cancelled`; sample revision itself is not cancellation.
 2. **Given** an order is `Confirmed`, **when** production has not started and no active batch exists, **then** an authorized actor may cancel it.
-3. **Given** a captured deposit exists when cancellation commits, **then** the order remains `Cancelled` and MFG-06 receives a refund request for the captured refundable amount under the snapshotted policy; the order and made-to-order evidence are retained.
+3. **Given** a deposit was captured before cancellation commits, **then** the order remains `Cancelled` and MFG-06 requests a 100% refund of all accepted captured order payments to the original method, without a cancellation deduction, under MFG-06 BR-013; the order and made-to-order evidence are retained.
 4. **Given** an order is `InProduction`, `Shipped`, `DeliveredAwaitingBalance`, `Completed`, or linked to a Sales Admin-started active batch, **when** cancellation is attempted, **then** it is rejected with 409. A recommendation alone does not reserve the order and does not prevent eligible cancellation.
 5. **Given** cancellation races with production or batch assignment, **when** both mutations contend, **then** one commits and the other returns 409.
 
@@ -54,7 +54,7 @@ Sales Admin or the Dony Sales employee actively assigned to the Customer advance
 
 1. **Given** a verified deposit and a `Confirmed` order, **when** authorized staff advance it, **then** only `Confirmed→InProduction→Shipped` is accepted as a staff fulfillment transition.
 2. **Given** the target is Shipped, **when** carrier and tracking number are valid, **then** the server records shipped_at and makes the tracking information available.
-3. **Given** delivery is received, **when** the Customer confirms receipt or Sales Admin submits authorized delivery proof, **then** the order advances `Shipped→DeliveredAwaitingBalance`; `Shipped` alone never enables final payment.
+3. **Given** delivery is verified by the Customer, a checked carrier-delivered event, or recorded signed proof-of-delivery, **when** the Customer confirms or the MFG-06 three-calendar-day dispute window elapses without a dispute, **then** the order advances `Shipped→DeliveredAwaitingBalance`; a dispute pauses auto-confirmation and `Shipped` alone never enables final payment.
 4. **Given** MFG-06 verifies the full remaining balance, **when** settlement commits, **then** the order advances `DeliveredAwaitingBalance→Completed` and staff cannot perform this transition manually.
 5. **Given** a status event commits, **when** notification delivery is delayed or fails, **then** committed status remains visible in the inbox and email is retryable.
 6. Duplicate commands are idempotent; stale versions and skipped transitions return 409.
@@ -148,7 +148,7 @@ FR identifiers are local to MFG-07. Access is server-checked: customers require 
 | FR-003 | order_id, reason_for_cancellation, expected_version, Idempotency-Key | UUID, string, integer, key | Yes | status, refund workflow reference | Object | Valid transitions only; duplicate key replays |
 | FR-004 | committed cancellation event | Internal event | Yes | notification/outbox IDs | UUIDs | After commit; deduplicated |
 | FR-005 | filters, page, page_size | Allowlisted values / integers | Optional | Dony order list and counts | Paginated object | Dony operations only |
-| FR-006 | order_id, lifecycle_event, carrier, tracking_number, receipt_evidence?, expected_version, Idempotency-Key | UUID, enum, strings, object, integer, key | Yes | updated order and timeline | Object | Carrier/tracking required for Shipped; receipt event/evidence required for DeliveredAwaitingBalance; payment event is server-authenticated |
+| FR-006 | order_id, lifecycle_event, carrier, tracking_number, delivery_evidence?, expected_version, Idempotency-Key | UUID, enum, conditional strings/evidence, integer, key | By transition | updated order and timeline | Object | Carrier/tracking required only for Shipped; delivery evidence required only for `Shipped→DeliveredAwaitingBalance`; payment event is server-authenticated; 3-day timer comes from MFG-06 BR-007 |
 | FR-007 | committed status event | Internal event | Yes | durable notification/outbox IDs | UUIDs | After commit; inbox authoritative |
 
 ### 5.2 Business rules
@@ -157,9 +157,9 @@ FR identifiers are local to MFG-07. Access is server-checked: customers require 
 | --- | --- | --- |
 | BR-001 | Canonical progression is `AwaitingDigitalApproval→DigitalDesignApproved→SampleInPreparation→SampleShipped→PendingContract→AwaitingDeposit→Confirmed→InProduction→Shipped→DeliveredAwaitingBalance→Completed`; sample revision loops to a new immutable design/quote approval cycle. Only pre-deposit states and eligible unbatched `Confirmed` orders can be cancelled. | Preserve design, sample, contract, deposit, production, receipt and final-payment gates. |
 | BR-002 | A merge recommendation does not reserve an order. Before a Sales Admin starts a batch, otherwise eligible Confirmed orders can be cancelled normally. Starting a batch atomically assigns membership and advances every selected order to InProduction; linked orders cannot then be cancelled. If no Admin-started batch includes an order by its seven-day merge-window deadline, scheduler starts its individual production and records fallback. | Preserve Admin final approval, avoid stranded orders, and keep membership auditable. |
-| BR-003 | Cancellation with captured funds triggers MFG-06 refund processing for the refundable captured amount under the stored policy; no inventory restock occurs because Dony manufactures to order. | Made-to-order production and payment ownership. |
-| BR-005 | Staff cannot manually mark an order `Completed`; completion requires an accepted BALANCE transaction, and receipt must be recorded before that transaction becomes payable. | Prevent false delivery and revenue completion. |
+| BR-003 | Cancellation/refund amounts and timing follow MFG-06 BR-013; MFG-07 only records eligibility and requests the refund. No inventory restock occurs because Dony manufactures to order. | Made-to-order production and payment ownership. |
 | BR-004 | Every access is checked server-side; customers require ownership and staff require an internal Dony role or active assignment. | Prevent cross-customer access and privilege escalation. |
+| BR-005 | Staff cannot manually mark an order `Completed`; completion requires an accepted BALANCE transaction, and receipt must be recorded before that transaction becomes payable. | Prevent false delivery and revenue completion. |
 
 ## 6. Key entities (mandatory)
 
@@ -192,6 +192,7 @@ FR identifiers are local to MFG-07. Access is server-checked: customers require 
 
 - Orders are made to order; cancellation does not restock inventory.
 - MFG-06 is authoritative for settlement/refunds, and MFG-10 is authoritative for batch membership.
+- Delivery proof/timer and refund policy are authoritative in MFG-06 BR-007/BR-013; this module must not restate different amounts or deadlines.
 - The complete module remains Should, but the minimum transitions needed to finish the MFG-06 MVP order path are required in the MVP implementation slice in README. Manual Sales Admin updates are the defined MVP behavior, not an optional fallback.
 
 ## 10. Open questions

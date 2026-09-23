@@ -38,7 +38,7 @@ This module provides Customer registration, verification, email/password authent
 ### US-1 (Must): Register account
 
 1. **Given** a new normalized email and valid fields, **when** submitted, **then** one pending Customer and verification event are created atomically.
-2. **Given** a duplicate email, **when** retried, **then** return 409 without another account.
+2. **Given** a duplicate email, **when** registration is retried, **then** return the same generic 202 acknowledgement as a new address; do not reveal whether the address is registered and do not create another account.
 3. **Given** a valid unconsumed verification link, **when** opened within 24 hours, **then** activate exactly once.
 
 ### US-2 (Must): Log in
@@ -60,7 +60,7 @@ This module provides Customer registration, verification, email/password authent
 
 ### US-5 (Must): Log out
 
-1. **Given** an active Customer session, **when** logout runs, **then** revoke it, clear the cookie and route to S03; an employee session returns to S44.
+1. **Given** an active Customer session, **when** the Logout action in the storefront account menu runs, **then** revoke it, clear the cookie and route to S03; the internal CRM shell exposes its own Logout action and returns the employee to S44. Logout is a shell/header action, not the MFG-02 profile screen S06.
 2. **Given** an already-revoked session, **when** repeated, **then** succeed as an idempotent no-op.
 
 ### Edge cases
@@ -170,7 +170,7 @@ sequenceDiagram
 | FR ID | Input field | Type | Required | Output field | Type | Notes / validation |
 | --- | --- | --- | --- | --- | --- | --- |
 | FR-001 | route/session context | Session context | Yes | registration form | View model | Name, email, password, confirmation |
-| FR-002 | full_name, email, password, confirmation | Strings | Yes | pending Customer | Object | Name 1-100; password 12-128; 422 invalid; 409 duplicate |
+| FR-002 | full_name, email, password, confirmation | Strings | Yes | generic registration acknowledgement | Object | New normalized address: create pending Customer and queue verification. Existing address: no change. Both return same generic 202 response/body; no duplicate 409 or account-existence disclosure. |
 | FR-003 | server user; resend email | UUID / email | Yes | token and email event | Object | Hashed, single-use, 24 hours, rate-limited |
 | FR-004 | route/session context | Session context | Yes | login model | View model | Includes recovery link |
 | FR-005 | email, password, redirect | Strings / URL | Yes | session and capabilities | Object | Generic 401; later limited attempts 429; redirect allowlisted |
@@ -215,7 +215,8 @@ sequenceDiagram
 | S44 | Dony employee CRM login and invitation acceptance | Must | `screens/S44-staff_login_screen.md` |
 | S45 | Dony employee CRM recovery request | Must | `screens/S45-staff_forgot_password_screen.md` |
 | S46 | Dony employee CRM password reset | Must | `screens/S46-staff_reset_password_screen.md` |
-| S06 | Session entry/logout | Must | `screens/S06-user_profile_screen.md` |
+| S06 | Profile page (post-MVP); no separate logout page | Won't (MVP) | `screens/S06-user_profile_screen.md` |
+| Storefront / CRM shell | Logout action | Must | Header/account-menu action; no separate screen |
 | S08 | Safe default catalog destination | Must | `screens/S08-product_catalog_screen.md` |
 
 ## 8. Success criteria (mandatory)
@@ -223,7 +224,7 @@ sequenceDiagram
 | SC ID | Criterion | How it is measured |
 | --- | --- | --- |
 | SC-001 | All eleven functions map one-to-one to FRs and retries/concurrency are deterministic. | Contract, idempotency and race tests. |
-| SC-002 | Authentication and recovery do not disclose account existence. | Compare responses for known and unknown accounts. |
+| SC-002 | Registration, login and recovery do not disclose account existence. | Compare status, body and timing class for new/existing addresses and known/unknown credentials. |
 | SC-003 | Passwords, raw tokens and session secrets never appear in responses/logs/demo data. | Security and log inspection. |
 
 ## 9. Assumptions
@@ -247,7 +248,7 @@ Historical IDs are retained for continuity; external DBIZ2 comparison is not req
 | --- | --- | --- |
 | Registration | `UC-G03`; `F-USER-001` .. `003` | S02; Sections 3 and 5 |
 | Login | `UC-M01`; `F-USER-004` .. `005` | S03 (Customer), S44 (employee); Sections 3 and 5 |
-| Logout | `UC-M04`; `F-USER-006` | S06; Sections 3 and 5 |
+| Logout | `UC-M04`; `F-USER-006` | Storefront account menu / internal CRM shell; Sections 3 and 5; not S06 |
 | Recovery | `UC-M02`, `UC-M03`; `F-USER-007` .. `011` | S04-S05 (Customer), S45-S46 (employee); Sections 3 and 5 |
 
 ## Completion checklist

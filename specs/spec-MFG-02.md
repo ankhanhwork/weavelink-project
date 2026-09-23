@@ -15,6 +15,8 @@
 
 ## 1. Purpose and scope (mandatory)
 
+MFG-02 describes full-system profile/settings capabilities. Its internal `Must` labels are module requirements, not MVP release commitments; README classifies MFG-02 and S06/S07 as Won't/No for MVP. Do not expose the profile/settings route or navigation link in MVP.
+
 Authenticated active members view and maintain their own identity details and change a known password. A Customer profile may identify the representative and optional Buyer Organization for a company buying uniforms or a Reseller Shop commissioning production from its own designs. The server derives identity from the session. This module cannot assign internal Dony roles or transfer ownership.
 
 **In scope:** view profile; edit full name; request verified email change; change password after current-password verification.

@@ -34,11 +34,11 @@ Customers configure, preview and save versioned made-to-order garment designs an
 
 ### US-1 (Must): Design product
 
-Compatible options/assets produce a 2D preview and immutable Saved version. Incompatible/stale rules return actionable 422/409 and persist nothing. Only Saved/Delivered versions are orderable.
+Customer configures the product-supported size, colour, material and print method, then edits artwork on the existing 2D front/back garment canvas. Each supported side has its own printable area; the customer may upload up to five safe PNG/JPEG/WebP assets (10 MiB each), place and resize each asset using X/Y/width/height in millimetres relative to that area's top-left, and preview/save the configuration. Every placement must fit wholly inside its selected printable area. Saving creates an immutable Saved version; edits create a new version and never overwrite an ordered snapshot. Incompatible or stale rules return actionable 422/409 and persist nothing. Only Saved/Delivered versions are orderable. The existing workflow does not imply text layers, 3D editing or artwork rotation controls.
 
 ### US-2 (Must): Product customization
 
-Every option and print asset is validated against the current Published product version, ownership, actual MIME, scan result and print-area bounds.
+Every option and print asset is validated against the current Published product version, ownership, actual MIME, scan result and print-area bounds. Front/back selection, upload list, zoom, drag/resize and numeric placement fields edit the same draft configuration; zoom changes only the view and not physical placement values.
 
 ### US-3 (Must): View saved design
 
@@ -181,7 +181,7 @@ sequenceDiagram
 
 ## 5. Functional requirements (mandatory)
 
-### 5.1 Input / Output contract
+### 5.1 Functional requirement I/O contract
 
 | FR ID | DBIZ2 Subfunction ID | Requirement (system MUST ...) | Actor | Priority |
 | --- | --- | --- | --- | --- |
@@ -199,7 +199,7 @@ sequenceDiagram
 | FR-012 | F-DES-012 | Accept the exact current proposed fee/version for an owned FeeProposed request and atomically record acceptance and Approved. | Customer | Could |
 | FR-013 | F-DES-013 | Cancel an owned unassigned Submitted/UnderReview/FeeProposed/Approved request without refund; reject after assignment and replay repeated cancellation. | Customer | Could |
 
-### 5.1 Input / Output contract
+### 5.2 Input / Output contract
 
 | FR ID | Input field | Type | Required | Output field | Type | Notes / validation |
 | --- | --- | --- | --- | --- | --- | --- |

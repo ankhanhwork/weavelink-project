@@ -21,6 +21,8 @@
 
 ![S35 historical reference](img/S35-order_payment_screen.png)
 
+This mockup predates the current payment contract. Do not reproduce any promo-code, marketing-consent or second merge-consent controls visible in it; the current element inventory below is authoritative, and MVP payment is standard-order deposit or balance only.
+
 Written behavior below takes precedence over obsolete sample content.
 
 ## 3. Element inventory

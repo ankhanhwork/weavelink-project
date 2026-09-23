@@ -13,7 +13,7 @@
 
 ## 1. Purpose
 
-**Shown when:** The customer reviews the generated contract only after approving the received physical sample. The screen shows bound design/sample evidence, contract total, deposit percentage/amount and remaining-balance formula. Signing requires explicit consent, typed full-name match, recent password reauthentication and a one-time contract-bound challenge.
+**Shown when:** The customer reviews the generated contract only after approving the received physical sample. The screen shows bound design/sample evidence, buyer organization snapshot when present, contract total, deposit percentage/amount and remaining-balance formula. MVP acknowledgement requires explicit consent and typed full-name match in the active authenticated session; stronger reauthentication/challenge is full-system only.
 
 **MVP authentication level:** Follow the README MVP slice: the already-authenticated Customer gives explicit consent and types their matching full name; the active Customer session is the authentication evidence. MVP does not require password re-entry or a one-time signing challenge. The stronger reauthentication/challenge flow below is post-MVP and must not block MVP contract acknowledgement.
 
@@ -39,7 +39,7 @@ Written behavior below takes precedence over obsolete sample content.
 | 8 | password | Field / control | secret, required at signing | As specified | Reauthenticate; valid within 5 minutes; never logged or stored in evidence. |
 | 9 | signing_challenge | Post-MVP field | one-time token | No (MVP) | Full-system flow: server binds contract UUID/version/content hash; expires in 10 minutes; single use. Omit in MVP. |
 | 10 | Idempotency-Key | Field / control | UUID, required | As specified | Same key/payload returns signed version; changed payload returns 409. |
-| 11 | signature evidence | Field / control | server-generated record | As specified | signer, name, consent version, hash, timestamp, server IP/user-agent, challenge digest. |
+| 11 | signature evidence | Server-generated evidence record | signer, name, consent version, contract hash, timestamp, server IP/user-agent | Yes | MVP records active session, matching name and consent; full-system may also record a challenge digest. |
 | 12 | Request signing challenge | Post-MVP action | Require explicit consent, typed name and recent password reauth; issue contract-bound 10m one-use challenge. | Post-MVP only | Destination: S34; MVP signing uses the authenticated session, consent and matching typed name only. |
 | 13 | Sign | Action | Verify challenge/hash/version/sample binding and transactionally record evidence; order advances to `AwaitingDeposit`. | Available when authorized | Destination: S35 |
 | 14 | Download/view PDF | Action | Authorized private URL; no public asset URL. | Available when authorized | Destination: S34 |
@@ -79,8 +79,8 @@ Home and public catalog are available to Guest and authenticated users. Customer
 
 ### Acceptance scenarios
 
-1. Correct consent, typed profile name, recent password and valid contract-bound challenge records evidence once and moves order to `AwaitingDeposit`.
-2. Expired/replayed challenge, changed sample/design/hash/version or missing consent rejects signing; checkbox alone never signs.
+1. MVP: correct consent, typed account name and active session record acknowledgement once and moves order to `AwaitingDeposit`; full-system additionally requires recent password and valid contract-bound challenge.
+2. Missing/invalid session, mismatched name, stale sample/design/hash/version or missing consent rejects MVP acknowledgement; expired/replayed challenge also rejects the full-system path.
 3. Contract/PDF displays the snapshotted design fee separately before signing; it never reads current configuration or adds a second charge.
 
 ## 7. Linked requirements

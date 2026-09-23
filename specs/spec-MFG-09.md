@@ -30,20 +30,20 @@ MVP priority: **Should** for the complete module. The MVP includes one fixed-tem
 
 ## 3. User scenarios and acceptance criteria (mandatory)
 
-### US-1: Manage templates and generate contract (Should)
+### US-1: Manage templates and generate contract (Should; MVP fixed-template slice)
 
-Admin selects a compatible active template for a Dony `PendingContract` order whose current physical sample is Approved, previews allowlisted placeholders, and generates a server-rendered PDF from immutable customer/order/address/design/sample/payment-policy snapshots.
+Full system: Sales Admin selects a compatible active template for a Dony `PendingContract` order whose current physical sample is Approved, previews allowlisted placeholders, and generates a server-rendered PDF from immutable customer/order/address/design/sample/payment-policy snapshots. MVP: Sales Admin opens the approved-sample order on S33 and explicitly selects Generate; the system uses the single preconfigured fixed template without exposing a template picker or template CRUD. Generation is not automatic and requires the Sales Admin action.
 
 1. **Given** no compatible template exists or the physical sample is not Approved, **when** generation is requested, **then** an actionable state appears and generation is blocked.
 2. **Given** a template is published or edited, **when** a new version is created, **then** prior contract PDFs and hashes remain unchanged.
 3. **Given** required snapshot data is unavailable or the order/template version is stale, **when** generation runs, **then** it fails without creating a Ready contract.
 
-### US-2: Review and sign contract (Should)
+### US-2: Review and sign contract (Should; MVP uses reduced acknowledgement evidence)
 
-Customer signs only the current Ready version for their own PendingContract order. Signing requires explicit consent, matching typed name, current-password reauthentication, and a single-use challenge tied to contract ID/version/hash.
+Full system: Customer signs only the current Ready version for their own PendingContract order using explicit consent, matching typed name, current-password reauthentication, and a single-use challenge tied to contract ID/version/hash. MVP: the already-authenticated Customer gives consent and matching typed name; the session, contract version and content hash are recorded, with no password re-entry or one-time challenge.
 
 1. **Given** all signature evidence is valid and still references the approved sample/design and current order total, **when** signing commits, **then** evidence is stored and the order advances to `AwaitingDeposit`.
-2. **Given** consent is missing, name mismatches, reauthentication fails, challenge expires/is reused, or version is stale, **when** signing is attempted, **then** no signature or order transition commits.
+2. **Given** in MVP consent is missing, the authenticated session is invalid, name mismatches, or contract version is stale—or in the full system reauthentication fails or the challenge expires/is reused—**when** signing is attempted, **then** no signature or order transition commits.
 3. **Given** a contract is signed, **when** it is later cancelled through an eligible order cancellation, **then** it is auditably Voided and its signed artifact/evidence is retained.
 
 ### US-3: Update and notify contract (Should)
@@ -69,7 +69,7 @@ flowchart LR
   Template --> Render[Render PDF and content hash]
   Render --> Ready[Persist current contract as Ready]
   Ready --> Review[Customer reviews contract]
-  Review --> Evidence[Submit consent, typed name, reauthentication and challenge]
+  Review --> Evidence[Submit consent and typed name; MVP session-authenticated; full system adds reauthentication and challenge]
   Evidence --> Valid{Evidence and version valid?}
   Valid -->|No| Error[Reject without state change]
   Valid -->|Yes| Signed[Lock contract and save signed evidence]
@@ -79,39 +79,7 @@ flowchart LR
 
 ### 4.2 Sequence for the main flow
 
-# UC-C09: View/Sign contract — SD-08: View and Sign Digital Contract
-
-```mermaid
-sequenceDiagram
-    actor Customer
-    participant ContractUI
-    participant ContractController
-    participant ContractService
-    participant ContractDatabase
-
-    Customer->>ContractUI: view contract
-    ContractUI->>ContractController: request contract
-    ContractController->>ContractService: retrieve contract
-    ContractService->>ContractDatabase: get contract data
-    ContractDatabase-->>ContractService: contract data
-    ContractService-->>ContractController: contract data
-    ContractController-->>ContractUI: display contract
-    ContractUI-->>Customer: display contract
-    Customer->>ContractUI: click sign contract
-    ContractUI->>ContractController: submit signing action
-    ContractController->>ContractService: process signing
-    alt [signing successful]
-        ContractService->>ContractDatabase: Save evidence and atomically set order AwaitingDeposit
-        ContractDatabase-->>ContractService: update success
-        ContractService-->>ContractController: signing success
-        ContractController-->>ContractUI: return signed contract
-        ContractUI-->>Customer: display signed contract
-    else [signing failed]
-        ContractService-->>ContractController: signing failed
-        ContractController-->>ContractUI: return signing error
-        ContractUI-->>Customer: display error message
-    end
-```
+The canonical contract-generation/signing message flow is [SD-08 in the architecture sequence catalogue](../docs/architecture/sequence.md#uc-c09-viewsign-contract--sd-08-view-and-sign-digital-contract). That flow is the full-system path; the MVP evidence reduction and fixed-template/manual-generation behavior above take precedence for MVP.
 
 
 ## 5. Functional requirements (mandatory)
@@ -125,7 +93,7 @@ sequenceDiagram
 | FR-005 | F-CONTR-005 | Notify customer of Ready contract after commit using authorized review link. | System | Should |
 | FR-006 | F-CONTR-006 | List contracts and create/update/publish/archive versioned templates with allowlisted placeholders including design_fee_vnd and source_design_request_id. | Sales Admin | Should |
 | FR-007 | F-CONTR-007 | Regenerate unsigned `PendingContract` documents from the same approved sample and commercial snapshots, preserving fee/deposit terms without manual override, supersede the prior version after storage, and notify; a revised design/sample requires a new approval cycle rather than silent regeneration. | Sales Admin / System | Should |
-| FR-008 | F-CONTR-008 | Record customer application acknowledgement with consent, matching name, recent reauthentication and one-time challenge bound to contract version/hash. | Customer | Should |
+| FR-008 | F-CONTR-008 | Record consent and matching name against the authenticated Customer session, contract version and hash. MVP uses this evidence; full system additionally enforces recent reauthentication and one-time challenge. | Customer | Should |
 | FR-009 | F-CONTR-009 | Notify customer and Dony Sales Admins after successful signing; only then advance order `PendingContract→AwaitingDeposit`. | System | Should |
 
 ### 5.1 Input / Output contract
@@ -139,7 +107,7 @@ sequenceDiagram
 | FR-005 | Ready contract event | Internal event | Yes | outbox notification ID | UUID | After commit; deduplicated |
 | FR-006 | filters; template name/content/expected_version | Values / structured body / integer | Optional by action | contract list or versioned template | Paginated object | Sales Admin; create/update/publish/archive; archive blocks new use and preserves past contracts; stale/duplicate 409; invalid fields 422 |
 | FR-007 | order/contract/template versions, expected order version, Idempotency-Key | UUIDs/versions/key | Yes | superseded/new Ready references and notice ID | Object | Signed version and fee snapshot immutable |
-| FR-008 | contract ID/version/hash, consent, typed name, current password, one-time challenge, key | Values | Yes | Signed metadata and evidence receipt | Object | Typed name matches account full name after trim/case normalization; reauth ≤5 min; challenge bound to ID/version/hash, expires in 10 min and is single-use |
+| FR-008 | contract ID/version/hash, consent, typed name, key; post-MVP current password and one-time challenge | Values | MVP fields required; post-MVP fields conditional | Signed metadata and evidence receipt | Object | Typed name matches account full name after trim/case normalization; MVP requires active authenticated session; post-MVP reauth ≤5 min and challenge bound to ID/version/hash, expires in 10 min and is single-use |
 | FR-009 | committed signing event | Internal event | Yes | delivery IDs and signed-copy links | UUIDs/authorized URLs | Notify both parties after commit |
 
 ### 5.2 Business rules
@@ -152,15 +120,15 @@ sequenceDiagram
 | BR-004 | Successful signature evidence is application acknowledgement, not a certified digital signature. | State the signature capability accurately. |
 | BR-005 | Only a current Ready contract for an owned `PendingContract` order with the same current Approved sample/design can be signed; successful signature alone advances the order to `AwaitingDeposit`. | Prevent signing stale terms or taking a deposit before sample approval. |
 
-Contract amounts must match the quote/payment screens using the same VND snapshot. Show design_fee_vnd as a separate line outside merchandise subtotal, including 0 for free/repeat orders; use the MFG-06 allocation snapshot and never add another fee. The contract must also show `deposit_due_vnd = floor(contract_total_vnd × deposit_percent / 100)` and `balance_due_vnd = contract_total_vnd − accepted_deposit_vnd − accepted_order_credit_vnd`, with the percentage and policy version snapshotted. Missing required fee, sample or deposit data blocks generation with 422. S34 displays the same terms before signing. PDF render/storage must succeed before a contract becomes Ready. If cancellation is eligible, the contract becomes Voided with artifact and signature evidence retained.
+Contract amounts must match the quote/payment screens using the same VND snapshot. Show design_fee_vnd as a separate line outside merchandise subtotal, including 0 for MVP, free or repeat orders; use the MFG-06 allocation snapshot and never add another fee. The contract must also show `deposit_due_vnd = floor(contract_total_vnd × deposit_percent / 100)`, `balance_due_vnd = contract_total_vnd − accepted_deposit_vnd − accepted_order_credit_vnd`, and the snapshotted payment rule that the balance is due 7 calendar days after verified delivery (MFG-06 BR-014). `balance_due_at` is set only after delivery is verified and must not be fabricated during pre-delivery contract generation. Snapshot the percentage and payment-policy version. Missing required fee, sample or deposit data blocks generation with 422. S34 displays the same terms before signing. PDF render/storage must succeed before a contract becomes Ready. If cancellation is eligible, the contract becomes Voided with artifact and signature evidence retained.
 
 ## 6. Key entities (mandatory)
 
 | Entity | Attributes (from Input/Output fields) | Relationships |
 | --- | --- | --- |
 | ContractTemplate | UUID, name, version, structured body including design-fee and buyer-organization placeholders, active, timestamps | Dony-owned template; published versions are immutable. |
-| Contract | UUID, order_id, buyer_organization_id?, approved_design_version, approved_sample_id, contract_total_vnd, deposit_percent, deposit_due_vnd, payment_policy_version, version, template_version, content_hash, PDF asset UUID, status, ready/signed/voided timestamps, evidence | Belongs to an order and optionally snapshots its Business Buyer/Reseller Shop legal details; versioned; unsigned prior version may be superseded. |
-| SignatureEvidence | signer_id from session, typed_name, consent_text_version, contract_hash, server_timestamp, observed IP/user_agent, challenge digest | Bound to one contract version/hash; never trusts client-reported identity/IP. |
+| Contract | UUID, order_id, buyer_type, buyer_organization_snapshot?, approved_design_version, approved_sample_id, contract_total_vnd, deposit_percent, deposit_due_vnd, balance_due_vnd, balance_due_rule, payment_policy_version, version, template_version, content_hash, PDF asset UUID, status, ready/signed/voided timestamps, evidence | Belongs to an order and copies its immutable S22 Business Buyer/Reseller Shop snapshot when present; snapshots the seven-day-after-delivery rule, not an undetermined delivery timestamp; versioned; unsigned prior version may be superseded. |
+| SignatureEvidence | signer_id from session, typed_name, consent_text_version, contract_hash, server_timestamp, observed IP/user_agent, optional post-MVP challenge digest | Bound to one contract version/hash; MVP evidence is active authenticated session, consent and matching name; never trusts client-reported identity/IP. |
 
 ## 7. Screens involved
 
@@ -178,7 +146,7 @@ Contract amounts must match the quote/payment screens using the same VND snapsho
 | SC ID | Criterion | How it is measured |
 | --- | --- | --- |
 | SC-001 | Rendered contract total and terms match immutable order snapshots. | Compare PDF hash/content and VND totals with quote/payment screens. |
-| SC-002 | Only the customer can sign the current Ready version with all required evidence. | Verify ownership, consent, name, reauthentication, challenge and stale-version cases. |
+| SC-002 | Only the customer can acknowledge/sign the current Ready version with evidence required for the selected release scope. | MVP tests ownership, active session, consent, matching name and stale-version cases; full-system additionally tests reauthentication and challenge expiry/replay. |
 | SC-003 | Signed documents remain immutable and notifications survive email outage. | Verify artifact retention, audit evidence, inbox and retry behavior. |
 
 ## 9. Assumptions

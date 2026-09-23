@@ -31,18 +31,17 @@ sequenceDiagram
     Guest->>AuthUI: enter registration information
     AuthUI->>AuthController: submit registration
     AuthController->>AuthService: register user
-    AuthService->>UserAccountDatabase: create user account
-    alt [user already exists]
-        UserAccountDatabase-->>AuthService: duplicate user
-        AuthService-->>AuthController: registration failed
-        AuthController-->>AuthUI: return error
-        AuthUI-->>Guest: display error message
-    else [registration successful]
-        UserAccountDatabase-->>AuthService: user created
-        AuthService-->>AuthController: registration success
-        AuthController-->>AuthUI: return success
-        AuthUI-->>Guest: display success message
+    AuthService->>UserAccountDatabase: register normalized email idempotently
+    alt [email is new]
+        UserAccountDatabase-->>AuthService: create Customer account
+        AuthService->>AuthService: queue verification message
+    else [email already registered]
+        UserAccountDatabase-->>AuthService: no mutation
     end
+    Note over AuthService,AuthUI: Both paths return the same 202 response and generic acknowledgement; never reveal whether the address exists.
+    AuthService-->>AuthController: registration accepted (same response shape)
+    AuthController-->>AuthUI: HTTP 202 generic acknowledgement
+    AuthUI-->>Guest: display generic next-step message
 ```
 
 # UC-M01: Log in — SD-03: Log In
@@ -59,22 +58,14 @@ sequenceDiagram
     AuthUI->>AuthController: submit login request
     AuthController->>AuthService: authenticate user
     AuthService->>UserAccountDatabase: find user
-    alt [user not found]
-        UserAccountDatabase-->>AuthService: not found
-        AuthService-->>AuthController: authentication failed
-        AuthController-->>AuthUI: return error
-        AuthUI-->>Customer: display error message
-    else [user found]
-        UserAccountDatabase-->>AuthService: found user
-        alt [invalid credentials]
-            AuthService-->>AuthController: invalid credentials
-            AuthController-->>AuthUI: return error
-            AuthUI-->>Customer: display login failed
-        else [valid credentials]
-            AuthService-->>AuthController: authentication success
-            AuthController-->>AuthUI: return success
-            AuthUI-->>Customer: display login success
-        end
+    alt [unknown identity or invalid credentials]
+        AuthService-->>AuthController: generic authentication failure
+        AuthController-->>AuthUI: HTTP 401 Invalid email or password
+        AuthUI-->>Customer: display the same login failure message
+    else [valid credentials]
+        AuthService-->>AuthController: authentication success
+        AuthController-->>AuthUI: return success
+        AuthUI-->>Customer: display login success
     end
 ```
 
