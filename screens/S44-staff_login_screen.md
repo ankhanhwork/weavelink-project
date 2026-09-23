@@ -40,12 +40,12 @@ MVP supports staff sign-in only for pre-provisioned identities; invitation accep
 | State | What the user sees | Trigger |
 |---|---|---|
 | Loading | Progress and disabled submit | Authentication begins |
-| Empty | Staff sign-in form | Initial route |
+| Empty |  | Initial route |
 | Forbidden/not found | Safe access message | Invalid invitation or unauthorized route |
 | Error | Generic credential error with request ID | Failed request |
 | Retry | Sign-in remains available within rate limits | Recoverable failure |
-| Success | Internal CRM landing screen | Active StaffAccount authenticated |
-| Conflict | Invitation already consumed or stale; direct user to sign in or request a new invite | 409 |
+| Success |  | Active StaffAccount authenticated |
+| Conflict |  | 409 |
 
 ## 5. Interactions and navigation
 

@@ -42,13 +42,12 @@ The homepage's informational process copy must match MFG-06: digital-design appr
 | State | What the user sees | Trigger |
 |---|---|---|
 | Loading | Load the S01 Home Page view model and show labelled progress; keep writes disabled until route data and authorization are resolved. | Request starts |
-| Empty | Show no Published products or configured public links; preserve filters where present and explain eligibility/filter conditions. | Successful query returns no rows |
+| Empty | Show no published products; retain public navigation and explain that the catalog is currently empty. | Screen has no eligible or matching record |
 | Forbidden/not found | Return a safe 401/403/404 for S01 Home Page without revealing inaccessible record, customer, staff or payment details. | 401/403/404 |
 | Error | For S01 Home Page, show the API code, message, field_errors and request_id; preserve safe user-entered values. | Request failure |
 | Retry | Retry transient reads for S01 Home Page; retry a mutation only with its original idempotency key and identical payload, never as a new side effect. | Recoverable failure |
-| Success | Refresh S01 Home Page from the committed server response, expose only the next role/state-allowed action and announce the result via aria-live. | Mutation commits |
-| Conflict | For a stale S01 Home Page version or lifecycle state, reload authoritative data, explain the conflict and require explicit review before resubmission. | 409 |
-
+| Success | Refresh the committed Home Page data and show the next action permitted by its lifecycle and actor. | Valid action commits |
+| Conflict | The Home Page data or lifecycle changed concurrently; reload authoritative state and do not replay a stale mutation. | Stale version, duplicate or invalid lifecycle transition |
 ## 5. Interactions and navigation
 
 | # | Element | User action | System response | Goes to screen |
@@ -57,7 +56,7 @@ The homepage's informational process copy must match MFG-06: digital-design appr
 | 2 | Start customization/request | Activate | Preserve intended route through sign-in when needed. | S13 or S15 |
 | 3 | About/contact/help/policies | Activate | Open named content panel on S01; show configured contacts only. | S01 panel |
 
-Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Sales Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks internal role, customer ownership and staff assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Sales Admin, S20 for Sales, S41 for System Admin, and S01 for Guest.
+Portal: Guest and all authenticated roles. Route: /. Back preserves the originating route and filters. Fallback: Customer→S26; Sales Admin→S28; Sales→S20; System Admin→S41; Guest→S01. Enforce role, ownership and assignment before rendering.
 
 ## 6. Screen-level rules
 
@@ -77,8 +76,8 @@ Home and public catalog are available to Guest and authenticated users. Customer
 
 | FR ID (from the module spec) | What this screen does for it |
 |---|---|
-| MFG-04/F-PROD-001 | UI touchpoint for **Catalog Grid View**; this screen defines the visible action/result, while the module spec owns server authorization, validation and persistence. |
-The rules in this screen and its linked module specifications are complete for implementation.
+| MFG-04/F-PROD-001 | **View Catalog** — Return Dony's paginated catalogue of Published configurable garment bases using allowlisted category and sort values; these are not ready-made inventory. |
+
 
 ## 8. Responsive and accessibility notes
 

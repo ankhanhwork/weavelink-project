@@ -36,12 +36,12 @@
 | State | What the user sees | Trigger |
 |---|---|---|
 | Loading | Progress and disabled submit | Reset begins |
-| Empty | New/confirm password fields | Valid token route opens |
+| Empty |  | Valid token route opens |
 | Forbidden/not found | Safe invalid or expired-link notice | Wrong portal, expired or unknown token |
 | Error | Field-safe message with request ID | Validation/dependency failure |
 | Retry | Form remains available if token is valid | Recoverable failure |
-| Success | Password updated; continue to staff login | Commit succeeds |
-| Conflict | Token was already consumed; request a new link | Concurrent or repeated use |
+| Success |  | Commit succeeds |
+| Conflict |  | Concurrent or repeated use |
 
 ## 5. Interactions and navigation
 

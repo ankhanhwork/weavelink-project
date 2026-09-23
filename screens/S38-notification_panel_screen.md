@@ -44,13 +44,12 @@ Written behavior below takes precedence over obsolete sample content.
 | State | What the user sees | Trigger |
 |---|---|---|
 | Loading | Load the S38 Notification Panel view model and show labelled progress; keep writes disabled until route data and authorization are resolved. | Request starts |
-| Empty | Show no notifications for this recipient; preserve filters where present and explain eligibility/filter conditions. | Successful query returns no rows |
+| Empty | Show “You are all caught up” when no unread or recent notification exists. | Screen has no eligible or matching record |
 | Forbidden/not found | Return a safe 401/403/404 for S38 Notification Panel without revealing inaccessible record, customer, staff or payment details. | 401/403/404 |
 | Error | For S38 Notification Panel, show the API code, message, field_errors and request_id; preserve safe user-entered values. | Request failure |
 | Retry | Retry transient reads for S38 Notification Panel; retry a mutation only with its original idempotency key and identical payload, never as a new side effect. | Recoverable failure |
-| Success | Refresh S38 Notification Panel from the committed server response, expose only the next role/state-allowed action and announce the result via aria-live. | Mutation commits |
-| Conflict | For a stale S38 Notification Panel version or lifecycle state, reload authoritative data, explain the conflict and require explicit review before resubmission. | 409 |
-
+| Success | Refresh the committed Notification Panel data and show the next action permitted by its lifecycle and actor. | Valid action commits |
+| Conflict | The Notification Panel data or lifecycle changed concurrently; reload authoritative state and do not replay a stale mutation. | Stale version, duplicate or invalid lifecycle transition |
 ## 5. Interactions and navigation
 
 | # | Element | User action | System response | Goes to screen |
@@ -59,7 +58,7 @@ Written behavior below takes precedence over obsolete sample content.
 | 2 | Open notification | Activate | Resolve allowlisted target and reauthorize target access. | authorized target route |
 | 3 | Close | Activate | Return to prior validated route. | Origin |
 
-Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Sales Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks internal role, customer ownership and staff assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Sales Admin, S20 for Sales, S41 for System Admin, and S01 for Guest.
+Portal: Authenticated user. Route: /notifications. Back preserves the originating route and filters. Fallback: Customer→S26; Sales Admin→S28; Sales→S20; System Admin→S41; Guest→S01. Enforce role, ownership and assignment before rendering.
 
 ## 6. Screen-level rules
 
@@ -80,7 +79,7 @@ Home and public catalog are available to Guest and authenticated users. Customer
 
 | FR ID (from the module spec) | What this screen does for it |
 |---|---|
-The rules in this screen and its linked module specifications are complete for implementation.
+
 
 ## 8. Responsive and accessibility notes
 

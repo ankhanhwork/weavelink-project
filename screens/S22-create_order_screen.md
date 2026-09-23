@@ -52,13 +52,12 @@ Written behavior below takes precedence over obsolete sample content. MVP does n
 | State | What the user sees | Trigger |
 |---|---|---|
 | Loading | Load the S22 Create Order view model and show labelled progress; keep writes disabled until route data and authorization are resolved. | Request starts |
-| Empty | Render the defined initial/empty state for S22 Create Order; if a required route object is absent, return a safe 404 and the authorized parent route. | Empty initial form or missing detail payload |
+| Empty | Require a saved design and valid quantity by size; retain buyer organization fields and show missing prerequisites. | Screen has no eligible or matching record |
 | Forbidden/not found | Return a safe 401/403/404 for S22 Create Order without revealing inaccessible record, customer, staff or payment details. | 401/403/404 |
 | Error | For S22 Create Order, show the API code, message, field_errors and request_id; preserve safe user-entered values. | Request failure |
 | Retry | Retry transient reads for S22 Create Order; retry a mutation only with its original idempotency key and identical payload, never as a new side effect. | Recoverable failure |
-| Success | Refresh S22 Create Order from the committed server response, expose only the next role/state-allowed action and announce the result via aria-live. | Mutation commits |
-| Conflict | For a stale S22 Create Order version or lifecycle state, reload authoritative data, explain the conflict and require explicit review before resubmission. | 409 |
-
+| Success | Save quote with buyer-type/organization snapshots and size quantities; route to quote summary. | Valid action commits |
+| Conflict | Price, product rule, or design version changed: retain the size mix, re-quote, and require customer confirmation. | Stale version, duplicate or invalid lifecycle transition |
 ## 5. Interactions and navigation
 
 | # | Element | User action | System response | Goes to screen |
@@ -67,7 +66,7 @@ Written behavior below takes precedence over obsolete sample content. MVP does n
 | 2 | Select merge | Post-MVP only | Available after MFG-10 activation; not rendered in MVP. | S23 |
 | 3 | Select design | Activate | Return to owned designs. | S17 |
 
-Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Sales Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks internal role, customer ownership and staff assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Sales Admin, S20 for Sales, S41 for System Admin, and S01 for Guest.
+Portal: Customer owner. Route: /orders/new?design_id={id}. Back preserves the originating route and filters. Fallback: Customer→S26; Sales Admin→S28; Sales→S20; System Admin→S41; Guest→S01. Enforce role, ownership and assignment before rendering.
 
 ## 6. Screen-level rules
 
@@ -87,9 +86,9 @@ Home and public catalog are available to Guest and authenticated users. Customer
 
 | FR ID (from the module spec) | What this screen does for it |
 |---|---|
-| MFG-06/F-PAY-001 | UI touchpoint for **Checkout View**; this screen defines the visible action/result, while the module spec owns server authorization, validation and persistence. |
-| MFG-06/F-PAY-003 | UI touchpoint for **Create Order Logic**; this screen defines the visible action/result, while the module spec owns server authorization, validation and persistence. |
-The rules in this screen and its linked module specifications are complete for implementation.
+| MFG-06/F-PAY-001 | **Finalize Order** — Render checkout for the customer's eligible design and Published Dony configurable product base. |
+| MFG-06/F-PAY-003 | **Finalize Order** — Atomically create one `AwaitingDigitalApproval` order from a current quote with immutable snapshots and idempotency; lock/revalidate and claim any design-fee allocation under BR-008. |
+
 
 ## 8. Responsive and accessibility notes
 

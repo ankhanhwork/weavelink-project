@@ -46,13 +46,12 @@ This screenshot is obsolete and must be recreated before submission: it depicts 
 | State | What the user sees | Trigger |
 |---|---|---|
 | Loading | Load the S42 Merge Recommendations and Batch Console view model and show labelled progress; keep writes disabled until route data and authorization are resolved. | Request starts |
-| Empty | Show no orders eligible for merge under current policy; preserve filters where present and explain eligibility/filter conditions. | Successful query returns no rows |
+| Empty | Show no eligible merge recommendations, active policy version, and zero estimated savings. | Screen has no eligible or matching record |
 | Forbidden/not found | Return a safe 401/403/404 for S42 Merge Recommendations and Batch Console without revealing inaccessible record, customer, staff or payment details. | 401/403/404 |
 | Error | For S42 Merge Recommendations and Batch Console, show the API code, message, field_errors and request_id; preserve safe user-entered values. | Request failure |
 | Retry | Retry transient reads for S42 Merge Recommendations and Batch Console; retry a mutation only with its original idempotency key and identical payload, never as a new side effect. | Recoverable failure |
-| Success | Refresh S42 Merge Recommendations and Batch Console from the committed server response, expose only the next role/state-allowed action and announce the result via aria-live. | Mutation commits |
-| Conflict | For a stale S42 Merge Recommendations and Batch Console version or lifecycle state, reload authoritative data, explain the conflict and require explicit review before resubmission. | 409 |
-
+| Success | Create batch only after Sales Admin approval and explicit start; show recalculated savings. | Valid action commits |
+| Conflict | Recommendation membership/policy changed: recalculate totals and savings, then require Sales Admin review. | Stale version, duplicate or invalid lifecycle transition |
 ## 5. Interactions and navigation
 
 | # | Element | User action | System response | Goes to screen |
@@ -61,7 +60,7 @@ This screenshot is obsolete and must be recreated before submission: it depicts 
 | 2 | Estimate | Activate | Compute gross/net savings, discount total, quantity and setup minutes saved; negative result is shown but does not gate operation. | S42 |
 | 3 | Start selected batch | Activate | Revalidate Admin authority, all order versions, eligibility, quantity and window deadlines; atomically create an InProduction batch and advance all selected orders. | S42 |
 
-Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Sales Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks internal role, customer ownership and staff assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Sales Admin, S20 for Sales, S41 for System Admin, and S01 for Guest.
+Portal: Sales Admin. Route: /admin/merge-batches. Back preserves the originating route and filters. Fallback: Customer→S26; Sales Admin→S28; Sales→S20; System Admin→S41; Guest→S01. Enforce role, ownership and assignment before rendering.
 
 ## 6. Screen-level rules
 
@@ -83,11 +82,11 @@ Home and public catalog are available to Guest and authenticated users. Customer
 
 | FR ID (from the module spec) | What this screen does for it |
 |---|---|
-| MFG-10/F-MER-004 | UI touchpoint for **Merge Console View**; this screen defines the visible action/result, while the module spec owns server authorization, validation and persistence. |
-| MFG-10/F-MER-005 | UI touchpoint for **Estimate setup savings and setup time saved**; this screen defines the visible action/result, while the module spec owns server authorization, validation and persistence. |
-| MFG-10/F-MER-006 | UI touchpoint for **Batch Exec Logic**; this screen defines the visible action/result, while the module spec owns server authorization, validation and persistence. |
-| MFG-10/F-MER-007 | UI touchpoint for **Merge Notify Logic**; this screen defines the visible action/result, while the module spec owns server authorization, validation and persistence. |
-The rules in this screen and its linked module specifications are complete for implementation.
+| MFG-10/F-MER-004 | **View Eligible** — Recommend compatible Dony order groups and show exclusion reasons using server-recomputed eligibility, without reserving or starting orders. |
+| MFG-10/F-MER-005 | **View Eligible** — Compute selected-batch gross/discount/net, quantity, setup minutes and due-date estimates; separately report programme-to-date net including discounts on fallback orders; show negative programme net without blocking. |
+| MFG-10/F-MER-006 | **Confirm Merge** — System recommends eligible groups; Sales Admin makes the final decision and explicitly starts a revalidated batch; individual fallback starts automatically after the rolling seven-day window. |
+| MFG-10/F-MER-007 | **Confirm Merge** — Notify each customer and production planning after committed batch events, deduplicating recipients. |
+
 
 ## 8. Responsive and accessibility notes
 

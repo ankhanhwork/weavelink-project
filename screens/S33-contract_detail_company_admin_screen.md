@@ -45,13 +45,12 @@ Written behavior below takes precedence over obsolete sample content.
 | State | What the user sees | Trigger |
 |---|---|---|
 | Loading | Load the S33 Contract Detail (Sales Admin) view model and show labelled progress; keep writes disabled until route data and authorization are resolved. | Request starts |
-| Empty | Render the defined initial/empty state for S33 Contract Detail (Sales Admin); if a required route object is absent, return a safe 404 and the authorized parent route. | Empty initial form or missing detail payload |
+| Empty | No Contract Detail (Sales Admin) records match the current route/filter; preserve inputs and show only the screen’s authorized next action. | Screen has no eligible or matching record |
 | Forbidden/not found | Return a safe 401/403/404 for S33 Contract Detail (Sales Admin) without revealing inaccessible record, customer, staff or payment details. | 401/403/404 |
 | Error | For S33 Contract Detail (Sales Admin), show the API code, message, field_errors and request_id; preserve safe user-entered values. | Request failure |
 | Retry | Retry transient reads for S33 Contract Detail (Sales Admin); retry a mutation only with its original idempotency key and identical payload, never as a new side effect. | Recoverable failure |
-| Success | Refresh S33 Contract Detail (Sales Admin) from the committed server response, expose only the next role/state-allowed action and announce the result via aria-live. | Mutation commits |
-| Conflict | For a stale S33 Contract Detail (Sales Admin) version or lifecycle state, reload authoritative data, explain the conflict and require explicit review before resubmission. | 409 |
-
+| Success | Refresh the committed Contract Detail (Sales Admin) data and show the next action permitted by its lifecycle and actor. | Valid action commits |
+| Conflict | The Contract Detail (Sales Admin) data or lifecycle changed concurrently; reload authoritative state and do not replay a stale mutation. | Stale version, duplicate or invalid lifecycle transition |
 ## 5. Interactions and navigation
 
 | # | Element | User action | System response | Goes to screen |
@@ -60,7 +59,7 @@ Written behavior below takes precedence over obsolete sample content.
 | 2 | Replace unsigned contract | Activate | Create new version; supersede prior unsigned version and notify. | S33 |
 | 3 | Download PDF | Activate | Issue authorized expiring URL. | S33 |
 
-Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Sales Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks internal role, customer ownership and staff assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Sales Admin, S20 for Sales, S41 for System Admin, and S01 for Guest.
+Portal: Sales Admin. Route: /admin/contracts/{contract_id}. Back preserves the originating route and filters. Fallback: Customer→S26; Sales Admin→S28; Sales→S20; System Admin→S41; Guest→S01. Enforce role, ownership and assignment before rendering.
 
 ## 6. Screen-level rules
 
@@ -81,11 +80,11 @@ Home and public catalog are available to Guest and authenticated users. Customer
 
 | FR ID (from the module spec) | What this screen does for it |
 |---|---|
-| MFG-09/F-CONTR-003 | UI touchpoint for **Fill Contract Logic**; this screen defines the visible action/result, while the module spec owns server authorization, validation and persistence. |
-| MFG-09/F-CONTR-004 | UI touchpoint for **Render PDF Logic**; this screen defines the visible action/result, while the module spec owns server authorization, validation and persistence. |
-| MFG-09/F-CONTR-005 | UI touchpoint for **Ready Notify Logic**; this screen defines the visible action/result, while the module spec owns server authorization, validation and persistence. |
-| MFG-09/F-CONTR-007 | UI touchpoint for **Replace unsigned contract and notify customer**; this screen defines the visible action/result, while the module spec owns server authorization, validation and persistence. |
-The rules in this screen and its linked module specifications are complete for implementation.
+| MFG-09/F-CONTR-003 | **Generate Contract** — Fill immutable draft contract from order/customer/address/item/design/sample/payment-policy snapshots, including design fee, approved sample, deposit percentage and balance formula. |
+| MFG-09/F-CONTR-004 | **Generate Contract** — Render the separate snapshotted design-fee line and persist PDF/hash as Ready transactionally with idempotency and private asset access. |
+| MFG-09/F-CONTR-005 | **Receive Ready contract notice** — Notify customer of Ready contract after commit using authorized review link. |
+| MFG-09/F-CONTR-007 | **Update Contract** — Regenerate unsigned PendingContract documents only from the same approved sample and commercial snapshots; revised design/sample returns to approval instead of silently changing the contract. |
+
 
 ## 8. Responsive and accessibility notes
 

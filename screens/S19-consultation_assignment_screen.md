@@ -43,13 +43,12 @@ Written behavior below takes precedence over obsolete sample content.
 | State | What the user sees | Trigger |
 |---|---|---|
 | Loading | Load the S19 Consultation Assignment view model and show labelled progress; keep writes disabled until route data and authorization are resolved. | Request starts |
-| Empty | Render the defined initial/empty state for S19 Consultation Assignment; if a required route object is absent, return a safe 404 and the authorized parent route. | Empty initial form or missing detail payload |
+| Empty | No Consultation Assignment records match the current route/filter; preserve inputs and show only the screen’s authorized next action. | Screen has no eligible or matching record |
 | Forbidden/not found | Return a safe 401/403/404 for S19 Consultation Assignment without revealing inaccessible record, customer, staff or payment details. | 401/403/404 |
 | Error | For S19 Consultation Assignment, show the API code, message, field_errors and request_id; preserve safe user-entered values. | Request failure |
 | Retry | Retry transient reads for S19 Consultation Assignment; retry a mutation only with its original idempotency key and identical payload, never as a new side effect. | Recoverable failure |
-| Success | Refresh S19 Consultation Assignment from the committed server response, expose only the next role/state-allowed action and announce the result via aria-live. | Mutation commits |
-| Conflict | For a stale S19 Consultation Assignment version or lifecycle state, reload authoritative data, explain the conflict and require explicit review before resubmission. | 409 |
-
+| Success | Refresh the committed Consultation Assignment data and show the next action permitted by its lifecycle and actor. | Valid action commits |
+| Conflict | The Consultation Assignment data or lifecycle changed concurrently; reload authoritative state and do not replay a stale mutation. | Stale version, duplicate or invalid lifecycle transition |
 ## 5. Interactions and navigation
 
 | # | Element | User action | System response | Goes to screen |
@@ -57,7 +56,7 @@ Written behavior below takes precedence over obsolete sample content.
 | 1 | Assign consultant | Activate | Atomic assign/reassign, record committed_due_at, notify after commit. | S18 requests tab |
 | 2 | Cancel | Activate | Leave request unchanged. | S18 |
 
-Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Sales Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks internal role, customer ownership and staff assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Sales Admin, S20 for Sales, S41 for System Admin, and S01 for Guest.
+Portal: Sales Admin. Route: /admin/design-requests/{request_id}/assignment. Back preserves the originating route and filters. Fallback: Customer→S26; Sales Admin→S28; Sales→S20; System Admin→S41; Guest→S01. Enforce role, ownership and assignment before rendering.
 
 ## 6. Screen-level rules
 
@@ -78,11 +77,11 @@ Home and public catalog are available to Guest and authenticated users. Customer
 
 | FR ID (from the module spec) | What this screen does for it |
 |---|---|
-| MFG-08/F-ORD-003 | UI touchpoint for **Assign Sales Logic**; this screen defines the visible action/result, while the module spec owns server authorization, validation and persistence. |
-| MFG-08/F-ORD-004 | UI touchpoint for **Assign Notify Logic**; this screen defines the visible action/result, while the module spec owns server authorization, validation and persistence. |
+| MFG-08/F-ORD-003 | **Assign Consultant** — Assign/reassign an active Dony Sales employee with version checks, idempotency and atomic paired assignment of affected approved/assigned design requests; `committed_due_at` is Dony's commitment, not the customer's requested deadline. |
+| MFG-08/F-ORD-004 | **Assign Consultant** — Notify the newly assigned consultant with authorized customer context after commit; reassignment also notifies affected staff and customer; deduplicate and retry delivery. |
 Additional linked modules: [MFG-08](../specs/spec-MFG-08.md).
 
-The rules in this screen and its linked module specifications are complete for implementation.
+
 
 ## 8. Responsive and accessibility notes
 

@@ -219,7 +219,7 @@ sequenceDiagram
 | `SampleShipped` | `AwaitingDigitalApproval` | Request sample revision / Customer | Require reason; mark sample `RevisionRequested`; create a new immutable design/quote cycle on the same order; retain prior evidence and block contract/deposit. |
 | `PendingContract` | `AwaitingDeposit` | Acknowledge current contract / Customer | MFG-09 records required release-scope evidence against current contract and approved sample. |
 | `AwaitingDeposit` | `Confirmed` | Deposit settles / Payment service | Valid, deduplicated VNPay server notification for exact DEPOSIT amount. |
-| `Confirmed` | `InProduction` | Start production / Sales Admin or eligible MFG-10 scheduler | Revalidate order; if merge opted in, scheduler fallback is permitted only under MFG-10 policy/window. |
+| `Confirmed` | `InProduction` | Start production / Sales Admin, assigned Sales or eligible MFG-10 scheduler | Revalidate order; if merge opted in, scheduler fallback is permitted only under MFG-10 policy/window. |
 | `InProduction` | `Shipped` | Ship goods / Sales Admin or assigned Sales | Record carrier, tracking and shipment timestamp. |
 | `Shipped` | `DeliveredAwaitingBalance` | Confirm receipt / Customer | Immediate transition; record customer-confirmed receipt timestamp. |
 | `Shipped` | `DeliveredAwaitingBalance` | Auto-confirm / scheduled system event | Only after Sales Admin records verified delivery evidence and 3 calendar days elapse without Customer confirmation; record auto-confirmation as `received_at`. There is no MVP dispute branch. |

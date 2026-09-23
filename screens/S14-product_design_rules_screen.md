@@ -42,13 +42,12 @@ Written behavior below takes precedence over obsolete sample content.
 | State | What the user sees | Trigger |
 |---|---|---|
 | Loading | Load the S14 Product Design Rules view model and show labelled progress; keep writes disabled until route data and authorization are resolved. | Request starts |
-| Empty | Render the defined initial/empty state for S14 Product Design Rules; if a required route object is absent, return a safe 404 and the authorized parent route. | Empty initial form or missing detail payload |
+| Empty | No Product Design Rules records match the current route/filter; preserve inputs and show only the screen’s authorized next action. | Screen has no eligible or matching record |
 | Forbidden/not found | Return a safe 401/403/404 for S14 Product Design Rules without revealing inaccessible record, customer, staff or payment details. | 401/403/404 |
 | Error | For S14 Product Design Rules, show the API code, message, field_errors and request_id; preserve safe user-entered values. | Request failure |
 | Retry | Retry transient reads for S14 Product Design Rules; retry a mutation only with its original idempotency key and identical payload, never as a new side effect. | Recoverable failure |
-| Success | Refresh S14 Product Design Rules from the committed server response, expose only the next role/state-allowed action and announce the result via aria-live. | Mutation commits |
-| Conflict | For a stale S14 Product Design Rules version or lifecycle state, reload authoritative data, explain the conflict and require explicit review before resubmission. | 409 |
-
+| Success | Refresh the committed Product Design Rules data and show the next action permitted by its lifecycle and actor. | Valid action commits |
+| Conflict | The Product Design Rules data or lifecycle changed concurrently; reload authoritative state and do not replay a stale mutation. | Stale version, duplicate or invalid lifecycle transition |
 ## 5. Interactions and navigation
 
 | # | Element | User action | System response | Goes to screen |
@@ -56,7 +55,7 @@ Written behavior below takes precedence over obsolete sample content.
 | 1 | Save rules | Activate | Validate supported options/area/surcharges, increment product version; old quotes require review. | S10 |
 | 2 | Cancel | Activate | Discard changes. | S10 |
 
-Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Sales Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks internal role, customer ownership and staff assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Sales Admin, S20 for Sales, S41 for System Admin, and S01 for Guest.
+Portal: Sales Admin. Route: /admin/products/{product_id}/design-rules. Back preserves the originating route and filters. Fallback: Customer→S26; Sales Admin→S28; Sales→S20; System Admin→S41; Guest→S01. Enforce role, ownership and assignment before rendering.
 
 ## 6. Screen-level rules
 
@@ -76,10 +75,10 @@ Home and public catalog are available to Guest and authenticated users. Customer
 
 | FR ID (from the module spec) | What this screen does for it |
 |---|---|
-| MFG-04/F-PROD-007 | UI touchpoint for **Edit Product Form**; this screen defines the visible action/result, while the module spec owns server authorization, validation and persistence. |
-| MFG-04/F-PROD-008 | UI touchpoint for **Update Product Logic**; this screen defines the visible action/result, while the module spec owns server authorization, validation and persistence. |
-| MFG-04/F-PROD-011 | UI touchpoint for **Publish or hide product**; this screen defines the visible action/result, while the module spec owns server authorization, validation and persistence. |
-The rules in this screen and its linked module specifications are complete for implementation.
+| MFG-04/F-PROD-007 | **Update Product** — Render an authorized product edit model with current version. |
+| MFG-04/F-PROD-008 | **Update Product** — Update allowlisted product fields atomically with expected-version checks. |
+| MFG-04/F-PROD-011 | **Publish Product** — Change product visibility to an explicitly requested valid state. |
+
 
 ## 8. Responsive and accessibility notes
 

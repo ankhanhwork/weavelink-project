@@ -36,12 +36,12 @@
 | State | What the user sees | Trigger |
 |---|---|---|
 | Loading | Progress; submit disabled | Request starts |
-| Empty | Work-email form | Initial route |
+| Empty |  | Initial route |
 | Forbidden/not found | Safe route message | Invalid route or token context |
 | Error | Generic safe error with request ID | Dependency failure |
 | Retry | Retry allowed within rate limits | Recoverable error |
-| Success | Neutral acknowledgement | Request accepted |
-| Conflict | Current request status and retry guidance | Stale or replaced request |
+| Success |  | Request accepted |
+| Conflict |  | Stale or replaced request |
 
 ## 5. Interactions and navigation
 

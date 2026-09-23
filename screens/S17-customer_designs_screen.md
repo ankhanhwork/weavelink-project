@@ -49,13 +49,12 @@ Written behavior below takes precedence over obsolete sample content.
 | State | What the user sees | Trigger |
 |---|---|---|
 | Loading | Load the S17 Customer Designs view model and show labelled progress; keep writes disabled until route data and authorization are resolved. | Request starts |
-| Empty | Show no owned designs in the selected state; preserve filters where present and explain eligibility/filter conditions. | Successful query returns no rows |
+| Empty | Show “No saved designs yet” and link to the catalog/design workflow. | Screen has no eligible or matching record |
 | Forbidden/not found | Return a safe 401/403/404 for S17 Customer Designs without revealing inaccessible record, customer, staff or payment details. | 401/403/404 |
 | Error | For S17 Customer Designs, show the API code, message, field_errors and request_id; preserve safe user-entered values. | Request failure |
 | Retry | Retry transient reads for S17 Customer Designs; retry a mutation only with its original idempotency key and identical payload, never as a new side effect. | Recoverable failure |
-| Success | Refresh S17 Customer Designs from the committed server response, expose only the next role/state-allowed action and announce the result via aria-live. | Mutation commits |
-| Conflict | For a stale S17 Customer Designs version or lifecycle state, reload authoritative data, explain the conflict and require explicit review before resubmission. | 409 |
-
+| Success | Refresh the committed Customer Designs data and show the next action permitted by its lifecycle and actor. | Valid action commits |
+| Conflict | The Customer Designs data or lifecycle changed concurrently; reload authoritative state and do not replay a stale mutation. | Stale version, duplicate or invalid lifecycle transition |
 ## 5. Interactions and navigation
 
 | # | Element | User action | System response | Goes to screen |
@@ -67,7 +66,7 @@ Written behavior below takes precedence over obsolete sample content.
 | 5 | Accept fee | Explicitly confirm displayed fee | Version-check exact proposal; atomically save acceptance and Approved; notify Admin. | S17 |
 | 6 | Cancel request | Confirm | Atomically cancel only eligible unassigned state; notify owner/Admin; no refund; race/stale 409. | S17 |
 
-Home and public catalog are available to Guest and authenticated users. Customer designs and customer orders are Customer-only; profile and notifications require authentication. Sales Admin routes: S10, S18, S28, S30, S36, S42 and S43. Sales routes: S20 and assigned-only S21. System Admin routes: S39, S40 and S41. The server rechecks internal role, customer ownership and staff assignment for every route and notification target. Back returns to the validated originating route and preserves list filters; without one, use S26 for Customer, S28 for Sales Admin, S20 for Sales, S41 for System Admin, and S01 for Guest.
+Portal: Customer owner. Route: /designs. Back preserves the originating route and filters. Fallback: Customer→S26; Sales Admin→S28; Sales→S20; System Admin→S41; Guest→S01. Enforce role, ownership and assignment before rendering.
 
 ## 6. Screen-level rules
 
@@ -90,10 +89,10 @@ Home and public catalog are available to Guest and authenticated users. Customer
 
 | FR ID (from the module spec) | What this screen does for it |
 |---|---|
-| MFG-05/F-DES-004 | UI touchpoint for **Owned designs and requests**; this screen defines the visible action/result, while the module spec owns server authorization, validation and persistence. |
+| MFG-05/F-DES-004 | **View Designs** — List only the customer's Saved/Delivered designs and a separate owned-request status/detail view with pagination. |
 | MFG-05/F-DES-012 | Explicit acceptance of the current Complex fee proposal. |
 | MFG-05/F-DES-013 | Eligible preassignment cancellation without refund. |
-The rules in this screen and its linked module specifications are complete for implementation.
+
 
 ## 8. Responsive and accessibility notes
 
