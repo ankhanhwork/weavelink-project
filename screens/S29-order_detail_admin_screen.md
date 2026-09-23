@@ -85,9 +85,8 @@ Portal: Sales Admin / Assigned Sales. Route: /admin/orders/{order_id}. Back pres
 
 | FR ID (from the module spec) | What this screen does for it |
 |---|---|
-| MFG-07/F-ORD-005 | **View Assignment** — List only the consultant's active assigned Dony customer records with pagination and allowlisted filters. |
-| MFG-07/F-ORD-006 | **View Assignment** — Return authorized Customer and optional Buyer Organization context plus chronological interaction history without exposing unassigned records or internal CRM notes. |
-| MFG-07/F-ORD-007 | **Update Consult** — Show consultation status, notes and linked record summaries to assigned consultant or Sales Admin. |
+| MFG-07/F-ORD-006 | **Status Update Logic** — Enforce event-owned order transitions with expected-version/idempotency checks and required shipment/delivery evidence; only authorized actors can advance their permitted transitions. |
+| MFG-07/F-ORD-007 | **Status Notify Logic** — Notify the order owner after a committed status change with timestamp and safe tracking link; suppress duplicates. |
 | MFG-06/F-PAY-003 | Implements versioned physical-sample preparation/dispatch and preserves Customer approval gates. |
 | MFG-09/F-CONTR-001 | Opens contract generation only after the current physical sample is Approved. |
 Additional linked modules: [MFG-06](../specs/spec-MFG-06.md), [MFG-09](../specs/spec-MFG-09.md).

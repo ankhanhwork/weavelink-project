@@ -91,9 +91,9 @@ Portal: Customer owner. Route: /orders/{order_id}. Back preserves the originatin
 
 | FR ID (from the module spec) | What this screen does for it |
 |---|---|
-| MFG-07/F-ORD-002 | **Assign Sales** — Show customer and optional buyer-organization contact data, request/order summaries and current assignment. |
-| MFG-07/F-ORD-003 | **Assign Consultant** — Assign/reassign an active Dony Sales employee with version checks, idempotency and atomic paired assignment of affected approved/assigned design requests; `committed_due_at` is Dony's commitment, not the customer's requested deadline. |
-| MFG-07/F-ORD-004 | **Assign Consultant** — Notify the newly assigned consultant with authorized customer context after commit; reassignment also notifies affected staff and customer; deduplicate and retry delivery. |
+| MFG-07/F-ORD-002 | **Order Detail View** — Show only the authenticated customer’s authorized order snapshot, lifecycle timeline, contract/payment/refund summaries and shipment tracking; never recalculate historical prices. |
+| MFG-07/F-ORD-003 | **Cancel eligible order and request refund** — Allow cancellation only in permitted pre-production states, require a reason and idempotency/version checks, and request a policy-based refund without allowing the client to set its amount. |
+| MFG-07/F-ORD-004 | **Cancel Notify Logic** — Notify the customer and Dony Sales Admin after committed cancellation; deduplicate events and include refund status when relevant. |
 
 
 ## 8. Responsive and accessibility notes

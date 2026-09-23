@@ -36,12 +36,12 @@
 | State | What the user sees | Trigger |
 |---|---|---|
 | Loading | Progress; submit disabled | Request starts |
-| Empty |  | Initial route |
+| Empty | Render the work-email recovery form; no account data is shown before submission. | Initial route |
 | Forbidden/not found | Safe route message | Invalid route or token context |
 | Error | Generic safe error with request ID | Dependency failure |
 | Retry | Retry allowed within rate limits | Recoverable error |
-| Success |  | Request accepted |
-| Conflict |  | Stale or replaced request |
+| Success | Show the same neutral acknowledgement whether the address exists; queue a time-limited employee reset link only for an eligible account. | Request accepted |
+| Conflict | Explain that the recovery token/request is stale or already replaced and offer a safe way to request a new link; do not reveal account existence. | Stale or replaced request |
 
 ## 5. Interactions and navigation
 

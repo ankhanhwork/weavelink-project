@@ -40,12 +40,12 @@ MVP supports staff sign-in only for pre-provisioned identities; invitation accep
 | State | What the user sees | Trigger |
 |---|---|---|
 | Loading | Progress and disabled submit | Authentication begins |
-| Empty |  | Initial route |
+| Empty | This is an authentication form, not a data-list screen; render the email/password form rather than an empty-record message. | Initial route |
 | Forbidden/not found | Safe access message | Invalid invitation or unauthorized route |
 | Error | Generic credential error with request ID | Failed request |
 | Retry | Sign-in remains available within rate limits | Recoverable failure |
-| Success |  | Active StaffAccount authenticated |
-| Conflict |  | 409 |
+| Success | Establish the secure employee session and route Sales Admin to S28. Seeded Sales and System Admin test accounts route to S01 and have no staff-only MVP functions. | Active StaffAccount authenticated |
+| Conflict | Show a safe session/version conflict, clear stale employee session state, and require sign-in again; do not create a second session from a stale challenge. | Stale or concurrently consumed authentication state |
 
 ## 5. Interactions and navigation
 

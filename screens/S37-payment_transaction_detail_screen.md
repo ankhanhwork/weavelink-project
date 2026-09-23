@@ -77,8 +77,7 @@ Portal: Sales Admin. Route: /admin/payments/{payment_id}. Back preserves the ori
 | FR ID (from the module spec) | What this screen does for it |
 |---|---|
 | MFG-06/F-PAY-005 | **Make Payment** — Verify and deduplicate provider notifications by order and purpose; accept settlement once, perform the purpose-specific order transition, and support authorized reconciliation/refunds without resurrecting cancelled orders. |
-| MFG-07/F-ORD-003 | **Assign Consultant** — Assign/reassign an active Dony Sales employee with version checks, idempotency and atomic paired assignment of affected approved/assigned design requests; `committed_due_at` is Dony's commitment, not the customer's requested deadline. |
-Additional linked modules: [MFG-07](../specs/spec-MFG-07.md).
+Additional linked modules: [MFG-06](../specs/spec-MFG-06.md).
 
 
 

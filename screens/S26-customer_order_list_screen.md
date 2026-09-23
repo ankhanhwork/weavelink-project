@@ -74,7 +74,7 @@ Portal: Customer owner. Route: /orders. Back preserves the originating route and
 
 | FR ID (from the module spec) | What this screen does for it |
 |---|---|
-| MFG-07/F-ORD-001 | **Assign Sales** — List Dony customers without an active Sales assignment, with relevant request/order summaries and pagination. |
+| MFG-07/F-ORD-001 | **Order List View** — List the authenticated customer’s own orders with newest-first pagination and allowlisted status/date filters; an empty result is valid. |
 
 
 ## 8. Responsive and accessibility notes

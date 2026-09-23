@@ -77,9 +77,7 @@ Portal: Sales Admin / Assigned Sales. Route: /admin/orders. Back preserves the o
 
 | FR ID (from the module spec) | What this screen does for it |
 |---|---|
-| MFG-07/F-ORD-005 | **View Assignment** — List only the consultant's active assigned Dony customer records with pagination and allowlisted filters. |
-| MFG-07/F-ORD-006 | **View Assignment** — Return authorized Customer and optional Buyer Organization context plus chronological interaction history without exposing unassigned records or internal CRM notes. |
-| MFG-07/F-ORD-007 | **Update Consult** — Show consultation status, notes and linked record summaries to assigned consultant or Sales Admin. |
+| MFG-07/F-ORD-005 | **Admin Order Dashboard** — Provide Sales Admin with a paginated Dony-wide order queue, status/date/customer filters and counts. |
 
 
 ## 8. Responsive and accessibility notes

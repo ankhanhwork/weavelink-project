@@ -36,12 +36,12 @@
 | State | What the user sees | Trigger |
 |---|---|---|
 | Loading | Progress and disabled submit | Reset begins |
-| Empty |  | Valid token route opens |
+| Empty | With a valid employee reset token, render new-password and confirmation fields; do not show a blank state. | Valid token route opens |
 | Forbidden/not found | Safe invalid or expired-link notice | Wrong portal, expired or unknown token |
 | Error | Field-safe message with request ID | Validation/dependency failure |
 | Retry | Form remains available if token is valid | Recoverable failure |
-| Success |  | Commit succeeds |
-| Conflict |  | Concurrent or repeated use |
+| Success | Consume the employee token once, save the new password, revoke existing sessions, and return to S44 employee sign-in. | Password update commits |
+| Conflict | Keep credentials unchanged, mark the token unusable after concurrent/repeated consumption, and direct the employee to request a fresh reset link. | Concurrent or repeated token use |
 
 ## 5. Interactions and navigation
 

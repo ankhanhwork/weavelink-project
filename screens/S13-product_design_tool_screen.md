@@ -19,9 +19,9 @@
 
 ## 2. Mockup
 
-![S13 existing workflow reference](img/S13-product_design_tool_screen.png)
+![S13 updated design tool mockup](img/S13-product_design_tool_screen.png)
 
-The image documents the existing intended editor controls (front/back canvas, product options, artwork list, placement dimensions, draft state, preview and save). Written rules below govern validation and versioning; image/sample values do not override product rules.
+The image is an updated illustrative mockup. Any sample artwork and sample data are fictional; the product shown is labelled with the seeded `DEMO-TEE-001` code and its depicted color/print options match the MVP seed. Written rules below govern validation and versioning.
 
 ## 3. Element inventory
 

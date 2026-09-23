@@ -19,9 +19,9 @@
 
 ## 2. Mockup
 
-![S22 historical reference](img/S22-create_order_screen.png)
+![S22 updated create-order mockup](img/S22-create_order_screen.png)
 
-Written behavior below takes precedence over obsolete sample content. MVP does not show the historical merge action or merge controls; merge becomes available only after MFG-10 activation.
+This updated illustrative mockup includes the required delivery fields and business details. The banner labels its sample data and all contact details as fictional. MVP does not show merge controls; merge becomes available only after MFG-10 activation. Written validation and server-calculated quote rules below remain authoritative.
 
 ## 3. Element inventory
 
