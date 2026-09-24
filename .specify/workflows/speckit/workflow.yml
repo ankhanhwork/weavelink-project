@@ -12,19 +12,14 @@ requires:
   # as a literal integration key and fail at dispatch.
   speckit_version: ">=0.8.5"
   integrations:
-    # The four commands below (specify, plan, tasks, implement) are core
-    # spec-kit commands provided by every integration. The list here is an
-    # advisory, non-exhaustive compatibility hint following the documented
-    # ``any: [...]`` schema -- it is NOT a closed set. The workflow runs
-    # against any integration the project was initialized with, including
-    # ones not listed below, as long as that integration provides the four
-    # core commands referenced in ``steps``.
+    # The team uses Claude Code, Codex, and Antigravity. The identifiers below
+    # are Spec Kit integration IDs; Antigravity is registered as "agy".
+    # This is a compatibility hint: each integration must provide the core
+    # specify, plan, tasks, and implement commands referenced in steps.
     any:
-      - "alquimia"
       - "claude"
-      - "copilot"
-      - "gemini"
-      - "opencode"
+      - "codex"
+      - "agy"
 
 inputs:
   spec:
@@ -34,7 +29,7 @@ inputs:
   integration:
     type: string
     default: "auto"
-    prompt: "Integration to use (e.g. claude, copilot, gemini; 'auto' uses the project's initialized integration)"
+    prompt: "Integration to use (claude, codex, agy for Antigravity; 'auto' uses the project's initialized integration)"
   scope:
     type: string
     default: "full"

@@ -1,14 +1,15 @@
 # AGENTS.md
 
 Instructions for every AI coding agent working in this repository
-(Antigravity agent, Claude Code, or any other tool). Humans: keep this file
-short, factual and current. Replace every `<...>` before the first commit.
+(Claude Code, Codex, and Antigravity). Humans: keep this file short, factual,
+and current.
 
 ## 1. Project
 
 - Product: `WeaveLink`, team `Group B`, course DBIZ3, VJCBI College, Foreign Trade University.
 - Current step of the course process: Environment setup (Session 6). Next step: `Do not know yet`.
-- Source of truth for requirements: `docs/spec/` (Spec Document from Session 4).
+- Source of truth for approved product requirements: `docs/spec/` (Spec Document from Session 4).
+- Feature working documents generated during planning (spec, plan, research, tasks, etc.) belong in `specs/`. They must follow `docs/spec/`; they do not replace or silently amend it.
 - Source of truth for data: `data/` (data model and seed package from Session 5).
 
 ## 2. Tech stack
@@ -40,8 +41,15 @@ short, factual and current. Replace every `<...>` before the first commit.
 | `data/` | humans | Data model, seed generator, seed files (read-only for agents) |
 | `docs/env/` | humans | Environment Readiness Report |
 | `.specify/` | Spec Kit | Templates, scripts, constitution |
-| `.agents/` | Antigravity | Workspace rules and Spec Kit skills |
+| `.agents/` | AI coding agent | Workspace rules and Spec Kit skills |
 | `tools/` | humans | Helper scripts |
+
+## 5.1 Requirements and feature documents
+
+- Read the relevant files in `docs/spec/` before specifying or implementing a product feature.
+- Keep approved baseline requirements in `docs/spec/` unchanged unless the human explicitly requests a change to those files.
+- Store feature-specific working documents in `specs/`, following the Spec Kit structure. Treat them as derived planning documents and flag conflicts with `docs/spec/` for human resolution.
+- Do not create a second copy of the baseline product specification under `specs/`.
 
 ## 6. Conventions
 
