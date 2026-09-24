@@ -6,8 +6,8 @@ short, factual and current. Replace every `<...>` before the first commit.
 
 ## 1. Project
 
-- Product: `<product name>`, team `<team code>`, course DBIZ3, VJCBI College, Foreign Trade University.
-- Current step of the course process: Environment setup (Session 6). Next step: `<step name>`.
+- Product: `WeaveLink`, team `Group B`, course DBIZ3, VJCBI College, Foreign Trade University.
+- Current step of the course process: Environment setup (Session 6). Next step: `Do not know yet`.
 - Source of truth for requirements: `docs/spec/` (Spec Document from Session 4).
 - Source of truth for data: `data/` (data model and seed package from Session 5).
 
@@ -19,7 +19,7 @@ short, factual and current. Replace every `<...>` before the first commit.
 ## 3. Commands that are safe to run
 
 - `uv run tools/check_env.py --repo` : environment and repository check.
-- `<seed command>` : regenerates the seed data; must finish with every integrity assertion passing.
+- `<seed command> Chưa có` : regenerates the seed data; must finish with every integrity assertion passing.
 - `git status`, `git diff` : always allowed.
 
 ## 4. Hard rules
@@ -41,7 +41,6 @@ short, factual and current. Replace every `<...>` before the first commit.
 | `docs/env/` | humans | Environment Readiness Report |
 | `.specify/` | Spec Kit | Templates, scripts, constitution |
 | `.agents/` | Antigravity | Workspace rules and Spec Kit skills |
-| `.claude/` | Claude Code | Spec Kit skills (Path A members only) |
 | `tools/` | humans | Helper scripts |
 
 ## 6. Conventions
@@ -56,6 +55,6 @@ short, factual and current. Replace every `<...>` before the first commit.
 
 | File or folder | Owner (member) |
 |---|---|
-| `AGENTS.md` | `<name>` |
-| `docs/spec/` | `<name>` |
-| `data/` | `<name>` |
+| `AGENTS.md` | `Group B` |
+| `docs/spec/` | `Group B` |
+| `data/` | `Group B` |
