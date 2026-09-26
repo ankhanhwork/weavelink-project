@@ -4,7 +4,7 @@
 | --- | --- |
 | Module ID | `MFG-11` |
 | Module name | Data Analytics |
-| Spec version | v1.4 |
+| Spec version | v1.5 |
 | Author (team member) | Group B |
 | Date | 2026-09-26 |
 | Status | Product decisions resolved for this revision; runtime selection remains at Plan |
@@ -15,13 +15,13 @@
 
 Sales Admins receive read-only, Dony-wide business metrics, end-to-end funnel and waiting-state analysis, prompt-based explanations and matching exports. WeaveLink has one manufacturer/system boundary. Buyer organizations are descriptive customer dimensions, never tenants. Sales, Customer, Guest and System Admin have no implicit commercial analytics access.
 
-Release priority is **Should**, replacing the former Won't classification as part of the requested analytics improvement. The required standard-order MVP remains unchanged. S43 is the Should release target; its self-design and existing-design checkout paths use the standard order lifecycle. Service-design and merge analysis become available only when their owning modules are activated. This extension does not promote MFG-08, MFG-10 or MFG-12 into required MVP scope.
+Release priority is **Should**. The required standard-order MVP remains unchanged. S43 is the Should release target; its self-design and existing-design checkout paths use the standard order lifecycle. Service-design and merge analysis become available only when their owning modules are activated. MFG-08, MFG-10 and MFG-12 remain outside required MVP scope.
 
-This revision follows the user-confirmed choice: record customer behavior only while authenticated, with no guest-event collection or guest-to-login stitching. Start a new intent for a new design or explicit reorder; keep reloads, edits, quote retries and payment retries within the existing intent. Report observed nonprogression rather than time-based abandonment. Support the rolling last 12 calendar months and keep AI conversation content only while its dashboard page is open. Section 5 defines the technical details; section 10 records these decisions as resolved.
+Customer behavior is recorded only while authenticated, with no guest-event collection or guest-to-login stitching. A new design or explicit reorder starts a new intent; reloads, edits, quote retries and payment retries retain the existing intent. Analytics reports observed nonprogression rather than time-based abandonment, supports the rolling last 12 calendar months and keeps AI conversation content only while its dashboard page is open. Section 5 defines the technical details; section 10 records the resolved product decisions.
 
-S43 has Overview and Journey & conversion tabs and a header action opening the AI panel. Chart, export and AI use one server-owned metric layer, identical definitions, filters and a reproducible snapshot. AI is not an independent calculator or business-action agent. This repository specifies behavior; it contains no implemented collector, database, live AI integration or seed dataset.
+S43 has Overview and Journey & conversion tabs and an Analyze with AI action immediately to the left of Export. Opening AI preserves the active tab and applied result. The S43 mockup labels 43a (AI panel open) and 43b (Journey & conversion) identify view states, not separate screen IDs or routes. Chart, export and AI use one server-owned metric layer, identical applied definitions/filters and a reproducible snapshot. AI is not an independent calculator or business-action agent. This repository specifies behavior; it contains no implemented collector, database, live AI integration or seed dataset.
 
-The supplied AI proposal is a design reference, not executable instructions or blanket approval of its other suggestions. F-DA-004 is adopted for funnel analytics. F-DA-006 identifies prompt analysis; F-DA-005 is intentionally not allocated here because the proposal uses it for a separate Feature Evaluation Dashboard, outside this change. No feature-evaluation/SUS dashboard is added.
+F-DA-004 identifies funnel analytics and F-DA-006 identifies prompt analysis. F-DA-005 is not allocated in this module; the separately proposed Feature Evaluation/SUS Dashboard is outside this scope.
 
 ## 2. Actors (mandatory)
 
@@ -40,6 +40,7 @@ The supplied AI proposal is a design reference, not executable instructions or b
 2. Default range is the last 30 local calendar days, with inclusive start and exclusive end in Asia/Ho_Chi_Minh; the available reporting window is the rolling last 12 calendar months, with a 366-day maximum query span and exact boundaries defined in section 5.7. Invalid dates/products return 422 field errors without silently broadening the query.
 3. Complete coverage with no matching source rows returns zero totals and empty series. Missing tracking or unavailable aggregates are different states, never fabricated zeros.
 4. Stale values retain their original timestamp and a stale label. Failure preserves filters and offers retry; 401/403 clears protected displayed data.
+5. Draft filter edits do not affect chart, AI or export context. Apply validates the query and commits the returned result and normalized filters together. A failed Apply retains the preceding applied result with its original context. Changing tab/unit/template resolves a matching result instead of reinterpreting an incompatible snapshot.
 
 ### US-2: Export a matching result (Should)
 
@@ -59,7 +60,7 @@ The supplied AI proposal is a design reference, not executable instructions or b
 
 ### US-4: Ask for analysis by prompt (Should)
 
-1. Opening the header AI panel carries the active tab, filters, selected stage, unit and result snapshot. Supported questions cover metric explanations, conversion, waiting states and comparisons of equivalent cohorts.
+1. Opening the header AI panel carries the active tab, applied filters, selected stage, unit and result snapshot without refreshing metric data. Source-based analysis requires an authorized, unexpired result. Supported questions cover metric explanations, conversion, waiting states and comparisons of equivalent cohorts.
 2. The server validates a typed query plan against allowed metrics, dimensions, operations and role before any data access. Ambiguous metric/unit/range asks for clarification; a proposed context change is shown for explicit Apply and never silently changes dashboard filters.
 3. A successful answer contains evidence-backed findings, relevant counts and denominators, metric definitions, filter/cohort context, snapshot time and links to source result IDs. Numerical fields are rendered from validated metric results, not invented by the model.
 4. Missing evidence produces an insufficient-data answer. Recorded reasons may be summarized, but correlation is not asserted as causation; hypotheses are explicitly labeled.
@@ -80,7 +81,10 @@ flowchart TD
   View --> Export[Queue matching private CSV or XLSX]
   View --> Prompt[Open AI panel and ask]
   Prompt --> Plan[Validate supported query plan]
-  Plan --> Metrics
+  Plan --> Gate{Plan supported and context confirmed?}
+  Gate -->|Yes| Metrics
+  Gate -->|No| Clarify[Clarify, reject or await Apply]
+  Clarify -->|Confirmed request| Plan
   Metrics --> Explain[Explain approved aggregates]
   Explain --> Check[Validate evidence and numerical fields]
   Check --> Answer[Answer with original context and source links]
@@ -103,18 +107,38 @@ sequenceDiagram
     Analytics-->>UI: Result ID, definitions, counts, series and as-of
     Admin->>UI: Ask about selected result
     UI->>Analytics: Prompt, result ID and selected stage
-    Analytics->>AI: Sanitized intent and allowed metric schema
-    AI-->>Analytics: Proposed typed plan or clarification
-    Analytics->>Analytics: Validate plan and authorize#59; require Apply for context change
-    Analytics->>Store: Execute bounded approved metric query
-    Store-->>Analytics: Reproducible aggregate result
-    Analytics->>AI: Approved aggregate facts and opaque source references
-    AI-->>Analytics: Structured explanation and evidence references
-    Analytics->>Analytics: Reject unsupported facts, numbers, links or actions
-    Analytics-->>UI: Validated answer with original context, or safe failure
+    Analytics->>Analytics: Recheck role, result access and expiry
+    alt Source result denied, expired or unavailable
+        Analytics-->>UI: Safe source error, no model request
+    else Valid source context
+        Analytics->>AI: Sanitized intent and allowed metric schema
+        AI-->>Analytics: Proposed typed plan or clarification
+        Analytics->>Analytics: Validate plan and authorize operations
+        alt Ambiguous or unsupported plan
+            Analytics-->>UI: Clarification or unsupported answer, no metric query
+        else Supported plan
+            opt Proposed context differs from applied context
+                Analytics-->>UI: Preview proposed context
+                UI-->>Admin: Await explicit Apply
+                Admin->>UI: Apply proposed context
+                UI->>Analytics: Confirm context and plan
+                Analytics->>Analytics: Revalidate permission, source and query bounds
+            end
+            Analytics->>Store: Resolve confirmed query using the correct snapshot
+            Store-->>Analytics: Aggregate result or unavailable status
+            alt Required evidence unavailable
+                Analytics-->>UI: Insufficient data or safe failure
+            else Verified aggregate facts
+                Analytics->>AI: Aggregate facts and opaque source references
+                AI-->>Analytics: Structured explanation and evidence references
+                Analytics->>Analytics: Validate facts, numbers, links and actions
+                Analytics-->>UI: Validated answer with bound result context, or safe failure
+            end
+        end
+    end
 ```
 
-Export follows the same snapshot through F-DA-003; its worker enforces authorization, column allowlist, formula escaping, row cap and private-link rules. Neither model latency nor analytics read failure blocks order processing.
+For unchanged context, analysis reuses the source result or a reproducible query against its pinned source version; it does not read newer facts as if they belonged to the original result. A confirmed context change creates a new authorized result, and its ID/context become the source of that answer. If Apply is not confirmed, no changed-context query executes. Model timeout, invalid output or failed revalidation returns a safe failure without advancing the sequence. Export follows the selected snapshot through F-DA-003; its worker enforces authorization, column allowlist, formula escaping, row cap and private-link rules. Neither model latency nor analytics read failure blocks order processing.
 
 ## 5. Functional requirements (mandatory)
 
@@ -139,9 +163,11 @@ Export follows the same snapshot through F-DA-003; its worker enforces authoriza
 
 ### 5.2 Business rules
 
+In as-of mode, eligibility depends on valid cohort attribution and source coverage through observed_until, not on reaching a later stage; immature count is not applicable. Coverage describes whether the required sources and links can reliably establish an outcome. A tracked entry with no later design save, checkout or order remains an eligible nonconversion when those sources are available. A known downstream record with missing attribution, or a missing source interval, is a coverage limitation; it is not treated as proof of nonconversion. Apply one disclosed eligible population to the ordered funnel so stage denominators do not silently change between rows. If coverage cannot support that population, report the unsupported funnel or steps explicitly.
+
 | Rule | Definition | Reason |
 | --- | --- | --- |
-| BR-001 | Revenue is immutable contract total on Completed, less recognized refunds by refunded_at. Cash is accepted DEPOSIT/BALANCE by paid_at less successful refunds. Exclude duplicate/late receipts and their offsetting refunds from both. Design fees are included once, not added again. Show negative net amounts without clamping. | Preserve existing commercial definitions |
+| BR-001 | Revenue is immutable contract total recognized by completed_at, less successful refunds of previously recognized revenue by refunded_at. A refund on a never-completed order affects cash only, not revenue that was never recognized. Cash is accepted DEPOSIT/BALANCE by paid_at less successful refunds by refunded_at. Exclude duplicate/late receipts and their offsetting refunds from both. Design fees are included once, not added again. Show negative net amounts without clamping. | Preserve existing commercial definitions |
 | BR-002 | Order count uses created_at and includes all states. For the same created-order cohort, show cancellations by the result cutoff separately. New customers are distinct customer IDs whose first submitted order across Dony falls in range; a product filter selects that first order, not the first order of that product. | Prevent registration/company counts or product repeat buyers becoming new customers |
 | BR-003 | Server authorizes Sales Admin within Dony. Buyer organization is a descriptive filter, not tenancy. Retain historical product IDs/names for archived/hidden products; do not query only the current Published catalog. | Keep authorization and history correct |
 | BR-004 | Export only approved columns; customer labels are display name/masked email. Escape formula-leading text, cap rows at 100,000 and reject unsupported datasets/columns. | Bound data exposure |
@@ -164,6 +190,8 @@ Export follows the same snapshot through F-DA-003; its worker enforces authoriza
 
 Each template continues through the common order milestones: order created → digital design approved → physical sample approved → contract Ready → contract Signed → accepted deposit → InProduction → receipt recorded → Completed. Expand sample preparation/dispatch, shipment, receipt source, payment attempts and revision cycles in step detail. Design `Delivered` is not order receipt; batch `Completed` and CRM `ClosedWon` are not order `Completed`.
 
+The independent order funnel starts at order created and follows these common milestones; it requires no product-entry or journey link. Missing pre-order tracking does not exclude an otherwise evidenced order from this unit. Missing evidence for a required order milestone is still a coverage limitation, not permission to fabricate a preceding stage.
+
 A journey is a server-correlated authenticated customer intent, not an authentication session, design lineage, quote or payment attempt. An explicit new-design action creates a fresh `journey_id`, even for the same product. Opening/resuming an existing draft/design for editing retains its originating intent while it remains a continuation of that work. An explicit order-again/new-order action from an existing Saved/Delivered design creates a new existing-design-checkout intent. Continuing an unsubmitted checkout or correcting its quote retains its intent. Reloads, design-version saves, sample revisions, quote refreshes and payment retries never create a new journey.
 
 Record a new intent at the first eligible rendered workspace/checkout after that action, not on a failed navigation or unauthenticated button click. An explicit new design-service request, when that feature is active, creates a new service intent on committed submission; retrying that submission reuses its idempotency-bound intent. Current draft/quote/order routes carry a validated continuation reference. Same-intent tabs share that reference; independently invoking New design or Order again produces separate intents. There is no inactivity-expiry rule for a journey. On a later authenticated visit, resume only through an explicitly linked owned draft/design/quote/order; an invalid or missing reference is unknown coverage, not a guessed join.
@@ -180,6 +208,8 @@ Order-stage achievement is historical; later cancellation/revision does not eras
 
 Transition median uses only eligible cohort units completing that transition by their applicable observation cutoff and reports sample size. Pair version/cycle-bound events correctly. For orders, total create-to-sample-approved time includes all sample rework; per-cycle timings are additional detail. For journey duration to a milestone, use the earliest linked order that completes the qualifying prefix, not timestamps borrowed from different orders. For product-entry duration, use the earliest qualifying child-journey chain with its own order. Open waiting age is cutoff minus entry into the current waiting state/cycle; return its own count/distribution. Do not present completed-transition median as the wait time of still-open records.
 
+Current waiting/terminal inventory contains distinct orders belonging to the selected order-entry cohort or explicitly linked to entries in the selected product-entry/journey cohort through observed_until. It covers the full observed entry cohort, including entries immature for fixed-follow-up conversion, and uses its own disclosed order population and attribution coverage. It is not a dashboard-wide count of all open orders and is not the residual of a selected conversion step. A selected current-state group filters the supporting-order table. Open-wait age always uses observed_until, not the historical fixed-follow-up cutoff. Missing linkage is disclosed, and an entry with no order does not create a waiting-order row.
+
 Contract wait splits sample approval→Ready (Dony generation/render) and Ready→Signed (customer action on the current bound version). Superseded contract versions remain historical; never pair a signature with a different version's Ready timestamp. Sample transit is not customer approval delay. Receipt may be customer-confirmed or system-confirmed under MFG-06; verified delivery proof alone does not advance receipt. Completion includes the zero-balance path. Preserve MFG-10's legitimate wait and production deadline semantics without inventing a shipping SLA.
 
 ### 5.4 Event evidence and instrumentation
@@ -188,7 +218,7 @@ Contract wait splits sample approval→Ready (Dony generation/render) and Ready�
 | --- | --- | --- |
 | MFG-04 / S09 | `product_viewed` | Valid product detail actually displayed to an authenticated Customer; product_entry_id identifies the navigation entry; no guest history, catalog impression, prefetch or staff preview |
 | MFG-05 / S13 | `design_started`, `design_saved` | Workspace ready for a new or resumed explicit intent; preserve its journey_id and optional originating product_entry_id; save counts only committed immutable version; preview/autosave requests are not successful saves unless they commit a qualifying version |
-| MFG-05 / S15–S21 | `design_request_submitted`, `design_request_approved`, `design_delivered`, request terminal outcomes | Committed service records, request/design provenance and assignment/fee substeps; no standalone service payment |
+| MFG-05 / S15, S17–S21 | `design_request_submitted`, `design_request_approved`, `design_delivered`, request terminal outcomes | Committed service records, request/design provenance and assignment/fee substeps; no standalone service payment; S16 is retired |
 | MFG-06 / S22, S25 | `checkout_started`, `order_created` | Eligible checkout rendered; order only on committed creation; quote generation and validation errors are not orders |
 | MFG-06/07 / S27, S29 | Digital/sample approvals, sample-cycle revisions, dispatch, production, shipment, receipt, cancellation and completion | Authoritative append-only timeline with actor/source and bound version/cycle; not current status alone |
 | MFG-09 / S33, S34 | `contract_ready`, `contract_signed` | Persisted Ready PDF and accepted signature for exact contract version/hash; notification delivery is not the milestone |
@@ -215,6 +245,8 @@ Validate structured output against returned evidence: numeric claims/units/denom
 
 Business export schemas are explicit so different date bases cannot be mistaken for matching totals:
 
+The selected dataset must be supported by the source result's query context. Overview results support the revenue/orders/customers period datasets below; funnel results support the aggregate funnel dataset. A supporting table labeled Recent completed orders is selected by completed_at, whereas the orders export is selected by created_at. The export UI states that date basis and must not imply that it downloads that table verbatim. Unsupported result/dataset combinations fail explicitly instead of changing the unit, period or source snapshot.
+
 | Dataset | Row selection and allowlisted columns |
 | --- | --- |
 | revenue | Daily aggregate rows within the selected business period: date, value (recognized net revenue_vnd), cash_collected_vnd (net accepted cash by settlement/refund time), design_fee_revenue_vnd (included component), currency. Revenue, cash and design-fee sums must match their corresponding chart series under identical filters/snapshot; the fee is never added again |
@@ -230,6 +262,8 @@ Each result records query/context, source watermark, business outcome cutoff, ge
 ### 5.7 Reporting window, retention and conversation lifetime
 
 The product decision is a rolling last **12 calendar months**, not any arbitrary 12-month interval in the distant past. Use Asia/Ho_Chi_Minh local dates: let `available_end_exclusive` be the day after the current local date and `available_start` be that date minus 12 calendar months (clamp to the last valid day when required). Require `available_start <= start_date < end_date <= available_end_exclusive` and query span at most 366 calendar days. Default to the last 30 dates ending at available_end_exclusive. Today's points/cohort are partial through the explicit available cutoff. Return these boundaries in the query metadata; reject dates outside them instead of silently truncating. Twelve months is capability from collected/authoritative evidence, not permission to invent history before collection began.
+
+The date picker displays an inclusive last date for readability. Convert that selected last date to the next local date for the API's exclusive end_date; for example, 01–31 August sends start_date 01 August and end_date 01 September. Derive available_start explicitly as available_end_exclusive minus 12 calendar months. Display labels, exports and AI context describe the same covered dates; date conversion must not omit the last selected day.
 
 Technical retention defaults for this release:
 
@@ -263,22 +297,22 @@ Retaining normalized historical facts does not extend the UI's reporting window.
 | Screen | Role | Specification |
 | --- | --- | --- |
 | S43 | Should analytics destination; Overview, Journey & conversion, AI panel and exports | [S43](../screens/S43-analytics_dashboard_screen.md) |
-| S09/S13/S15–S22/S25 | Evidence-producing existing customer/design surfaces; availability follows owning module | Section 5.4; no new analytics controls for customers |
+| S09/S13/S15/S17–S22/S25 | Evidence-producing existing customer/design surfaces; availability follows owning module; retired S16 is excluded | Section 5.4; no new analytics controls for customers |
 | S27/S29/S33–S37/S42 | Authorized business evidence and supporting-record navigation | Existing ownership/assignment and module activation rules still apply |
 
 ## 8. Success criteria (mandatory)
 
 | SC | Criterion | Required verification before implementation release |
 | --- | --- | --- |
-| SC-001 | Baseline metrics remain exact | Known synthetic records including negative net refunds, duplicate/late receipts, first-order customers and design-fee allocation; chart/export/AI metric values match |
+| SC-001 | Baseline metrics remain exact | Known synthetic records including negative net refunds, refunds before completion (cash only), duplicate/late receipts, first-order customers and design-fee allocation; chart/export/AI metric values match |
 | SC-002 | Role and data boundaries hold | Deny Customer/Sales/System Admin, forged organization scope, prompt-based role override and revoked-session cached results; inspect model payload/log/export fields |
-| SC-003 | Export matches its snapshot | Job retry/key conflict, explicit revenue/cash export columns and date bases, refund of a prior-period order, column allowlist, formula-leading text, >100,000 rows, URL clipped to file expiry and unavailable original snapshot |
+| SC-003 | Export matches its snapshot | Job retry/key conflict, result/dataset compatibility, completed-order table versus created-order export, revenue/cash date bases, refund of a prior-period order, column allowlist, formula-leading text, >100,000 rows, URL clipped to file expiry and unavailable original snapshot |
 | SC-004 | Funnel units and identity are correct | Repeat orders from one design; multiple linked orders per journey; retries/versions; no spliced cross-order chain; unknown/legacy attribution; service Simple/Complex paths |
 | SC-005 | Timing and waiting are not false drop-off | Two sample-revision cycles, delayed contract generation, superseded Ready versions, sample transit, customer/system receipt, zero-balance completion, cancellation/refund and optional merge fallback |
-| SC-006 | Observation and coverage are explicit | Local-day boundaries, fixed-follow-up per-unit cutoffs, immature/excluded units, no eligible denominator, outcomes after the horizon, unequal follow-up, late arrivals after watermark, true empty data versus tracking gaps |
+| SC-006 | Observation and coverage are explicit | Inclusive picker to exclusive query dates, fixed-follow-up cutoffs, immature/excluded units, tracked nonconverters retained in denominator, independently scoped current-order inventory, no eligible denominator, outcomes after horizon, unequal follow-up, late arrivals and tracking gaps |
+| SC-007 | AI answers are grounded | Golden questions with exact counts/denominators; revenue versus cash; unsupported causes; malicious prompt/source text; source expiry before model access; clarification and Apply gates; draft versus applied filters; original snapshot replay; provider timeout leaves charts usable |
 | SC-008 | Confirmed identity rules hold | Guest browsing emits no analytics events; login does not backfill guest views; reload/edit/requote/retry keeps intent; new design/reorder changes intent; restored same-entry tabs do not multiply entries; account switch cannot reassign events |
 | SC-009 | Reporting and retention match the chosen scope | Rolling 12-month boundaries including leap/month ends; 366-day cap; collection-start gaps; 13-month raw-event cleanup preserves needed milestone facts; seven-day source/export expiry; page close/reload/logout removes chat but not valid business facts |
-| SC-007 | AI answers are grounded | Golden questions with exact expected counts/denominators; ambiguous revenue versus cash; unsupported causal claims; malicious prompt/source text; changed filters/stage and source replay; provider timeout leaves charts usable |
 
 Use at least ten synthetic authenticated customer journeys, plus deterministic order fixtures covering these cases. Assert expected values, not merely successful rendering. No real personal data or illustrative UI numbers become fixtures by assumption.
 
@@ -291,7 +325,7 @@ Use at least ten synthetic authenticated customer journeys, plus deterministic o
 
 ## 10. Confirmed decisions and implementation handoff
 
-The user confirmed the following product choices in the current revision, including explicitly selecting authenticated-only tracking when asked to distinguish it from the later guest-tracking recommendation. No guest-linking feature is included.
+The following product decisions define this release. Guest tracking and guest-to-login journey linking are outside its scope.
 
 | ID | Decision | Status / implementation consequence |
 | --- | --- | --- |
