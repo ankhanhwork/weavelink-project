@@ -34,9 +34,9 @@
 | UC-C18 | Confirm merge batch | Sales Admin | None | MFG-10/F-MER-006, MFG-10/F-MER-007 |
 | UC-C16 | Optimize order | Sales Admin | UC-C17, UC-C18 | MFG-10/F-MER-004, MFG-10/F-MER-005, MFG-10/F-MER-006, MFG-10/F-MER-007 |
 | UC-C19 | Assign consultant | Sales Admin | None | MFG-08/F-ORD-001, MFG-08/F-ORD-002, MFG-08/F-ORD-003, MFG-08/F-ORD-004 |
-| UC-C21 | View dashboard | Sales Admin | None | MFG-11/F-DA-001, MFG-11/F-DA-002 |
+| UC-C21 | View dashboard and journey conversion | Sales Admin | System (validated evidence and aggregation) | MFG-11/F-DA-001, MFG-11/F-DA-002, MFG-11/F-DA-004 |
 | UC-C22 | Export data | Sales Admin | None | MFG-11/F-DA-003 |
-| UC-C20 | Data Analytics | Sales Admin | UC-C21, UC-C22 | MFG-11/F-DA-001, MFG-11/F-DA-002, MFG-11/F-DA-003 |
+| UC-C20 | Data Analytics and prompt-based explanation | Sales Admin | UC-C21, UC-C22; restricted AI adapter | MFG-11/F-DA-001, MFG-11/F-DA-002, MFG-11/F-DA-003, MFG-11/F-DA-004, MFG-11/F-DA-006 |
 | UC-C24 | Add product | Sales Admin | None | MFG-04/F-PROD-004, MFG-04/F-PROD-005, MFG-04/F-PROD-006 |
 | UC-C25 | Update product info | Sales Admin | None | MFG-04/F-PROD-007, MFG-04/F-PROD-008 |
 | UC-C26 | Delete product | Sales Admin | None | MFG-04/F-PROD-009, MFG-04/F-PROD-010 |

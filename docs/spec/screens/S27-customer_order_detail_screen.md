@@ -42,7 +42,7 @@ Written behavior below takes precedence over obsolete sample content.
 | 13 | View contract | Action | Open the authorized current contract only after sample approval. | Only in PendingContract or later | Destination: S34 |
 | 14 | Pay deposit | Action | Open exact `DEPOSIT` amount only after current contract is Signed and order is `AwaitingDeposit`. | Only in AwaitingDeposit | Destination: S35 |
 | 15 | Confirm delivery receipt | Action | Record Customer receipt evidence and immediately advance `Shipped→DeliveredAwaitingBalance`; no dispute action is in MVP. | Only in Shipped | Destination: S27 |
-| 16 | Pay remaining balance | Action | Open exact `BALANCE` amount only after receipt is recorded. | Only in DeliveredAwaitingBalance | Destination: S35 |
+| 16 | Pay remaining balance | Action | Open exact positive `BALANCE` amount only after receipt is recorded; a zero balance follows automatic completion without a payment action. | Only in DeliveredAwaitingBalance with positive balance | Destination: S35 |
 
 When staff records verified carrier/POD evidence, S27 shows the evidence timestamp and a three-calendar-day auto-confirmation countdown. There is no dispute button or dispute state in the MVP. If the Customer does not confirm before expiry, the scheduled event records receipt and changes the order to `DeliveredAwaitingBalance`.
 
@@ -84,7 +84,7 @@ Portal: Customer owner. Route: /orders/{order_id}. Back preserves the originatin
 1. Digital approval binds the reviewed version; stale design/quote returns 409 and cannot start sample preparation.
 2. Only the current shipped sample can be approved or revised; approval opens contract generation, while revision preserves history and restarts digital approval.
 3. Cancellation succeeds only in an allowed pre-production unbatched state; captured funds use the stored refund policy.
-4. Deposit payment is visible only in `AwaitingDeposit`; remaining-balance payment is visible only in `DeliveredAwaitingBalance` after receipt evidence.
+4. Deposit payment is visible only in `AwaitingDeposit`; remaining-balance payment is visible only in `DeliveredAwaitingBalance` after receipt evidence and when the balance is positive; zero balance completes through the authoritative MFG-06 path without a provider attempt.
 5. Cancellation after batch assignment or production start returns 409 and leaves order unchanged.
 
 ## 7. Linked requirements
