@@ -376,33 +376,75 @@ sequenceDiagram
     end
 ```
 
-# MFG-11: Company analytics and export — SD-13
+# MFG-11: Dony analytics, funnel and matching export — SD-13
 
 ```mermaid
 sequenceDiagram
-    actor CompanyAdmin as Sales Admin
-    participant AnalyticsUI as S43
-    participant AnalyticsModule as Analytics module
-    participant AuthoritativeDB as Authoritative records
-    participant ExportWorker as Export worker
-    participant PrivateAssetStore as Private asset store
-    CompanyAdmin->>AnalyticsUI: Select date range and metric
-    AnalyticsUI->>AnalyticsModule: Request dashboard data
-    AnalyticsModule->>AuthoritativeDB: Validate Dony scope and date range
-    AnalyticsModule->>AuthoritativeDB: Aggregate scoped orders and accepted payments/refunds
-    AuthoritativeDB-->>AnalyticsModule: Source rows and refresh watermark
-    AnalyticsModule-->>AnalyticsUI: Typed chart series, totals and refreshed_at
-    CompanyAdmin->>AnalyticsUI: Request CSV/XLSX export
-    AnalyticsUI->>AnalyticsModule: Dataset, filters, format and idempotency key
-    AnalyticsModule->>AuthoritativeDB: Snapshot filters/watermark and queue job
-    AnalyticsModule-->>AnalyticsUI: Export ID and queued status
-    ExportWorker->>AuthoritativeDB: Read snapshot, enforce columns/row limit and escape formulas
-    ExportWorker->>PrivateAssetStore: Store private export
-    ExportWorker->>AuthoritativeDB: Mark success and persist asset reference
-    CompanyAdmin->>AnalyticsUI: Poll export status
-    AnalyticsUI->>AnalyticsModule: Export ID
-    AnalyticsModule-->>AnalyticsUI: Success and short-lived authorized link
+    actor Admin as Sales Admin
+    participant UI as S43
+    participant Metrics as Shared authorized metric layer
+    participant DB as Authoritative facts and validated events
+    participant Results as Protected result snapshots
+    participant Worker as Export worker
+    participant Assets as Private asset store
+    Admin->>UI: Select tab, filters, unit, cohort, observation mode and cutoff
+    UI->>Metrics: Typed query with current session
+    Metrics->>Metrics: Authorize Sales Admin and validate context
+    Metrics->>DB: Read consistent snapshot with evidence coverage
+    DB-->>Metrics: Scoped facts, original events and watermark
+    Metrics->>Results: Record result, definitions, cutoff and coverage
+    Metrics-->>UI: Result ID, business or funnel metrics, waiting detail
+    Admin->>UI: Export selected result as CSV or XLSX
+    UI->>Metrics: Result ID, dataset, format and idempotency key
+    Metrics->>Results: Reauthorize result and queue matching export
+    Metrics-->>UI: Export job ID and state
+    Worker->>Results: Read original result snapshot, not current filters
+    Worker->>Worker: Enforce column allowlist, row cap and formula escaping
+    Worker->>Assets: Store private export
+    Worker->>Results: Persist success or actionable failure
+    Admin->>UI: Poll and download
+    UI->>Metrics: Authorized job request
+    Metrics-->>UI: Job state#59; successful private URL expires within 10 minutes and before file expiry
 ```
+
+When the original snapshot cannot be reproduced, export fails explicitly instead of substituting current data. Interaction evidence cannot settle orders; committed timeline/outbox events are projected idempotently. MFG-11 5.3 owns resolved authenticated product-entry/intent/order formulas and coverage; 5.7 owns 12-month reporting and seven-day result/export lifetimes. Guest views are neither collected nor replayed at login.
+
+# MFG-11: Grounded prompt analysis — SD-13A
+
+```mermaid
+sequenceDiagram
+    actor Admin as Sales Admin
+    participant UI as S43 AI panel
+    participant Metrics as Shared authorized metric layer
+    participant AI as Restricted AI adapter
+    participant Results as Protected facts and result snapshots
+    Admin->>UI: Ask about active result and selected stage
+    UI->>Metrics: Prompt and original context result ID
+    Metrics->>Metrics: Recheck role and sanitize prompt
+    Metrics->>AI: Allowed metric schema and sanitized intent
+    AI-->>Metrics: Typed query proposal or clarification
+    alt Ambiguous or unsupported plan
+        Metrics-->>UI: Clarification or unsupported state#59; no arbitrary query
+    else Changed context
+        Metrics-->>UI: Proposed context for explicit Apply
+        Admin->>UI: Apply proposed context
+        UI->>Metrics: Validated proposed context
+    end
+    opt Validated and explicitly applied context
+        Metrics->>Results: Execute bounded authorized metric query
+        Results-->>Metrics: Aggregate result, definitions, cutoff and coverage
+        Metrics->>AI: Minimum aggregate facts with opaque evidence IDs
+        AI-->>Metrics: Structured findings, references and labeled hypotheses
+        Metrics->>Metrics: Validate numeric fields, claims and evidence links
+        Metrics-->>UI: Grounded answer or safe insufficient/unavailable state
+    end
+    Admin->>UI: Open answer source after filters change
+    UI->>Metrics: Original source result ID and stage
+    Metrics->>Results: Fresh authorization#59; load original result
+    Metrics-->>UI: Original context or explicit snapshot unavailable
+```
+
+For unchanged valid context, the existing applied dashboard context satisfies the Apply condition. Model failure does not disable deterministic charts or exports. Provider/model selection and runtime limits remain Plan item I-01; the product retention rules are resolved in MFG-11 5.7. No external provider or direct model database access is implied. Prompt/answer conversation is transient processing plus memory in the active page, not a persistent history. Closing/reloading/leaving that page or losing the session clears it; source results expire after seven days and must not be silently refreshed.
 
 # MFG-12: System operations, backup, restore and configuration — SD-14
 

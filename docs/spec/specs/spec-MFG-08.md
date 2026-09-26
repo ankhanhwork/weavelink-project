@@ -4,9 +4,9 @@
 | --- | --- |
 | Module ID | `MFG-08` |
 | Module name | Sales |
-| Spec version | v1.1 |
+| Spec version | v1.2 |
 | Author (team member) | Group B |
-| Date | 2026-09-22 |
+| Date | 2026-09-26 |
 | Status | Draft |
 | Approved by (Client role) | No approver identified |
 | DBIZ2 source | Function List MFG-08, No. 60–67, `F-ORD-001`–`F-ORD-008`; UC-S01, UC-S02, UC-C19; screens S18–S21 and S38 |
@@ -141,6 +141,10 @@ sequenceDiagram
 | BR-005 | Status transitions: New→Contacted/ClosedLost; Contacted→InProgress/ClosedLost; InProgress→ClosedLost/ClosedWon; Admin alone may reopen a closed consultation to InProgress. | Keep consultation lifecycle controlled. |
 
 Interaction history uses source_channel InApp, Email, Phone or Chat and kind Note, StatusChange, Assignment or DesignDelivery. Staff manually record external conversation/chat summaries as notes with source channel and occurred_at; no real-time chat or external inbox integration is implied. Committed assignment, request and delivery events append immutable entries. A correction appends a new entry referencing the prior event; it never erases history and does not send an external message.
+
+### Analytics evidence integration (MFG-11)
+
+Consultation `ClosedWon`/`ClosedLost`, service-request outcomes and order lifecycle statuses are separate domains. MFG-11 must not substitute consultation closure for order completion/cancellation or infer causal loss reasons from free-form CRM notes. Existing assignment permissions do not grant Sales access to S43 or its AI answers. This change does not add salesperson scoring, performance ranking or CRM-note analysis. If a future approved metric attributes historical work to a consultant, it must use assignment evidence at that event time rather than today's assignment.
 
 ## 6. Key entities (mandatory)
 

@@ -79,7 +79,7 @@ Portal: Sales Admin / Assigned Sales. Route: /admin/orders/{order_id}. Back pres
 
 1. Only valid next fulfillment transition is applied; shipment requires carrier, tracking and timestamp.
 2. Sales cannot cancel an order or bypass Customer design/sample approval, contract, deposit, receipt or balance gates; stale order version returns 409.
-3. Staff can never set `Completed`; only verified BALANCE settlement can do so.
+3. Staff can never set `Completed`; only verified BALANCE settlement or MFG-06's authoritative zero-balance completion path can do so. Both produce the same final lifecycle milestone for MFG-11; payment-attempt counts remain separate.
 
 ## 7. Linked requirements
 

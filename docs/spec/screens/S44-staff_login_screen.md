@@ -74,8 +74,9 @@ MVP supports staff sign-in only for pre-provisioned identities; invitation accep
 
 | FR ID (from the module spec) | What this screen does for it |
 |---|---|
-| MFG-01/F-USER-004 | Authenticates invited and active Dony staff through the employee portal. |
-| MFG-03/F-ACC-001 | Continues the staff invitation flow after authorized provisioning. |
+| MFG-01/F-USER-004 | Render the separate employee login portal and its recovery/invitation entry; invitation acceptance remains post-MVP. |
+| MFG-01/F-USER-005 | Authenticate eligible active employees, enforce rate limits and establish the staff session. |
+| MFG-03/F-ACC-003 | After MFG-03 activation, use the valid single-use invitation issued by authorized provisioning; acceptance follows that module's invitation lifecycle. |
 
 ## 8. Responsive and accessibility notes
 

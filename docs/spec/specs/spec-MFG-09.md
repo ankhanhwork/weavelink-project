@@ -4,9 +4,9 @@
 | --- | --- |
 | Module ID | `MFG-09` |
 | Module name | Contract Management |
-| Spec version | v2.0 |
+| Spec version | v2.1 |
 | Author (team member) | Group B |
-| Date | 2026-09-23 |
+| Date | 2026-09-26 |
 | Status | Draft |
 | Approved by (Client role) | No approver identified |
 | DBIZ2 source | Function List MFG-09, No. 68–76, `F-CONTR-001`–`F-CONTR-009`; UC-C10, UC-C09, UC-C11, UC-C14, UC-C15, UC-C13; screens S30–S34 and S38 |
@@ -121,6 +121,10 @@ The canonical contract-generation/signing message flow is [SD-08 in the architec
 | BR-005 | Only a current Ready contract for an owned `PendingContract` order with the same current Approved sample/design can be signed; successful signature alone advances the order to `AwaitingDeposit`. | Prevent signing stale terms or taking a deposit before sample approval. |
 
 Contract amounts must match the quote/payment screens using the same VND snapshot. Show design_fee_vnd as a separate line outside merchandise subtotal, including 0 for MVP, free or repeat orders; use the MFG-06 allocation snapshot and never add another fee. The contract must also show `deposit_due_vnd = floor(contract_total_vnd × deposit_percent / 100)`, `balance_due_vnd = contract_total_vnd − accepted_deposit_vnd − accepted_order_credit_vnd`, and the snapshotted payment rule that the balance is due 7 calendar days after verified delivery (MFG-06 BR-014). `balance_due_at` is set only after delivery is verified and must not be fabricated during pre-delivery contract generation. Snapshot the percentage and payment-policy version. Missing required fee, sample or deposit data blocks generation with 422. S34 displays the same terms before signing. PDF render/storage must succeed before a contract becomes Ready. If cancellation is eligible, the contract becomes Voided with artifact and signature evidence retained.
+
+### Analytics evidence integration (MFG-11)
+
+For MFG-11/F-DA-004, expose committed `contract_ready` and `contract_signed` evidence with exact order, contract version, approved sample/design binding and occurrence time. Ready means the PDF was successfully persisted; email/outbox delivery does not define readiness. Preserve superseded versions and pair each signature with the Ready event of that same version. Analytics separates sample approval→Ready (Dony preparation) from Ready→Signed (customer action). The MVP still requires Sales Admin to explicitly Generate after sample approval; this integration does not auto-generate contracts. AI receives aggregate timings only, not PDF, typed name, signature, IP or challenge evidence.
 
 ## 6. Key entities (mandatory)
 

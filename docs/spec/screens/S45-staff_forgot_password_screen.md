@@ -68,8 +68,9 @@
 
 | FR ID (from the module spec) | What this screen does for it |
 |---|---|
-| MFG-01/F-USER-007 | Requests staff portal-bound password recovery. |
-| MFG-01/F-USER-008 | Reissues a staff recovery link under the request limit. |
+| MFG-01/F-USER-007 | Render the employee email-only recovery form. |
+| MFG-01/F-USER-008 | Validate employee recovery input and request limits without disclosing account existence. |
+| MFG-01/F-USER-009 | Issue/reissue and deliver the hashed employee-portal reset token for eligible requests. |
 
 ## 8. Responsive and accessibility notes
 

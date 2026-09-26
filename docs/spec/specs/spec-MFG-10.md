@@ -4,9 +4,9 @@
 | --- | --- |
 | Module ID | `MFG-10` |
 | Module name | Order Optimization (Merge) |
-| Spec version | v3.0 |
+| Spec version | v3.1 |
 | Author (team member) | Group B |
-| Date | 2026-09-19 |
+| Date | 2026-09-26 |
 | Status | Draft |
 | Approved by (Client role) | No approver identified |
 | DBIZ2 source | Function List MFG-10, No. 77–83, `F-MER-001`–`F-MER-007`; UC-C06, UC-C17, UC-C18, UC-C16; screens S23–S25, S29, S38, S42 |
@@ -156,6 +156,10 @@ sequenceDiagram
 | BR-006 | Recommendations reserve no orders and have no durable Planned batch state. A Sales Admin start action locks and revalidates all selected members, creates the batch directly in InProduction with immutable membership/estimate snapshots, and advances every order atomically. A batch production due date is the earliest member due date. Orders not started together remain eligible until their own window expires. | Make final approval/launch authority explicit and eliminate unstarted batches that can strand orders. |
 
 Duplicate IDs, unsupported variants and incompatible production keys are rejected with 422; stale candidate/order versions return 409. Mutations are idempotent. There is one Dony factory/system boundary, not tenant-by-customer-company authorization. The scheduler only recommends groups and starts individual fallback; Sales Admin alone authorizes and starts a batch. MFG-07 owns resulting order transitions.
+
+### Analytics evidence integration (MFG-11)
+
+MFG-11 may segment active order analysis by the immutable merge opt-in/policy and actual batch/individual-fallback events only after this module is activated. The allowed waiting window is operational context, not automatic abandonment; production_due_at is a production promise, not a delivery SLA. Batch Completed is not order Completed. Preserve the distinction between selected-batch estimates, programme-to-date setup savings and actual business revenue; never present an estimate as realized profit. AI remains read-only and cannot start/decline a batch or change discount policy. The v3 commercial policy and all numeric assumptions in this module are unchanged by this documentation revision.
 
 ## 6. Key entities (mandatory)
 
