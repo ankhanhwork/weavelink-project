@@ -19,9 +19,15 @@
 
 ## 2. Mockup
 
-![S08 historical reference](img/S08-product_catalog_screen.png)
+![S08 catalogue with AI Compare](img/S08-product_catalog_screen.png)
 
-Written behavior below takes precedence over obsolete sample content.
+![S08 compare selection mode](img/S08a-compare_mode.png)
+
+![S08 guest comparison panel](img/S08b-ai_compare_panel_guest.png)
+
+![S08 authenticated advisory panel](img/S08c-ai_copilot_advisory.png)
+
+Written requirements take precedence over illustrative mockup content. Product names, counts, prices, material ratings and lead times in these images are sample content, not approved catalogue facts or delivery promises. The design-service action remains subject to MFG-05 release scope.
 
 ## 3. Element inventory
 
@@ -36,7 +42,8 @@ Written behavior below takes precedence over obsolete sample content.
 | 7 | API errors | Field / control | standard API error envelope | As specified | 400 malformed; 422 invalid fields; 409 stale/duplicate; 429 rate limit; 503 dependency failure |
 | 8 | Search/filter/sort | Action | Query published products using allowlisted filters and pagination. | Available when authorized | Destination: S08 |
 | 9 | Open product | Action | Load public detail after published-state check. | Available when authorized | Destination: S09 |
-
+| 10 | Compare with AI | Action | Toggle compare mode and enable checkbox selection for 2-4 Published products in the same `branch`; do not show Draft/Hidden/Archived products. | Available when authorized | Destination: AI Copilot compare panel |
+| 11 | AI Copilot compare panel | Component | Pop-up or side drawer that renders the grounded comparison table and verdict. | Available when authorized | Must keep the same `branch` and hide cross-branch items from selection |
 
 ### Product Finder extension (Should)
 
@@ -55,6 +62,14 @@ Debounce requests; use MFG-04 performance targets. Arrow keys move the active ro
 
 The optional service action references [S15](S15-design_service_request_screen.md), preserving its login and availability rules. Product discovery stays public. Recent searches exist only for the current browser session; this extension adds no MFG-11 query tracking.
 
+### AI Compare and advisory extension (Should)
+
+Compare with AI enters a selection mode while preserving the catalogue query, filters and pagination. Select 2-4 Published products from the same `branch`; disable cross-branch checkboxes and further additions at four products. Show the selected count/group with Clear, Exit compare mode and Compare actions. The AI Copilot drawer displays quantity-tier pricing, material facts, print compatibility, pros/cons and a grounded verdict. The first selected product defines the branch; same-branch products can be added or removed within the comparison limits.
+
+Guests may read the comparison but must sign in at S03 before sending questions; preserve a safe return route and the comparison context. Advisory opens independently of compare selection and accepts free-form needs after login, returning four candidates by default and eight maximum. Turning recommendations into a comparison still requires 2-4 same-branch products. Product Finder retains its existing keyword matching and suggestion behavior independently.
+
+Follow-ups on the five technical criteria use the active comparison set's Product/MaterialProfile/PrintMethod data. Keep only the latest five Q&A exchanges as context. Missing evidence shows "Chưa đủ dữ liệu, Dony sẽ liên hệ trực tiếp." Apply [MFG-04 section 5.5](../specs/spec-MFG-04.md#55-ai-compare-and-advisory-f-prod-013--f-prod-014), including current visibility checks and MVP colour-invariant prices. A suggested product opens its current Published detail on S09.
+
 ## 4. States
 
 | State | What the user sees | Trigger |
@@ -66,12 +81,18 @@ The optional service action references [S15](S15-design_service_request_screen.m
 | Retry | Retry transient reads for S08 Product Catalog; retry a mutation only with its original idempotency key and identical payload, never as a new side effect. | Recoverable failure |
 | Success | Refresh the committed Product Catalog data and show the next action permitted by its lifecycle and actor. | Valid action commits |
 | Conflict | The Product Catalog data or lifecycle changed concurrently; reload authoritative state and do not replay a stale mutation. | Stale version, duplicate or invalid lifecycle transition |
+| AI loading | Show labelled comparison/advisory progress without presenting an older response as current. | AI request pending |
+| AI unavailable/error | Preserve safe query/selection state, show a recoverable error and keep ordinary catalogue/detail usable. | Webhook unconfigured or request fails |
+| AI insufficient data | Show "Chưa đủ dữ liệu, Dony sẽ liên hệ trực tiếp." for unsupported conclusions. | Required grounding evidence missing |
+
 ## 5. Interactions and navigation
 
 | # | Element | User action | System response | Goes to screen |
 |---|---|---|---|---|
 | 1 | Search/filter/sort | Activate | Query published products using allowlisted filters and pagination. | S08 |
 | 2 | Open product | Activate | Load public detail after published-state check. | S09 |
+| 3 | Compare with AI | Activate | Enter compare mode and let the user select 2-4 Published products in the same `branch`; products from other groups are disabled via checkbox state. | AI Copilot compare panel |
+| 4 | AI Copilot compare panel | Activate | Show grounded comparison facts and verdict; guests may view, but free-text chat requires login with a safe `return_to` back to this screen. | S08 or login flow |
 
 Portal: Guest/Member. Route: /catalog. Back preserves the originating route and filters. Fallback: Customer→S26; Sales Admin→S28; Sales→S20; System Admin→S41; Guest→S01. Enforce role, ownership and assignment before rendering.
 
@@ -93,6 +114,10 @@ Portal: Guest/Member. Route: /catalog. Back preserves the originating route and 
 5. Unknown filters or a query longer than 100 characters are rejected without broadening; late responses cannot overwrite newer query/filter state.
 6. Keyboard navigation, Enter/Escape/clear, full-results navigation and optional S15 navigation preserve the specified route and release boundaries.
 
+7. Compare mode preserves search/filter state; 2-4 same-branch products can be compared, cross-branch items and a fifth addition are blocked, and invalid/stale selections are rechecked before use.
+8. Guest sees the grounded comparison but cannot send questions until login restores the comparison context; authenticated advisory works without preselection and observes the 4-default/8-maximum candidate cap.
+9. Technical follow-ups use the selected products and latest five exchanges; missing evidence returns the fixed fallback, and colour selection does not change a product's MVP price table.
+
 ## 7. Linked requirements
 
 | FR ID (from the module spec) | What this screen does for it |
@@ -101,6 +126,8 @@ Portal: Guest/Member. Route: /catalog. Back preserves the originating route and 
 | MFG-04/F-PROD-002 | **View Catalog** — Return a product detail and options for a canonical product UUID; nonpublic products return 404. |
 | MFG-04/F-PROD-003 | Must paginated keyword search with validated filters and preserved query state. |
 | MFG-04/F-PROD-012 (FR-012..017) | Should Product Finder: keyword matching, featured/results/no-match panel, attribute reasons, scope and current Published-only search eligibility. |
+| MFG-04/F-PROD-013 (FR-018..020, FR-022..025) | Same-branch comparison, guest view/login-gated follow-up and grounded technical answers. |
+| MFG-04/F-PROD-014 (FR-020..025) | Login-gated advisory without preselection, bounded candidate suggestions and catalogue-grounded answers. |
 
 ## 8. Responsive and accessibility notes
 
@@ -110,7 +137,7 @@ Support 360px through desktop; stack columns and use labelled horizontal-scroll 
 
 | # | Question | Blocking? | Status |
 |---|---|---|---|
-| 1 | No unresolved screen behavior questions remain; routes, fields, permissions, and defaults are resolved in this specification and its linked module requirements. | No | Resolved |
+| 1 | AI webhook runtime contract and conversation storage remain Plan decisions; see MFG-04 section 10. | Yes, before implementing AI | Open; product behavior is defined above |
 
 ## Completion checklist
 
@@ -119,4 +146,4 @@ Support 360px through desktop; stack columns and use labelled horizontal-scroll 
 - [x] Loading, empty, forbidden, error, retry, success, and conflict states are documented.
 - [x] Navigation and acceptance scenarios are explicit.
 - [x] Responsive and accessibility requirements follow the shared baseline.
-- [x] No unresolved screen-level decisions remain.
+- [ ] Resolve the MFG-04 AI integration handoff at Plan before implementation.
