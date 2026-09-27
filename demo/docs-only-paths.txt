@@ -1,0 +1,12 @@
+docs/spec/specs/spec-MFG-05.md
+docs/spec/screens/S13-product_design_tool_screen.md
+docs/spec/screens/S49-remove_background_screen.md
+docs/spec/screens/S50-product_mockups_screen.md
+docs/spec/screens/S51-virtual_try_on_screen.md
+docs/spec/screens/img/S13-product_design_tool_screen.png
+docs/spec/screens/img/S49-remove_background_screen.png
+docs/spec/screens/img/S50-product_mockups_screen.png
+docs/spec/screens/img/S51-virtual_try_on_screen.png
+docs/spec/docs/function-list.md
+docs/spec/docs/screen-list.md
+docs/spec/README.md
