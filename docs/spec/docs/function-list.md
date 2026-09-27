@@ -78,6 +78,10 @@
 | 95 | UC-C04 | Request Service | F-DES-012 | Accept proposed design fee | Accept the exact current proposed fee/version for an owned FeeProposed request and atomically record acceptance and Approved. | Process | Customer | request_id, proposal_version, accepted_fee_vnd, expected_version, key (UUID / integers / key; Required: Yes; Owner; FeeProposed only; exact amount/version; repeat key replays; stale/state 409) | Approved request and acceptance evidence (Object; Owner; FeeProposed only; exact amount/version; repeat key replays; stale/state 409) | Medium |
 | 96 | UC-C04 | Request Service | F-DES-013 | Cancel design request | Cancel an owned unassigned Submitted/UnderReview/FeeProposed/Approved request without refund; reject after assignment and replay repeated cancellation. | Process | Customer | request_id, expected_version, key (UUID / version / key; Required: Yes; Owner; preassignment only; repeated cancellation no-op; no refund) | Cancelled request (Object; Owner; preassignment only; repeated cancellation no-op; no refund) | Medium |
 
+| 97 | UC-C02 | Design Product | F-DES-014 | Remove Background | Review/apply/cancel reversible background removal without changing physical placement; S49. | Process | Customer | Owned asset, method, tolerance, revision | Transparent reviewed draft artwork; safe errors | High |
+| 98 | UC-C02 | Design Product | F-DES-015 | Multi-angle Mockups | Deterministic calibrated photo views of current product/draft; S50. | Screen | Customer | Product/template version, options, placements, view | Nonpersistent 2D preview | High |
+| 99 | UC-C02 | Design Product | F-DES-016 | Virtual Try On | Synthetic presets and explicit-consent OpenAI editing; session-only personal inputs/results; S51. | Process | Customer | Valid photo/polo, consent, revision/session/job | Matching transient result or sanitized error | Low |
+
 ## VI. MFG-06: Order & Payment
 
 

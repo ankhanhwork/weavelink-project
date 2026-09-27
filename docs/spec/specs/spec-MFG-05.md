@@ -6,7 +6,7 @@
 | Module name | Product Design |
 | Spec version | v1.3 |
 | Author (team member) | Group B |
-| Date | 2026-09-26 |
+| Date | 2026-09-27 |
 | Status | Draft |
 | Approved by (Client role) | No approver assigned |
 | DBIZ2 source | Historical IDs retained: Function List No. 36-46; `F-DES-001` .. `F-DES-011`; `UC-C02` .. `UC-C04`, `UC-S03`; S09, S13, S15-S22, S38. External DBIZ2 comparison is not required. |
@@ -17,7 +17,7 @@
 
 Customers configure, preview and save versioned made-to-order garment designs and may request Dony design assistance with assessment-based pricing. For a Business Buyer, the design commonly represents uniforms or garments for internal use. For a Reseller Shop, it represents the shop's own artwork, branding or specifications that Dony will manufacture for the shop to sell to its customers. Dony does not supply ready-made resale inventory. Self-design/upload/preview/save is MVP Must; assessed design service is MVP Could.
 
-**In scope:** validate product options/assets; save immutable design versions; list owned designs; create/cancel requests; assess complexity and accept deferred fees; assign via MFG-08; deliver consultant design and notify owner.
+**In scope:** background removal with reversible review; deterministic multi-angle 2D mockups; session-only OpenAI virtual try-on; validate product options/assets; save immutable design versions; list owned designs; create/cancel requests; assess complexity and accept deferred fees; assign via MFG-08; deliver consultant design and notify owner.
 
 **Out of scope:** payment callback processing is MFG-06; product-rule authoring is MFG-04; order creation is MFG-06.
 
@@ -56,6 +56,20 @@ The request stands alone until its delivered design is ordered. The accepted fee
 
 Assigned consultant/Admin validates and stores an immutable Delivered version, atomically updates request and sends an authorized notification. Delivery records source_design_request_id; every derived copy/version retains it. Assigned may advance to InProgress before delivery; only Assigned/InProgress may deliver. Concurrent deliveries yield one success and one 409.
 
+### US-6 (Must): Remove artwork background
+
+On S13, Customer selects one artwork and opens S49. For a solid background, remove only border-connected pixels within the chosen tolerance, preserving disconnected matching colours inside the artwork. For complex subject backgrounds, provide subject segmentation. Show original and transparent result on a checkerboard before applying. Apply preserves asset ID, selected side and physical X/Y/width/height; it changes only the artwork pixels and increments the draft revision. Cancel leaves the draft unchanged. Restore original is available within the current draft session. Transparent PNG output retains detail and alpha; an already transparent upload is accepted. No operation automatically saves a design.
+
+### US-7 (Must): Preview every supported angle
+
+S50 shares the current S13 draft and shows six prepared 2D views where the selected product has templates: front flat lay, front shaped, left angle, right angle, back flat lay, back shaped. Thumbnail selection displays a large matching preview. Render the same physical print coordinates across views; the centre follows the collar/placket-to-torso curve, chest logos follow the selected wearer side, and back views contain only back artwork. Use calibrated per-template surfaces, perspective, clipping, occlusion and fabric shading to attach ink to the garment. Never call image-generation AI on angle changes. Unsupported template/colour/material combinations must be clearly unavailable rather than illustrated with another product. Mockups show appearance, not measured colour, fit or manufacturing proof.
+
+### US-8 (Could): Try the designed polo on a person
+
+S51 offers labelled synthetic male, female and child presets immediately, and a customer-uploaded PNG/JPEG/WebP photo. Presets are deterministic mockups; uploading does not generate or send images to OpenAI automatically. Customer reviews a disclosure, explicitly consents to sending their photo and designed polo image to OpenAI, then activates Try on me. Backend validates current design and calls OpenAI image edits; a real AI result replaces the top while aiming to preserve identity, pose, background and logo. Offer original/result comparison and replacement/removal of the photo. The result is illustrative and may alter lettering/details; it is never a design asset, saved version, size recommendation, order attachment or manufacturing source.
+
+Personal uploads, try-on inputs/results and removal review buffers are session-only in application storage: no localStorage, sessionStorage, database, object store or image file persistence. Clear on session end, logout, navigation that destroys the workspace or reload. Provider processing/retention is separate and disclosed before consent; do not promise remote deletion at browser close. Consent is unchecked initially and revoked when the photo is replaced or removed. A changed design/photo/session invalidates pending results. Failed or cancelled generation preserves the design and must not trigger automatic paid retries.
+
 ### Edge cases
 
 - Another customer or unassigned consultant receives 404/403 without data leakage.
@@ -71,7 +85,11 @@ Assigned consultant/Admin validates and stores an immutable Delivered version, a
 ```mermaid
 flowchart LR
   Product[S09 Product] --> Workspace[S13 Design]
-  Workspace --> Preview[Validate and preview]
+  Workspace --> Remove[S49 Remove background]
+  Remove --> Workspace
+  Workspace --> Preview[S50 Multi-angle mockups]
+  Workspace --> TryOn[S51 Optional OpenAI try-on]
+  TryOn --> Workspace
   Preview --> Save[Save version]
   Save --> Gallery[S17 Designs]
   Product --> Request[S15 Request service]
@@ -198,6 +216,9 @@ sequenceDiagram
 | FR-011 | F-DES-011 | Notify the owning customer after design delivery. | System | Could |
 | FR-012 | F-DES-012 | Accept the exact current proposed fee/version for an owned FeeProposed request and atomically record acceptance and Approved. | Customer | Could |
 | FR-013 | F-DES-013 | Cancel an owned unassigned Submitted/UnderReview/FeeProposed/Approved request without refund; reject after assignment and replay repeated cancellation. | Customer | Could |
+| FR-014 | F-DES-014 | Remove a selected artwork background with before/after review, apply, cancel and session restore; preserve physical placement. | Customer | Must |
+| FR-015 | F-DES-015 | Render calibrated deterministic 2D multi-angle mockups from the current validated draft and product template version. | Customer | Must |
+| FR-016 | F-DES-016 | Provide synthetic presets and consent-gated OpenAI try-on for an uploaded photo; discard stale results and keep personal images session-only. | Customer | Could |
 
 ### 5.2 Input / Output contract
 
@@ -216,6 +237,9 @@ sequenceDiagram
 | FR-011 | delivery event | Internal event | Yes | notification/outbox ID | UUID | Owner only; private expiring link |
 | FR-012 | request_id, proposal_version, accepted_fee_vnd, expected_version, key | UUID / integers / key | Yes | Approved request and acceptance evidence | Object | Owner; FeeProposed only; exact amount/version; repeat key replays; stale/state 409 |
 | FR-013 | request_id, expected_version, key | UUID / version / key | Yes | Cancelled request | Object | Owner; preassignment only; repeated cancellation no-op; no refund |
+| FR-014 | selected asset, mode, tolerance, draft revision | Asset / enum / integer / version | Yes | transparent PNG review; applied draft revision | Image / version | Solid tolerance 5–100, default 35; subject failure offers solid mode; original immutable in session. |
+| FR-015 | product/template version, options, side placements, view ID, revision | IDs / object / integer | Yes | current angle preview | Image/view model | Validated product templates; unsupported views disabled; no paid AI call. |
+| FR-016 | person image, derived polo image, explicit external consent, design revision, session/job token | Images / boolean / versions | Yes for generation | generated result, matching design revision, safe error | Session image/object | <=10 MiB/image and <=16 million pixels; server-only API key; no image/secret logging; no automatic paid retry. |
 
 ### 5.2 Business rules
 
@@ -228,10 +252,11 @@ sequenceDiagram
 | BR-005 | Attachments are 0-5 PNG/JPEG/WebP files <=10 MiB each, actual MIME checked/scanned. | Protect users and storage. |
 | BR-006 | Consultation CRM state is independent and never changes order status. | Keep sales workflow separate from fulfillment. |
 | BR-007 | Customer accepts exact Complex proposal amount/version; store customer_id, accepted_fee_vnd, accepted_fee_version equal to proposal_version, and accepted_at. Proposal/approval is immutable; changed work/fee requires eligible cancellation and a new request. All mutations use expected_version and idempotency; no request payment/refund. | Preserve explicit consent and concurrency safety. |
-
-### Analytics evidence integration (MFG-11)
-
-For MFG-11/F-DA-004, S13 contributes workspace-ready evidence and successful immutable-save evidence; failed saves and preview requests are not conversions. Service submission, approval (Simple or accepted Complex), delivery, rejection and cancellation are projected from committed request/design records with source identity, version and provenance. Preserve sample-related design revisions as versions, not new customer orders. A delivered design is not delivered merchandise; one design lineage can support multiple orders and does not define a journey. S17 re-entry may start an existing-design checkout without a fresh product view or design save; do not manufacture those earlier stages. Journey entry route remains separate from `source_design_request_id`. An explicit new design creates a fresh intent; editing/resuming the same work, saving versions and sample revision retain it. An explicit new order/reorder from S17 creates a new checkout intent, while continuing an existing draft checkout retains its reference. Replays and shared same-intent tabs deduplicate; authorization/account changes cannot attach another customer's work. Product-entry links are explicit navigation evidence, not a guessed match by customer/product. Follow [MFG-11 sections 5.3/5.4](spec-MFG-11.md#53-funnel-templates-identity-and-formulas) for correlation and unknown coverage; no service analytics branch is enabled before the assessed-service feature itself.
+| BR-008 | Material/fabric choices come from Published product rules; selecting a fabric never implies unsupported catalogue additions or different geometry. Size stays on S22. | Keep product validation authoritative. |
+| BR-009 | Chest shortcuts use wearer left/right; default 70 mm width and <=90 mm height with aspect ratio retained, clamped to current print bounds. Centre uses the physical print area's centre; users may refine numeric placement. | Make common corporate logo placement usable. |
+| BR-010 | Processed artwork may become a scanned private design asset only on explicit design save; session-only personal try-on images/results are excluded from all save/order payloads. Preserve original/processed distinction and immutable saved versions. | Separate reusable production artwork from personal previews. |
+| BR-011 | OpenAI credentials remain backend-only in an ignored secret file or secret manager; never return keys/provider raw errors or log request images/headers. Production requires authenticated owner authorization, request quotas and concurrency limits. | Protect credentials and control provider costs. |
+| BR-012 | User photo replacement/removal revokes consent; stale job results are ignored. One active generation per customer session; no automatic retries. Cancelling UI work cannot promise cancellation of provider billing/processing. | Prevent wrong-photo results and accidental repeated charges. |
 
 ## 6. Key entities (mandatory)
 
@@ -241,6 +266,9 @@ For MFG-11/F-DA-004, S13 contributes workspace-ready evidence and successful imm
 | DesignRequest | customer_id, buyer_organization_id?, product_id, requirements, attachments, requested_deadline, committed_due_at, complexity, rationale/rejection_reason, assessed_by/at, fee_vnd, proposal_version, accepted_fee_version, accepted_fee_vnd, accepted_by/at, fee_order_id nullable, fee_allocation_version, state, assignee, version | Standalone until order creation; optional organization identifies a Business Buyer or Reseller Shop but grants no authority; Approved before assignment; MFG-06 BR-008 owns fee allocation. |
 | Consultation | customer_id, buyer_organization_id?, sales_user_id, notes, related IDs, CRM status | Internal notes visible only to assigned Sales and Sales Admin. |
 | Notification | event/recipient/type/payload/delivery state | Deduplicated; in-app record authoritative |
+| DesignAsset variant | Original/processed artwork reference, side, X/Y/width/height mm, processing method | Owned scanned asset on explicit save; preserves original artwork lineage. |
+| ProductMockupTemplate | Product/version, view ID, base image, calibrated surface grid, masks, material/colour support | Per-product rendering assets; no personal data. |
+| TryOn session job | Session/job token, design revision, consent, processing state, transient photo/result | Application memory only; no persisted personal photo/result entity. |
 
 ## 7. Screens involved
 
@@ -254,6 +282,9 @@ For MFG-11/F-DA-004, S13 contributes workspace-ready evidence and successful imm
 | S20/S21 | Consultant tasks and delivery | Could | `screens/S20-consultant_tasks_and_customers_screen.md` |
 | S22 | Order eligible design | Must | `screens/S22-create_order_screen.md` |
 | S38 | Notifications | Could | `screens/S38-notification_panel_screen.md` |
+| S49 | Remove artwork background | Must | `screens/S49-remove_background_screen.md` |
+| S50 | Product multi-angle mockups | Must | `screens/S50-product_mockups_screen.md` |
+| S51 | Virtual try-on | Could | `screens/S51-virtual_try_on_screen.md` |
 
 ## 8. Success criteria (mandatory)
 
@@ -262,6 +293,9 @@ For MFG-11/F-DA-004, S13 contributes workspace-ready evidence and successful imm
 | SC-001 | MVP self-design safely saves versioned, orderable work. | Verify rule validation, saved versions and order eligibility. |
 | SC-002 | Simple approval or explicit Complex fee acceptance makes a request assignable; cancellation is limited to preassignment states. | Verify both assessment branches, fee consent, cancellation/assignment races and deferred order fee. |
 | SC-003 | Ownership, assignment, idempotency and concurrent delivery are enforced; all functions map to FRs. | Exercise authorization/retry/race cases and compare F-DES IDs with FRs. |
+| SC-004 | Removal preserves interior colours, original recovery and coordinates. | Compare border-connected/subject inputs; apply/cancel/restore and save/reopen tests. |
+| SC-005 | Multi-angle prints follow calibrated garment surfaces and matching side. | Visually approve all angles and chest/centre/bounds cases per product template; no provider request on switching. |
+| SC-006 | Personal images and secrets do not enter persistent application storage or client credentials. | Inspect save payloads/storage/logs; test no-consent, quota/failure, stale result and session disposal paths. |
 
 ## 9. Assumptions
 
@@ -288,6 +322,7 @@ Historical IDs are retained; external DBIZ2 comparison is not required.
 | Design/customize | UC-C02; F-DES-001..003 | S13; sections 3 and 5 |
 | Saved designs | UC-C03; F-DES-004 | S17; sections 3 and 5 |
 | Service request/delivery | UC-C04, UC-S03; F-DES-005..013 | S15, S17-S21; SD-05B; sections 3 and 5 |
+| Design add-ons | User-approved 2026-09-27 extension of UC-C02; F-DES-014..016 (new, not historical DBIZ2 IDs) | S13, S49-S51; US-6..8; FR-014..016 |
 
 ## Completion checklist
 
@@ -295,3 +330,14 @@ Historical IDs are retained; external DBIZ2 comparison is not required.
 - [x] Function, state, entity, screen and ID traceability is complete.
 - [x] MVP priorities and demo assumptions are explicit.
 - [x] No unresolved placeholders remain.
+
+
+## 12. Design add-on implementation handoff
+
+The user validated the OpenAI try-on demo as feasible on 2026-09-27. This is feasibility acceptance, not a client signature or a guarantee of exact identity/logo preservation. Polo is the first demo product; it does not amend MFG-04 catalogue/seed data. Self-design saving/order rules remain unchanged. S49/S50 are Must extensions; S51 is Could, following the existing preview as Must and advanced AI as optional. No local try-on fallback is required.
+
+Production source of truth is this module and S13/S49/S50/S51. Reusable prototype code remains in `demo/polo`: `web/render.js` (calibrated grids and wearer chest geometry), `web/geometry.js`, `web/print-surface.js` (single-assignment alpha-safe rasterization and fabric light), `web/session-guard.js`/`app.js` (revision/session invalidation), `server.py` (validation, connected background removal), `ai.py` (OpenAI multipart image edits with person first, polo second). The prototype uses gpt-image-1 with high input fidelity, medium quality and no retries; model selection belongs in backend configuration in production. It is not a sizing engine.
+
+The approved left/right demo grids were manually calibrated against collar alignment. Their numeric values belong to the current synthetic template only; reuse the algorithm and verify new templates rather than copying offsets across products. Keep client physical coordinates independent of preview geometry. Subject background removal is separate from virtual try-on; local rembg in part 01 is permitted, while part 03 exclusively uses OpenAI.
+
+For this local demo only, backend resolves `docs/env/.env`; never include it in the documentation-only branch. Environment OPENAI_API_KEY takes precedence. Production uses server secrets, owner-authenticated endpoints, private asset storage and bounded jobs; do not copy the loopback demo security boundary as production authorization. Provider retention must be disclosed separately from session-only application storage.
