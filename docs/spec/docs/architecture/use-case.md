@@ -3,6 +3,8 @@
 | UC-G01 | View product catalog | Guest | None | MFG-04/F-PROD-001, MFG-04/F-PROD-002 |
 | UC-G02 | Search products | Guest | None | MFG-04/F-PROD-003; Should keyword matching/suggestions: MFG-04/F-PROD-012 |
 | UC-G03 | Register account | Guest | None | MFG-01/F-USER-001, MFG-01/F-USER-002, MFG-01/F-USER-003 |
+| UC-G04 | Compare products with AI | Guest/Member | Member (login-gated follow-up); n8n workflow | MFG-04/F-PROD-013 |
+| UC-G05 | Ask product advisory | Member | Guest (login required before asking); n8n workflow | MFG-04/F-PROD-014 |
 | UC-M01 | Log in | Guest | None | MFG-01/F-USER-004, MFG-01/F-USER-005 |
 | UC-M02 | Forgot password | Guest | None | MFG-01/F-USER-007, MFG-01/F-USER-008, MFG-01/F-USER-009 |
 | UC-M03 | Reset password | Guest | None | MFG-01/F-USER-010, MFG-01/F-USER-011 |

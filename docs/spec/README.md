@@ -20,7 +20,7 @@ This repository contains the software design documentation for the DBIZ 3 Group 
 | Area | Contents | Location |
 |---|---|---|
 | Function list | 12 MFG modules; module-qualified function entries including the Sales/design collaboration extension | [`docs/function-list.md`](docs/function-list.md) |
-| Use cases | 49 use cases with resolved actors, relationships, and functions | [`docs/architecture/use-case.md`](docs/architecture/use-case.md) |
+| Use cases | 51 use cases with resolved actors, relationships, and functions | [`docs/architecture/use-case.md`](docs/architecture/use-case.md) |
 | Architecture | Context diagram, system configuration, and end-to-end usage flow | [`docs/architecture/`](docs/architecture/) |
 | Sequence diagrams | Business and operations sequences through SD-14, including SD-05A/05B and SD-13A prompt analysis | [`docs/architecture/sequence.md`](docs/architecture/sequence.md) |
 | Screen catalogue | Screen catalogue including S52; S16 and S18 are intentionally retired, and Customer/employee authentication screens are separate | [`docs/screen-list.md`](docs/screen-list.md) |
@@ -45,7 +45,7 @@ This repository contains the software design documentation for the DBIZ 3 Group 
 | MFG-01 | Identity & Access | 11 | 5 | [`spec-MFG-01.md`](specs/spec-MFG-01.md) |
 | MFG-02 | Profile & Settings | 5 | 4 | [`spec-MFG-02.md`](specs/spec-MFG-02.md) |
 | MFG-03 | Dony Staff Accounts | 8 | 4 | [`spec-MFG-03.md`](specs/spec-MFG-03.md) |
-| MFG-04 | Product Catalog | 12 | 7 | [`spec-MFG-04.md`](specs/spec-MFG-04.md) |
+| MFG-04 | Product Catalog | 14 | 9 | [`spec-MFG-04.md`](specs/spec-MFG-04.md) |
 | MFG-05 | Product Design | 21 | 5 | [`spec-MFG-05.md`](specs/spec-MFG-05.md) |
 | MFG-06 | Order & Payment | 6 | 2 | [`spec-MFG-06.md`](specs/spec-MFG-06.md) |
 | MFG-07 | Order Management | 7 | 3 | [`spec-MFG-07.md`](specs/spec-MFG-07.md) |
@@ -54,7 +54,7 @@ This repository contains the software design documentation for the DBIZ 3 Group 
 | MFG-10 | Order Optimization (Merge) | 7 | 4 | [`spec-MFG-10.md`](specs/spec-MFG-10.md) |
 | MFG-11 | Data Analytics | 5 | 3 | [`spec-MFG-11.md`](specs/spec-MFG-11.md) |
 | MFG-12 | System Operations | 8 | 3 | [`spec-MFG-12.md`](specs/spec-MFG-12.md) |
-| **Total** | | **100** | **49** | |
+| **Total** | | **109** | **51** | |
 
 ## MVP Scope
 
@@ -64,6 +64,7 @@ The MVP scope is defined by feature priority. It does not remove lower-priority 
 |---|---|---|---|
 | **Must** | Role-based Authentication & Access (Customer, Sales, Sales Admin) | MFG-01 | Required login/authorization roles; initial Dony staff identities are pre-provisioned because staff-account administration is deferred |
 | **Must** | Product Catalog (browse, search, view product detail) | MFG-04 | Entry point for choosing a base product; Product Finder matching and suggestion panel (F-PROD-012) is a Should extension on S08. |
+| **Should** | AI Compare & Product Advisory | MFG-04 | Compare 2-4 Published products in one branch; guests can view results, while questions require login. F-PROD-013/014 use catalogue-grounded material/print guidance. |
 | **Must** | Product Design Workspace (self-design, fabric/chest placement, upload artwork, remove background, multi-angle preview, save design) | MFG-05 | Core customization workflow |
 | **Must** | Order & Payment (standard checkout, VNPay deposit and balance, order creation) | MFG-06 | MVP uses the standard single-order path; merge pricing/batching is deferred with MFG-10. The order path also requires the minimum MFG-07/MFG-09 slices below before the MVP is complete. |
 | **Should** | Order Tracking & Status Updates | MFG-07 | Full tracking automation is deferred; the MVP-required slice uses authenticated Dony staff to record sample preparation/dispatch, production and shipment, with Customer sample approval and receipt confirmation. |
@@ -78,7 +79,7 @@ The MVP scope is defined by feature priority. It does not remove lower-priority 
 ### MVP Priority Summary
 
 - **Must:** MFG-01, MFG-04, self-design in MFG-05, and MFG-06.
-- **Should:** Full MFG-07 and MFG-09 capabilities beyond the minimum order-completion slices required for the MVP vertical path; MFG-11 analytics improvement, with the confirmed product scope below and runtime AI configuration at Plan.
+- **Should:** MFG-04 Product Finder and AI Compare/advisory; full MFG-07 and MFG-09 capabilities beyond the minimum order-completion slices required for the MVP vertical path; MFG-11 analytics improvement, with the confirmed product scope below and runtime AI configuration at Plan.
 - **Could:** assessed design service in MFG-05, MFG-08, and MFG-10.
 - **Won't:** MFG-02 profile/settings screens, MFG-03 staff-account UI, and MFG-12 system-operations screens are omitted in MVP. Hide the Profile/S06 link; account recovery remains available through the relevant Customer or staff recovery screens.
 
@@ -104,7 +105,7 @@ The user-confirmed choices are recorded in [MFG-11 section 10](specs/spec-MFG-11
 
 Use Case IDs use the format `UC-<actor initial><number>`:
 
-- `UC-G01` to `UC-G03`: Guest.
+- `UC-G01` to `UC-G05`: public discovery/account access and AI comparison/advisory; advisory and follow-up questions require login.
 - `UC-M01` to `UC-M08`: Member or unauthenticated account-access flow.
 - `UC-C01` to `UC-C27`: Customer or Sales Admin; consult the actor column rather than inferring from the initial.
 - `UC-S01` to `UC-S11`: Sales or System Admin; consult the actor column rather than inferring from the initial.
