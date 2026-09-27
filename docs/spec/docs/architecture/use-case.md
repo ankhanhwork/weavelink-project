@@ -1,7 +1,7 @@
 | Use Case ID | Use case | Primary actor | Other actors | Subfunctions |
 |---|---|---|---|---|
 | UC-G01 | View product catalog | Guest | None | MFG-04/F-PROD-001, MFG-04/F-PROD-002 |
-| UC-G02 | Search products | Guest | None | MFG-04/F-PROD-003 |
+| UC-G02 | Search products | Guest | None | MFG-04/F-PROD-003; Should keyword matching/suggestions: MFG-04/F-PROD-012 |
 | UC-G03 | Register account | Guest | None | MFG-01/F-USER-001, MFG-01/F-USER-002, MFG-01/F-USER-003 |
 | UC-M01 | Log in | Guest | None | MFG-01/F-USER-004, MFG-01/F-USER-005 |
 | UC-M02 | Forgot password | Guest | None | MFG-01/F-USER-007, MFG-01/F-USER-008, MFG-01/F-USER-009 |

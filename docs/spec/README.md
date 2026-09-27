@@ -45,7 +45,7 @@ This repository contains the software design documentation for the DBIZ 3 Group 
 | MFG-01 | Identity & Access | 11 | 5 | [`spec-MFG-01.md`](specs/spec-MFG-01.md) |
 | MFG-02 | Profile & Settings | 5 | 4 | [`spec-MFG-02.md`](specs/spec-MFG-02.md) |
 | MFG-03 | Dony Staff Accounts | 8 | 4 | [`spec-MFG-03.md`](specs/spec-MFG-03.md) |
-| MFG-04 | Product Catalog | 11 | 7 | [`spec-MFG-04.md`](specs/spec-MFG-04.md) |
+| MFG-04 | Product Catalog | 12 | 7 | [`spec-MFG-04.md`](specs/spec-MFG-04.md) |
 | MFG-05 | Product Design | 16 | 5 | [`spec-MFG-05.md`](specs/spec-MFG-05.md) |
 | MFG-06 | Order & Payment | 6 | 2 | [`spec-MFG-06.md`](specs/spec-MFG-06.md) |
 | MFG-07 | Order Management | 7 | 3 | [`spec-MFG-07.md`](specs/spec-MFG-07.md) |
@@ -54,7 +54,7 @@ This repository contains the software design documentation for the DBIZ 3 Group 
 | MFG-10 | Order Optimization (Merge) | 7 | 4 | [`spec-MFG-10.md`](specs/spec-MFG-10.md) |
 | MFG-11 | Data Analytics | 5 | 3 | [`spec-MFG-11.md`](specs/spec-MFG-11.md) |
 | MFG-12 | System Operations | 8 | 3 | [`spec-MFG-12.md`](specs/spec-MFG-12.md) |
-| **Total** | | **99** | **49** | |
+| **Total** | | **100** | **49** | |
 
 ## MVP Scope
 
@@ -63,7 +63,7 @@ The MVP scope is defined by feature priority. It does not remove lower-priority 
 | Priority | Feature / Item | MFG | Notes |
 |---|---|---|---|
 | **Must** | Role-based Authentication & Access (Customer, Sales, Sales Admin) | MFG-01 | Required login/authorization roles; initial Dony staff identities are pre-provisioned because staff-account administration is deferred |
-| **Must** | Product Catalog (browse, search, view product detail) | MFG-04 | Entry point for choosing a base product |
+| **Must** | Product Catalog (browse, search, view product detail) | MFG-04 | Entry point for choosing a base product; Product Finder matching and suggestion panel (F-PROD-012) is a Should extension on S08. |
 | **Must** | Product Design Workspace (self-design, fabric/chest placement, upload artwork, remove background, multi-angle preview, save design) | MFG-05 | Core customization workflow |
 | **Must** | Order & Payment (standard checkout, VNPay deposit and balance, order creation) | MFG-06 | MVP uses the standard single-order path; merge pricing/batching is deferred with MFG-10. The order path also requires the minimum MFG-07/MFG-09 slices below before the MVP is complete. |
 | **Should** | Order Tracking & Status Updates | MFG-07 | Full tracking automation is deferred; the MVP-required slice uses authenticated Dony staff to record sample preparation/dispatch, production and shipment, with Customer sample approval and receipt confirmation. |

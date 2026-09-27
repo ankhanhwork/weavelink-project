@@ -29,13 +29,31 @@ Written behavior below takes precedence over obsolete sample content.
 |---|---|---|---|---|---|
 | 1 | Screen heading | Heading | Product Catalog | Yes | Static route title. |
 | 2 | Route | Navigation target | /catalog | Yes | Access checked on server. |
-| 3 | q | Field / control | optional trimmed search string. | As specified | q: optional trimmed search string. |
+| 3 | q | Field / control | optional trimmed search string, at most 100 characters; longer input returns 422 and is preserved. | As specified | q: optional trimmed search string, at most 100 characters; longer input returns 422 and is preserved. |
 | 4 | category,size,color | Field / control | optional allowlisted filters supported by product. | As specified | category,size,color: optional allowlisted filters supported by product. |
 | 5 | sort | Field / control | allowlisted (name, unit_price_vnd, created_at) | As specified | sort: allowlisted (name, unit_price_vnd, created_at); page>=1, page_size 1..100 default20. |
 | 6 | Results | Field / control | Published products only | As specified | Results: Published products only; unit_price_vnd integer. |
 | 7 | API errors | Field / control | standard API error envelope | As specified | 400 malformed; 422 invalid fields; 409 stale/duplicate; 429 rate limit; 503 dependency failure |
 | 8 | Search/filter/sort | Action | Query published products using allowlisted filters and pagination. | Available when authorized | Destination: S08 |
 | 9 | Open product | Action | Load public detail after published-state check. | Available when authorized | Destination: S09 |
+
+
+### Product Finder extension (Should)
+
+The Must catalogue grid and search remain available independently. When F-PROD-012 is enabled, apply [MFG-04 US-8 and sections 5.3–5.4](../specs/spec-MFG-04.md#53-keyword-matching-model-f-prod-012) to the existing search field, using the same current category/size/colour/material/price filters as the grid. Show the selected category scope; reject unknown values without resetting to all categories. Both suggestions and the full grid use the same matching rules; the full grid keeps normal pagination and the existing explicit sort options.
+
+| Panel state | Content and behavior |
+|---|---|
+| Empty query, focused | Up to four eligible featured products without panel scrolling, Published product count for the active constraints, popular keywords and current-session recent searches. Fewer than four eligible products shows only those products. |
+| Matching query | Query, total eligible match count before the suggestion cap, recognised attribute chips and up to ten matching products; four rows visible with a visible scrollbar/list-edge fade. Footer runs the full query on S08, preserving filters. |
+| No match | Explicit no-match message; valid spelling suggestion or popular keywords are labelled alternatives, never product matches. Activating a keyword submits that keyword under the same active filters. Show the design-service route only if enabled by MFG-05 release scope. |
+| Loading/error/rejected input | Labelled progress or recoverable error, preserving query and filters. Do not present old-query results as current matches; late responses for previous queries/filters cannot overwrite the current panel. |
+
+Each product row follows the same catalogue content as [S09](S09-product_detail_screen.md): safe image, stored name with matching text highlighted, existing secondary name if available, supported colour swatches with names, material, SKU, catalogue price and MOQ. Emphasise a matched colour first. Price remains catalogue information under MFG-04 tier/surcharge rules, not a confirmed quote. Attribute labels come from stored catalogue values; matching uses all-token AND, normalisation, synonyms and typo limits in MFG-04, with no generated product claims.
+
+Debounce requests; use MFG-04 performance targets. Arrow keys move the active row and bring it into view; Enter opens the active product on S09, or runs full search on S08 when no row is active. Escape closes the panel; clear empties the input. Use a labelled combobox with announced expanded/loading/count/error state and active option, visible focus and a distinct active-row background. The four-row list must fit the 360px layout without horizontal overflow. Selecting a product rechecks its current Published status; hidden/archived products are never exposed by stale suggestions.
+
+The optional service action references [S15](S15-design_service_request_screen.md), preserving its login and availability rules. Product discovery stays public. Recent searches exist only for the current browser session; this extension adds no MFG-11 query tracking.
 
 ## 4. States
 
@@ -69,7 +87,11 @@ Portal: Guest/Member. Route: /catalog. Back preserves the originating route and 
 ### Acceptance scenarios
 
 1. Search and filter return only Published products and preserve page/filter state.
-2. Hidden/Archived product never appears even when its identifier is supplied as a filter.
+2. Draft/Hidden/Archived products never appear, including exact SKU matches and stale index entries.
+3. When Product Finder is enabled, compare unaccented/partial/joined/typo and category-plus-colour queries with the MFG-04 keyword test set; suggestions and full search share eligible matches.
+4. Four featured products at most; ten suggestions at most with four visible rows; the total count is calculated after all active constraints and before the cap.
+5. Unknown filters or a query longer than 100 characters are rejected without broadening; late responses cannot overwrite newer query/filter state.
+6. Keyboard navigation, Enter/Escape/clear, full-results navigation and optional S15 navigation preserve the specified route and release boundaries.
 
 ## 7. Linked requirements
 
@@ -77,7 +99,8 @@ Portal: Guest/Member. Route: /catalog. Back preserves the originating route and 
 |---|---|
 | MFG-04/F-PROD-001 | **View Catalog** — Return Dony's paginated catalogue of Published configurable garment bases using allowlisted category and sort values; these are not ready-made inventory. |
 | MFG-04/F-PROD-002 | **View Catalog** — Return a product detail and options for a canonical product UUID; nonpublic products return 404. |
-
+| MFG-04/F-PROD-003 | Must paginated keyword search with validated filters and preserved query state. |
+| MFG-04/F-PROD-012 (FR-012..017) | Should Product Finder: keyword matching, featured/results/no-match panel, attribute reasons, scope and current Published-only search eligibility. |
 
 ## 8. Responsive and accessibility notes
 
