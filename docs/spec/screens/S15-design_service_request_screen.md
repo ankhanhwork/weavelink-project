@@ -35,7 +35,7 @@ Written behavior below takes precedence over obsolete sample content.
 | 6 | requested_deadline | Field / control | optional ISO date >=3 calendar days from submission | As specified | requested_deadline: optional ISO date >=3 calendar days from submission; not guaranteed. |
 | 7 | assessment_notice | Read-only text | Simple work is free; Complex fee requires acceptance and is collected only with an eventual order. | Yes | Do not display a fee amount or initiate payment at submission. |
 | 8 | API errors | Field / control | standard API error envelope | As specified | 400 malformed; 422 invalid fields; 409 stale/duplicate; 429 rate limit; 503 dependency failure |
-| 9 | Submit request | Action | Create Submitted with fee null and requested deadline; persist admin notice and open the owned request in S17. | Available when authorized | Destination: S17 /designs?tab=requests&request_id={id} |
+| 9 | Submit request | Action | Create Submitted with fee null and requested deadline; persist admin notice and open the owned request in S52. | Available when authorized | Destination: S52 /design-requests/{request_id} |
 | 10 | Cancel | Action | Discard unsubmitted request. | Available when authorized | Destination: S09 |
 
 ## 4. States
@@ -53,7 +53,7 @@ Written behavior below takes precedence over obsolete sample content.
 
 | # | Element | User action | System response | Goes to screen |
 |---|---|---|---|---|
-| 1 | Submit request | Activate | Create Submitted with fee null and requested deadline; persist admin notice and open the owned request in S17. | S17 /designs?tab=requests&request_id={id} |
+| 1 | Submit request | Activate | Create Submitted with fee null and requested deadline; persist admin notice and open the owned request in S52. | S52 /design-requests/{request_id} |
 | 2 | Cancel | Activate | Discard unsubmitted request. | S09 |
 
 Portal: Customer owner. Route: /design-requests/new?product_id={id}. Back preserves the originating route and filters. Fallback: Customer→S26; Sales Admin→S28; Sales→S20; System Admin→S41; Guest→S01. Enforce role, ownership and assignment before rendering.
@@ -69,7 +69,7 @@ Portal: Customer owner. Route: /design-requests/new?product_id={id}. Back preser
 
 ### Acceptance scenarios
 
-1. Valid request creates Submitted with fee null, no payment/assignment and one admin notice; opens the S17 request view. Duplicate submission replays the same request.
+1. Valid request creates Submitted with fee null, no payment/assignment and one admin notice; opens the S52 request view. Duplicate submission replays the same request.
 2. Deadline less than 3 calendar days or requirements outside 20..5000 chars is rejected.
 
 ## 7. Linked requirements
@@ -77,7 +77,7 @@ Portal: Customer owner. Route: /design-requests/new?product_id={id}. Back preser
 | FR ID (from the module spec) | What this screen does for it |
 |---|---|
 | MFG-05/F-DES-005 | **Request Service** — Render the design-service request form without a submission fee or payment step. |
-| MFG-05/F-DES-006 | **Request Service** — Create a validated Submitted request with idempotency and return S17 request navigation; no submission fee/payment. |
+| MFG-05/F-DES-006 | **Request Service** — Create a validated Submitted request with idempotency and return S52 request navigation; no submission fee/payment. |
 
 
 ## 8. Responsive and accessibility notes
@@ -98,3 +98,8 @@ Support 360px through desktop; stack columns and use labelled horizontal-scroll 
 - [x] Navigation and acceptance scenarios are explicit.
 - [x] Responsive and accessibility requirements follow the shared baseline.
 - [x] No unresolved screen-level decisions remain.
+
+
+## 10. Customer-model service boundary
+
+Business Buyers may request creative Dony design support. Reseller Shops submit their own artwork/specifications for production validation or larger rebuilding/rework; full creative design from scratch is not offered. Ordinary technical adjustments use S21 without a DesignRequest. Unknown-model submissions remain Submitted in Admin-only Unclassified lead triage; Sales Admin must classify before service assessment or assignment. Existing optional reference attachments and requirements/MIME/deadline validation remain unchanged; the submission never creates a fee or assignment.

@@ -7,19 +7,21 @@ flowchart TD
     Choice -->|Existing saved design| Designs
     Choice -->|Self-design| Editor["S13: validate and save design"]
     Choice -->|Service| Request["S15: persist Submitted; notify Admin"]
-    Request --> Status["S17: owned request status"]
-    Status --> Assessment["S18: UnderReview complexity assessment"]
+    Request --> Status["S52: owned request status / fee acceptance"]
+    Status --> Assessment["S19: UnderReview complexity assessment"]
     Assessment -->|Simple fee 0| Approved["Approved request"]
-    Assessment -->|Complex| Proposal["S17: FeeProposed; accept exact amount"]
+    Assessment -->|Complex| Proposal["S52: FeeProposed; accept exact amount"]
     Proposal -->|Accept fee| Approved
     Assessment -->|Reject with reason| Rejected["Rejected request"]
     Status -->|Cancel| ServiceEnd["Cancelled request; no refund"]
     Assessment -->|Cancel| ServiceEnd
     Proposal -->|Cancel| ServiceEnd
     Approved -->|Cancel before assignment| ServiceEnd
-    Approved --> Assign["S19: assign approved request"]
-    Assign --> Delivery["S20 / S21: deliver design"]
-    Delivery --> Designs["S17: owned orderable designs"]
+    Approved --> Assign["S19: eligible request follows lead owner; due may be missing"]
+    Assign --> Delivery["S21: create and share immutable version"]
+    Delivery --> Feedback["S52: review versions and reply / request revision"]
+    Feedback -->|Revision| Delivery
+    Feedback -->|Owner approval| Designs["S17: owned orderable designs"]
     Editor --> Designs
     Designs --> OrderInput["S22: sizes and shipping"]
     OrderInput -->|MVP standard path| Review
@@ -52,9 +54,9 @@ flowchart TD
     Balance -->|Verified settlement| Completed["Completed order"]
 ```
 
-Nodes found: 35
+Nodes found: counts are not normative.
 
-Arrows found: 50
+Arrows found: counts are not normative.
 
 Unreadable text: None.
 
@@ -83,3 +85,5 @@ flowchart TD
 Authenticated product-entry, explicit-intent and order identity/formulas belong to MFG-11. Guest browsing produces no analytics events and is never replayed after login. Explicit new design/reorder creates a new intent; reload/edit/requote/payment retry resumes the existing one. A missing link is not a dropout; sample rework, contract preparation, customer signing and payment waits are separate. AI does not change any node of the business flow. Disabled branches and missing tracking display coverage states instead of artificial zero conversion.
 
 Reporting covers the rolling last 12 calendar months. Observed nonprogression is shown without an inactivity-based abandonment rule. AI conversation remains only on the active dashboard page and is cleared on page reload/close/navigation away, logout or access revocation; closing only the panel may preserve it until that page ends.
+
+Unknown-model leads are triaged only by Sales Admin in S19 before assignment/assessment. S17 is the gallery, S52 owns request and version review. Physical-sample rework remains the existing MFG-06 design/quote cycle without a revision cap or separate sample fee.

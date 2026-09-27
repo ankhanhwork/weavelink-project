@@ -29,7 +29,7 @@ This updated illustrative mockup includes the required delivery fields and busin
 |---|---|---|---|---|---|
 | 1 | Screen heading | Heading | Create Order | Yes | Static route title. |
 | 2 | Route | Navigation target | /orders/new?design_id={id} | Yes | Access checked on server. |
-| 3 | design_id | Field / control | UUID, required | As specified | Customer-owned Saved self-design or Delivered consultant design. |
+| 3 | design_id | Field / control | UUID, required | As specified | Customer-owned current Saved self-design/confirmed unchanged import or approved Delivered consultant design under MFG-05 section 5.4; Draft, ProofDelivered and Superseded versions are not orderable. |
 | 4 | design_version / product_version | Field / control | UUID/version, required | As specified | Must match current product rule; changed rules require explicit review. |
 | 5 | quantity_by_size | Field / control | object map, required | As specified | Supported size keys; each value positive integer; aggregate quantity must be at least product MOQ and at most 10000; MVP seed MOQ is 10 across all sizes. |
 | 6 | recipient_name | Field / control | string, required | As specified | Trimmed, 1..100 characters. |

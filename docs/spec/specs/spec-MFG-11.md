@@ -218,7 +218,7 @@ Contract wait splits sample approval→Ready (Dony generation/render) and Ready�
 | --- | --- | --- |
 | MFG-04 / S09 | `product_viewed` | Valid product detail actually displayed to an authenticated Customer; product_entry_id identifies the navigation entry; no guest history, catalog impression, prefetch or staff preview |
 | MFG-05 / S13 | `design_started`, `design_saved` | Workspace ready for a new or resumed explicit intent; preserve its journey_id and optional originating product_entry_id; save counts only committed immutable version; preview/autosave requests are not successful saves unless they commit a qualifying version |
-| MFG-05 / S15, S17–S21 | `design_request_submitted`, `design_request_approved`, `design_delivered`, request terminal outcomes | Committed service records, request/design provenance and assignment/fee substeps; no standalone service payment; S16 is retired |
+| MFG-05 / S15, S19–S21, S52 | `design_request_submitted`, `design_request_approved`, `design_delivered`, request terminal outcomes | Committed service records, request/design provenance and assignment/fee substeps; no standalone service payment; S16 is retired |
 | MFG-06 / S22, S25 | `checkout_started`, `order_created` | Eligible checkout rendered; order only on committed creation; quote generation and validation errors are not orders |
 | MFG-06/07 / S27, S29 | Digital/sample approvals, sample-cycle revisions, dispatch, production, shipment, receipt, cancellation and completion | Authoritative append-only timeline with actor/source and bound version/cycle; not current status alone |
 | MFG-09 / S33, S34 | `contract_ready`, `contract_signed` | Persisted Ready PDF and accepted signature for exact contract version/hash; notification delivery is not the milestone |

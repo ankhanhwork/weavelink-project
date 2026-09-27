@@ -8,107 +8,56 @@
 | Priority | P1 |
 | Belongs to module | [MFG-05](../specs/spec-MFG-05.md) |
 | Route | `/designs` |
-| Mockup image | img/S17-customer_designs_screen.png |
-| Status | Resolved implementation specification |
+| Mockup image | img/S17-customer_designs_screen.png (historical reference) |
+| Status | Integrated specification 2026-09-27 |
 
 ## 1. Purpose
 
-**Shown when:** The customer sees only owned saved designs, consultant deliveries and a separate request tab, with product/version context and actions valid for each design state. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
-
-**The user leaves this screen when:** An authorized action in section 5 succeeds, the user follows a role-allowed global route, or they return to the validated originating route.
+Show the authenticated customer's existing designs as a gallery with product, version, status, preview and authorized actions. S17 contains no feedback form, version thread, request-detail tab, fee acceptance or cancellation controls. Those are in [S52](S52-delivered_designs_and_feedback_screen.md); request navigation remains available as a link. MVP includes saved self-designs only; service collaboration stays Could.
 
 ## 2. Mockup
 
 ![S17 historical reference](img/S17-customer_designs_screen.png)
 
-Written behavior below takes precedence over obsolete sample content.
+The written contract takes precedence over obsolete mockup controls.
 
 ## 3. Element inventory
 
-| # | Element | Type | Content / data source | Required | Validation |
+| # | Element | Type | Content / source | Required | Validation |
 |---|---|---|---|---|---|
-| 1 | Screen heading | Heading | Customer Designs | Yes | Static route title. |
-| 2 | Route | Navigation target | /designs | Yes | Access checked on server. |
-| 3 | tab | Field / control | enum: Draft, Saved, Delivered, requests | As specified | Filter scoped to authenticated customer_id. |
-| 4 | design_id / design_version / product_id | Field / control | UUID / integer version / UUID | As specified | Show latest owned version and associated product version. |
-| 5 | status | Field / control | Draft, Saved, Delivered | As specified | Draft is editable but not orderable; Saved self-design and Delivered consultant design are orderable. |
-| 6 | preview_asset_id | Field / control | private UUID | As specified | Access-checked expiring URL; customer-owned assets only. |
-| 7 | updated_at | Field / control | UTC timestamp | As specified | Display in Asia/Ho_Chi_Minh. |
-| 8 | API errors | Field / control | standard API error envelope | As specified | 400 malformed; 404 inaccessible design; 409 stale version; preserve filters on retry. |
-| 9 | Edit saved design | Action | Create new design version; never alter ordered snapshot. | Available when authorized | Destination: S13 |
-| 10 | Order design | Action | Permit saved self-design or delivered consultant design only. | Available when authorized | Destination: S22 |
-| 11 | Request design service | Action | Create new request for selected product. | Available when authorized | Destination: S15 |
-| 12 | request_id / status / assessment | Read-only request detail | Owned request UUID, status, complexity, rationale/rejection reason, requested_deadline, committed_due_at | In requests tab | Submitted, UnderReview, FeeProposed, Approved, Assigned, InProgress, Delivered, Cancelled, Rejected; never expose CRM notes. |
-| 13 | proposed/accepted fee | Read-only integer VND | null before assessment, 0 for Simple, proposed/accepted amount for Complex | In requests tab | State whether fee is awaiting acceptance or accepted; collected only with the first order under MFG-06 BR-008, never now. |
-| 14 | Accept fee | Action | Explicit acceptance of displayed amount/proposal_version with expected_version and Idempotency-Key | FeeProposed only | Destination: S17; owner only; stale version/amount 409; store acceptance and Approved. |
-| 15 | Cancel request | Action | Confirm cancellation with expected_version and Idempotency-Key | Eligible unassigned state only | Submitted/UnderReview/FeeProposed/Approved; no refund; reject Assigned/InProgress/Delivered/Rejected; repeat Cancelled returns same result. |
-| 16 | Delivery / source request | Read-only link | Delivered immutable design and source_design_request_id | When delivered | Copies retain provenance; order action follows MFG-06 fee allocation; no order means no collection. |
+| 1 | Gallery and filters | Heading / controls | Owned designs, product/status filters, pagination | Yes | Session-derived customer; allowlisted filters; no private staff Draft versions. |
+| 2 | Design card | Read-only summary | design_id, current customer-visible version, product, preview, status and updated_at | Per design | Private expiring asset URL; UTC displayed in Asia/Ho_Chi_Minh. |
+| 3 | Status | Badge | Draft, Saved, ProofDelivered, Delivered | Yes | Only customer-created drafts appear; a shared proof awaits review and is not orderable. |
+| 4 | Edit saved design | Action | Open self-design editor; create a new immutable version | If authorized | S13; ordered snapshots never change. |
+| 5 | Open design / feedback | Link | Open exact shared/approved design | If authorized | S52; fresh ownership check. |
+| 6 | Order design | Action | Current eligible Saved or Delivered version | If orderable | S22; server applies MFG-05 eligibility and MFG-06 quote rules. |
+| 7 | Request design service | Link | Open product-specific request form | If authorized | S15; Reseller Shop support is for supplied artwork, not creative design from scratch. |
+| 8 | View design requests | Link | Open owned requests in S52 | Could only | `/design-requests`; legacy S17 request links resolve there. |
 
 ## 4. States
 
-| State | What the user sees | Trigger |
-|---|---|---|
-| Loading | Load the S17 Customer Designs view model and show labelled progress; keep writes disabled until route data and authorization are resolved. | Request starts |
-| Empty | Show “No saved designs yet” and link to the catalog/design workflow. | Screen has no eligible or matching record |
-| Forbidden/not found | Return a safe 401/403/404 for S17 Customer Designs without revealing inaccessible record, customer, staff or payment details. | 401/403/404 |
-| Error | For S17 Customer Designs, show the API code, message, field_errors and request_id; preserve safe user-entered values. | Request failure |
-| Retry | Retry transient reads for S17 Customer Designs; retry a mutation only with its original idempotency key and identical payload, never as a new side effect. | Recoverable failure |
-| Success | Refresh the committed Customer Designs data and show the next action permitted by its lifecycle and actor. | Valid action commits |
-| Conflict | The Customer Designs data or lifecycle changed concurrently; reload authoritative state and do not replay a stale mutation. | Stale version, duplicate or invalid lifecycle transition |
+Loading disables actions until ownership resolves. Empty shows no matching owned designs and a catalog link. Invalid filters return 400/422; inaccessible designs return safe 404. Recoverable errors retain filters and show request_id; retries do not create new mutations. A stale version returns 409 and reloads the authoritative card. ProofDelivered offers S52 review, not ordering. Private staff drafts and CRM data never appear.
+
 ## 5. Interactions and navigation
 
-| # | Element | User action | System response | Goes to screen |
-|---|---|---|---|---|
-| 1 | Edit saved design | Activate | Create new design version; never alter ordered snapshot. | S13 |
-| 2 | Order design | Activate | Permit saved self-design or delivered consultant design only. | S22 |
-| 3 | Request design service | Activate | Create new request for selected product. | S15 |
-| 4 | Open request | Select request or follow S15/notification link | Load owned request by request_id in requests tab. | S17 |
-| 5 | Accept fee | Explicitly confirm displayed fee | Version-check exact proposal; atomically save acceptance and Approved; notify Admin. | S17 |
-| 6 | Cancel request | Confirm | Atomically cancel only eligible unassigned state; notify owner/Admin; no refund; race/stale 409. | S17 |
+Open shared designs in S52, edit eligible self-designs in S13, order eligible designs in S22 and request service in S15. View requests opens S52. Legacy `/designs?tab=requests&request_id={id}` resolves to `/design-requests/{request_id}` after reauthorization; the legacy requests list resolves to `/design-requests`. `/designs?tab=delivered` opens the S52 shared-design list. Back preserves validated origin/filters; customer fallback is S26. Customer storefront header/footer apply.
 
-Portal: Customer owner. Route: /designs. Back preserves the originating route and filters. Fallback: Customer→S26; Sales Admin→S28; Sales→S20; System Admin→S41; Guest→S01. Enforce role, ownership and assignment before rendering.
+## 6. Screen-level rules and acceptance
 
-## 6. Screen-level rules
-
-| Rule ID | Rule | Source |
-|---|---|---|
-| SR-001 | Access and ownership are checked server-side; do not trust submitted customer, company, role, price, or provider status. Apply 401/403/404 behavior and the field rules above. | Authorization and data ownership requirements |
-| SR-002 | IDs are UUIDs; timestamps are UTC and displayed in Asia/Ho_Chi_Minh; money and quantities are integers. Mutations use expected_version; significant create/sign/pay/batch operations use idempotency keys. | Data representation and concurrency requirements |
-| SR-003 | Apply the module lifecycle and validation rules linked below; preserve immutable submitted snapshots. | Module specification |
-| SR-004 | Selected product and technical defaults are project implementation decisions; do not invent factual company, author, client-approval, or course identifiers. | Project implementation assumptions |
-
-### Acceptance scenarios
-
-1. Only own designs appear; Saved and Delivered records offer order action while Draft does not.
-2. An ordered design edit creates a new version and cannot mutate order snapshot.
-3. Submission opens the selected Submitted request; Simple approval shows free; Complex remains unassignable until exact fee acceptance.
-4. Cancellation before assignment succeeds even after acceptance; assignment winning the race makes cancellation return 409. Repeated cancellation has no duplicate effect.
-5. A Delivered request links to its immutable design; zero/no-order fee behavior follows MFG-06 BR-008.
+1. Only the owner's designs appear; another Customer receives 404 for a design or preview.
+2. Saved self-designs and confirmed unchanged imports, or current approved Delivered designs, may order; Draft and ProofDelivered cannot.
+3. Editing an ordered design forks immutable work and preserves source_design_request_id.
+4. Review/version/feedback and request/fee/cancellation operations are links to S52, never duplicate forms in S17.
+5. MVP service links and review controls are hidden until assessed service activation; the saved-design path stays available.
 
 ## 7. Linked requirements
 
-| FR ID (from the module spec) | What this screen does for it |
-|---|---|
-| MFG-05/F-DES-004 | **View Designs** — List only the customer's Saved/Delivered designs and a separate owned-request status/detail view with pagination. |
-| MFG-05/F-DES-012 | Explicit acceptance of the current Complex fee proposal. |
-| MFG-05/F-DES-013 | Eligible preassignment cancellation without refund. |
-
+MFG-05/F-DES-004 owns the gallery; F-DES-003 owns immutable save; S52 implements F-DES-012/013 and F-DES-017/018/020. Ordering belongs to MFG-06. Screen scope follows README and screen-list.
 
 ## 8. Responsive and accessibility notes
 
-Support 360px through desktop; stack columns and use labelled horizontal-scroll tables on narrow screens. Controls are keyboard-operable with visible focus, logical headings, associated form labels, and aria-live status/error announcements. Text contrast is at least 4.5:1 (large text 3:1); pointer targets are at least 24px. Preserve user-entered data after recoverable failures. Confirm destructive actions, disable duplicate submit while pending, and enforce idempotency on the server.
+Support 360px through desktop, labelled filters, keyboard-operable cards/actions, visible focus, image alternatives, 4.5:1 text contrast, 24px targets and aria-live loading/error states. Preserve filters after errors and distinguish statuses with text rather than colour alone.
 
-## 9. Open questions
+## 9. Confirmed decisions
 
-| # | Question | Blocking? | Status |
-|---|---|---|---|
-| 1 | No unresolved screen behavior questions remain; routes, fields, permissions, and defaults are resolved in this specification and its linked module requirements. | No | Resolved |
-
-## Completion checklist
-
-- [x] Route, actor, module, priority, and mockup status are identified.
-- [x] Element fields, actions, validation, and data ownership are documented.
-- [x] Loading, empty, forbidden, error, retry, success, and conflict states are documented.
-- [x] Navigation and acceptance scenarios are explicit.
-- [x] Responsive and accessibility requirements follow the shared baseline.
-- [x] No unresolved screen-level decisions remain.
+User confirmed on 2026-09-27: S17 is the design gallery; S52 owns full customer design review. No unresolved gallery behavior remains.

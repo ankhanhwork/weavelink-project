@@ -163,8 +163,8 @@ sequenceDiagram
 sequenceDiagram
     actor Customer
     actor CompanyAdmin as Sales Admin
-    participant RequestUI as S15 / S17
-    participant AdminUI as S18
+    participant RequestUI as S15 / S52
+    participant AdminUI as S19
     participant DesignModule
     participant Database
     participant Outbox
@@ -172,7 +172,7 @@ sequenceDiagram
     Customer->>RequestUI: Submit validated request on S15
     RequestUI->>DesignModule: Create request with idempotency key
     DesignModule->>Database: Atomically save Submitted and admin outbox event
-    DesignModule-->>RequestUI: Request ID, navigate to S17 request view
+    DesignModule-->>RequestUI: Request ID, navigate to S52 request view
     Outbox-->>CompanyAdmin: Notify submitted request
     CompanyAdmin->>AdminUI: Start review with expected version
     AdminUI->>DesignModule: Transition Submitted to UnderReview
@@ -182,7 +182,7 @@ sequenceDiagram
         DesignModule->>Database: Approve with fee 0 and customer outbox event
     else Complex
         DesignModule->>Database: Save FeeProposed, amount/version and customer outbox event
-        Outbox-->>Customer: Review proposal in S17, no payment now
+        Outbox-->>Customer: Review proposal in S52, no payment now
         Customer->>RequestUI: Accept exact fee and proposal version
         RequestUI->>DesignModule: Accept with expected version and key
         DesignModule->>Database: Atomically record acceptance and Approved, admin outbox event
@@ -194,9 +194,9 @@ sequenceDiagram
         RequestUI->>DesignModule: Cancel with expected version and key
         DesignModule->>Database: Lock, cancel only unassigned eligible request, no refund
     end
-    CompanyAdmin->>AdminUI: Open S19 for Approved request
+    CompanyAdmin->>AdminUI: Assign/classify lead in S19; set committed due separately
     AdminUI->>DesignModule: Assign through MFG-08 with expected versions
-    DesignModule->>Database: Lock, assign only if still Approved, conflicting cancellation returns 409
+    DesignModule->>Database: Atomically assign Approved request to current lead owner; due may be null; cancellation race 409
 ```
 
 # UC-C03: View saved design — SD-06: View Saved Design
@@ -342,32 +342,43 @@ sequenceDiagram
     end
 ```
 
-# MFG-08: Assign customer and manage consultation — SD-11
+# MFG-08: Sales Pipeline and CRM — SD-11
 
 ```mermaid
 sequenceDiagram
-    actor CompanyAdmin as Sales Admin
-    actor Consultant as Sales
-    participant ConsultationUI as S18-S21
-    participant ConsultationModule as Consultation module
+    actor Admin as Sales Admin
+    actor Sales as Sales
+    participant PipelineUI as S19 / S20
+    participant SalesModule as MFG-08 Sales
+    participant DesignModule as MFG-05 Design
+    participant OrderModule as MFG-06/07 Order & Payment
     participant Database as Database
     participant OutboxWorker as Outbox worker
-    CompanyAdmin->>ConsultationUI: Select Dony customer and consultant
-    ConsultationUI->>ConsultationModule: Assignment change with expected version and key
-    ConsultationModule->>Database: Validate active Dony StaffAccount and lock assignment
-    Database-->>ConsultationModule: Current assignment and active requests
-    ConsultationModule->>Database: Atomically change assignment and transfer active request ownership
-    ConsultationModule->>Database: Append assignment history and outbox event
-    OutboxWorker-->>Consultant: Notify new assignment
-    Consultant->>ConsultationUI: Open assigned customer
-    ConsultationUI->>ConsultationModule: Request customer context
-    ConsultationModule->>Database: Check active assignment and load permitted summaries
-    Database-->>ConsultationModule: Authorized customer context and optional buyer organization
-    ConsultationModule-->>ConsultationUI: Context and consultation timeline
-    Consultant->>ConsultationModule: Update consultation status/notes with expected version
-    ConsultationModule->>Database: Validate transition and append interaction event
-    ConsultationModule-->>ConsultationUI: Updated consultation and timeline
+
+    Admin->>PipelineUI: Assign Lead In lead to active Sales
+    PipelineUI->>SalesModule: sales_user_id + expected_version + Idempotency-Key
+    SalesModule->>Database: Validate staff, lead and current assignment
+    SalesModule->>DesignModule: Resolve eligible/active DesignRequests for same lead/customer
+    SalesModule->>Database: Begin atomic owner + pipeline_stage=ASSIGNED + history update
+    SalesModule->>DesignModule: Assign/transfer request ownership per MFG-05 contract
+    SalesModule->>Database: Commit paired owner/request changes and notification outbox event
+    OutboxWorker-->>Sales: New assignment
+
+    Sales->>PipelineUI: Log customer interaction / move lead forward
+    PipelineUI->>SalesModule: action + expected_version
+    SalesModule->>Database: Validate authorization and stage gate
+    SalesModule->>Database: Commit interaction/stage history
+    SalesModule-->>PipelineUI: Updated lead and Activity
+
+    DesignModule-->>SalesModule: Version / feedback / approval event projection
+    SalesModule-->>PipelineUI: Refresh Design Consultation summary and badge
+
+    OrderModule-->>SalesModule: Committed AwaitingDeposit -> Confirmed
+    SalesModule->>Database: Set CLOSED_WON and append stage/Activity history
+    SalesModule->>Database: Append notification outbox event
 ```
+
+S18 is retired and its DesignRequest assessment controls are exposed in the Sales Admin S19 lead detail panel. S21 is an MFG-05 Design Workspace opened per design and is not part of the MFG-08 write surface; MFG-08 interactions may be shown there read-only.
 
 # MFG-10: Merge production and batch lifecycle — SD-12
 
@@ -504,3 +515,36 @@ sequenceDiagram
         OutboxWorker-->>SystemAdmin: Notify changed key names/version only
     end
 ```
+
+
+# MFG-05: Shared design review and revision — SD-05C (Could)
+
+```mermaid
+sequenceDiagram
+    actor Sales as Assigned Sales / Sales Admin
+    actor Customer as Customer owner
+    participant StaffUI as S21
+    participant CustomerUI as S52
+    participant Design as MFG-05
+    participant CRM as MFG-08
+    Sales->>StaffUI: Upload immutable version / import unchanged source
+    StaffUI->>Design: Validate assets, source and expected version
+    Sales->>Design: Share selected Draft version
+    Design->>Design: Supersede previous shared version; request InProgress; design ProofDelivered
+    Design-->>CustomerUI: Authorized shared version and notification
+    alt Owner requests revision
+        Customer->>CustomerUI: Feedback on exact shared version
+        CustomerUI->>Design: Append feedback with expected_version and key
+        Design-->>StaffUI: Notify owner staff; keep request InProgress
+        Sales->>Design: Append customer-visible reply / upload next Draft
+    else Owner approves
+        Customer->>Design: Approve current shared version with expected_version and key
+        Design->>Design: Persist CustomerApproval; Delivered design/request
+    else Unchanged customer import confirmed
+        Sales->>Design: Record exact source evidence in S21
+        Design->>Design: Saved/orderable import; never approve a Dony change
+    end
+    Design-->>CRM: Project authorized version/feedback/approval events
+```
+
+S17 remains the gallery. S52 also owns request status, exact fee acceptance and eligible cancellation before a Design exists. No shared revision counter, revision surcharge or separate physical-sample fee is introduced. MFG-06 retains the order's later digital/sample approval cycle.
