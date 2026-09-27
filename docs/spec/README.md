@@ -19,12 +19,12 @@ This repository contains the software design documentation for the DBIZ 3 Group 
 
 | Area | Contents | Location |
 |---|---|---|
-| Function list | 12 MFG modules and 99 module-qualified function entries | [`docs/function-list.md`](docs/function-list.md) |
+| Function list | 12 MFG modules; module-qualified function entries including the Sales/design collaboration extension | [`docs/function-list.md`](docs/function-list.md) |
 | Use cases | 49 use cases with resolved actors, relationships, and functions | [`docs/architecture/use-case.md`](docs/architecture/use-case.md) |
 | Architecture | Context diagram, system configuration, and end-to-end usage flow | [`docs/architecture/`](docs/architecture/) |
 | Sequence diagrams | Business and operations sequences through SD-14, including SD-05A/05B and SD-13A prompt analysis | [`docs/architecture/sequence.md`](docs/architecture/sequence.md) |
-| Screen catalogue | 48 documented screen entries; S16 is intentionally retired, and Customer/employee authentication screens are separate | [`docs/screen-list.md`](docs/screen-list.md) |
-| Screen specifications | 50 detailed screen specs; S16 has no screen or image because design-service fees are not paid as a separate transaction | [`screens/`](screens/) |
+| Screen catalogue | Screen catalogue including S52; S16 and S18 are intentionally retired, and Customer/employee authentication screens are separate | [`docs/screen-list.md`](docs/screen-list.md) |
+| Screen specifications | Detailed screen specs and the S18 retirement mapping; S16 has no screen or image because design-service fees are not paid as a separate transaction | [`screens/`](screens/) |
 | Module specifications | Scope, actors, scenarios, flows, requirements, entities, business rules, success criteria, decisions, and traceability | [`specs/`](specs/) |
 
 ## Main actors
@@ -46,7 +46,7 @@ This repository contains the software design documentation for the DBIZ 3 Group 
 | MFG-02 | Profile & Settings | 5 | 4 | [`spec-MFG-02.md`](specs/spec-MFG-02.md) |
 | MFG-03 | Dony Staff Accounts | 8 | 4 | [`spec-MFG-03.md`](specs/spec-MFG-03.md) |
 | MFG-04 | Product Catalog | 12 | 7 | [`spec-MFG-04.md`](specs/spec-MFG-04.md) |
-| MFG-05 | Product Design | 16 | 5 | [`spec-MFG-05.md`](specs/spec-MFG-05.md) |
+| MFG-05 | Product Design | 21 | 5 | [`spec-MFG-05.md`](specs/spec-MFG-05.md) |
 | MFG-06 | Order & Payment | 6 | 2 | [`spec-MFG-06.md`](specs/spec-MFG-06.md) |
 | MFG-07 | Order Management | 7 | 3 | [`spec-MFG-07.md`](specs/spec-MFG-07.md) |
 | MFG-08 | Sales | 8 | 3 | [`spec-MFG-08.md`](specs/spec-MFG-08.md) |
@@ -120,7 +120,7 @@ The authoritative actor association is recorded in [`docs/architecture/use-case.
 
 ## Traceability
 
-The documents retain the original identifier layers: `MFG-*`, `UC-*`, `F-*`, module-local `FR-*`, 48 active screen IDs (`S01`–`S15` and `S17`–`S46`, plus `S49`–`S51`; S16 is retired), `SD-*`, and `ILF-*`. Each module spec maps its scenarios, requirements, screens, entities, business rules, and success criteria back to these identifiers.
+The documents retain the original identifier layers: `MFG-*`, `UC-*`, `F-*`, module-local `FR-*`, active screen IDs (`S01`–`S15`, `S17`, `S19`–`S46`, and `S49`–`S52`; S16/S18 are retired), `SD-*`, and `ILF-*`. Each module spec maps its scenarios, requirements, screens, entities, business rules, and success criteria back to these identifiers.
 
 When documentation conflicts, apply this precedence for release scope and behavior: (1) README MVP implementation slice and explicit policy decisions, (2) relevant module specification, (3) screen specification, (4) architecture sequence diagram. The `MVP` column in [`docs/screen-list.md`](docs/screen-list.md) is authoritative only for whether a screen/subset ships. Screen `P1/P2/P3` and function-list `High/Medium/Low` are artefact-local rankings and do not replace project MoSCoW scope. Business-rule values must be defined in the owning module spec; lower-level documents reference them rather than redefining them.
 
@@ -136,3 +136,12 @@ The project is a classroom demo, uses clearly labelled fictional organization/co
 4. [`docs/function-list.md`](docs/function-list.md)
 5. The relevant module file in [`specs/`](specs/)
 6. The linked screen and sequence documents
+
+
+## Sales pipeline and website design collaboration (2026-09-27)
+
+S19/S20 now specify the shared Kanban/List Sales pipeline with role-scoped lead panels; S18 is retired into S19. Unknown-model leads are Admin-only Unclassified triage until classified. Closed Won is the historical verified-deposit outcome, separate from later order/refund outcomes. Eligible Approved design requests automatically follow the current lead owner; Sales Admin may set committed_due_at afterward, with Missing distinct from Overdue.
+
+S17 is the customer design gallery. S52 owns request status, exact fee acceptance/cancellation and complete shared-version review/feedback/approval; staff upload/share/import and replies happen in S21. MFG-05 section 5.4 defines the immutable version/provenance and owner-approval contracts. F-DES-017..021 are new; existing F-DES-014..016 retain their design-tool meanings. CustomerProvidedConfirmation of an unchanged import is separate from owner approval of any Dony change. Original references are not automatically DesignVersions.
+
+Reseller Shops use CustomerProvided designs: Dony supports ordinary technical adjustments or assessed rebuilding/rework of supplied artwork; creative design from scratch is reserved for Business Buyers. No shared revision cap, revision surcharge or separate sample fee is added; MFG-06's existing sample/design/quote approval cycle remains. These Sales/service capabilities remain Could and do not change the five-step required MVP path or other modules' priorities. Optional unresolved Sales follow-ups stay disabled until a later explicit decision.

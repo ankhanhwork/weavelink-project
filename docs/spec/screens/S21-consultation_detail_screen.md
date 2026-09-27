@@ -1,106 +1,133 @@
-# Screen Spec: S21 Consultation Detail
+# Screen Spec: S21 Design Workspace
 
 | Field | Value |
 |---|---|
 | Screen ID | `S21` |
-| Screen name | Consultation Detail |
-| Actor | Assigned Consultant/Sales Admin |
+| Screen name | Design Workspace |
+| Actor | Lead owner (Sales) / Sales Admin |
 | Priority | P2 |
-| Belongs to module | [MFG-08](../specs/spec-MFG-08.md) |
-| Route | `/consultant/design-requests/{request_id}` |
+| Belongs to module | [MFG-05](../specs/spec-MFG-05.md) (design data and its write path); opened from [S19](S19-consultation_assignment_screen.md) and [S20](S20-consultant_tasks_and_customers_screen.md) (MFG-08) |
+| Route | Canonical: `/consultant/design-workspace/{design_id}`. Creation mode before a Design exists: `/consultant/design-workspace/new?lead={consultation_id}` with optional `&request_id={request_id}` for an eligible DesignRequest. The former route `/consultant/design-requests/{request_id}` redirects to the request's Design workspace, or to creation mode when the request has no Design yet. The first successful version creation redirects to the canonical `design_id` route. |
 | Mockup image | img/S21-consultation_detail_screen.png |
-| Status | Resolved implementation specification |
+| Status | Revised specification 2026-09-27 (decision D-06 in S19). Narrowed from Consultation Detail to Design Workspace; CRM status, notes and reopen moved to S19/S20. Integrated with MFG-05 section 5.4 and S52. |
 
 ## 1. Purpose
 
-**Shown when:** The Sales Admin or currently assigned consultant sees one authorized consultation, its customer requirements, internal notes, deadline and design delivery controls. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
+**Shown when:** The Sales who owns the lead a design belongs to, or the Sales Admin, does the actual design work for **one specific design** (for example Polo uniform; a Jacket on the same lead has its own workspace): imports a design the customer provided outside WeaveLink, records the customer's confirmation of an imported version, uploads a technical adjustment, uploads new versions for a design service request, shares versions with the customer and reads the customer's feedback per version. This is the only staff screen that writes design assets, DesignVersions, customer-visible replies and staff-recorded version confirmation data (MFG-05); Sales Admin DesignRequest assessment/reject/committed-due administration remains in S19. Every important event here (version shared, feedback received, version approved or superseded, confirmation recorded) is projected to S19/S20; detailed file data stays here. Pipeline stage, design readiness, interactions, internal notes and Admin Reviews stay in S19/S20; logged CRM interactions are shown here read-only. All identifiers and permissions come from the server session; recoverable failures preserve entered values and selected files.
 
-**The user leaves this screen when:** An authorized action in section 5 succeeds, the user follows a role-allowed global route, or they return to the validated originating route.
+**The user leaves this screen when:** They return to the lead detail panel (S19 for Sales Admin, S20 for Sales), follow a role-allowed global route, or return to the validated originating route.
 
 ## 2. Mockup
 
-![Historical visual reference](img/S21-consultation_detail_screen.png)
+![S21 Design Workspace](img/S21-consultation_detail_screen.png)
 
-Written behavior below takes precedence over obsolete sample content.
+Sample names, companies and design data are synthetic. Written behavior below takes precedence over mockup content; customer-review labels that still name S17 in the mockup resolve to S52.
 
 ## 3. Element inventory
 
 | # | Element | Type | Content / data source | Required | Validation |
 |---|---|---|---|---|---|
-| 1 | Screen heading | Heading | Consultation Detail | Yes | Static route title. |
-| 2 | Route | Navigation target | /consultant/design-requests/{request_id} | Yes | Access checked on server. |
-| 3 | request_id | Field / control | UUID | As specified | The current Sales employee must be assigned to the Customer/request, or the actor must be Sales Admin. |
-| 4 | requirements / attachment_ids | Field / control | read-only request snapshot | As specified | Show requirements and authorized 10-minute private asset links; do not expose public URLs. |
-| 5 | internal_notes | Field / control | staff-only text | As specified | internal_notes: staff-only text; never returned to customer APIs. |
-| 6 | final_design | Field / control | validated product options and safe private assets | As specified | final_design: validated product options and safe private assets; validate file type, size, scan result, ownership, and compatibility before private storage. |
-| 7 | expected_version / delivery payload | Field / control | version plus validated design | As specified | Delivery requires the current request version and creates an immutable design version. |
-| 8 | API errors | Field / control | standard API error envelope | As specified | 400 malformed; 422 invalid fields; 409 stale/duplicate; 429 rate limit; 503 dependency failure |
-| 9 | Update consultation | Action | Apply permitted CRM transition with version check; notes remain staff-only. | Available when authorized | Destination: S21 |
-| 10 | Deliver design | Action | Validate assets/options; create immutable version; notify owner after commit. | Available when authorized | Destination: S20 |
-| 11 | Reopen closed CRM | Action | Sales Admin only; set InProgress with audit. | Available when authorized | Destination: S21 |
+| 1 | Screen heading | Heading | Design Workspace | Yes | Static route title. |
+| 2 | Route | Navigation target | `/consultant/design-workspace/{design_id}` or creation mode `/consultant/design-workspace/new?lead={consultation_id}[&request_id={request_id}]` | Yes | Existing workspace: actor must be the current owner of the linked lead or a Sales Admin. Creation mode: actor must be the current owner of the lead or a Sales Admin, and any `request_id` must belong to that lead and be eligible for design work. Otherwise 404/422. |
+| 3 | Design summary | Read-only | Existing mode: design name/product, lead code/name, customer model, owner, design source, technical adjustment flag, optional linked DesignRequest/status, current version, scope in lead, number of other designs. Creation mode: lead context plus optional DesignRequest snapshot; design/version fields show empty state until first successful create. | — | From MFG-05 and MFG-08; not editable here. |
+| 4 | Request snapshot | Read-only | requirements and attachment_ids of the linked DesignRequest | When a request exists | Authorized 10-minute private asset links; no public URLs. |
+| 5 | Versions and feedback | Read-only list | DesignVersions of this design only, newest first, with state (Draft, Shared for review, Approved, Superseded), source, uploader, original channel, change note, customer feedback per `design_version_id`, and logged design interactions shown read-only | — | Grouped by version. |
+| 6 | Add customer-provided design | Action with form | design file(s) and product options, original channel (Zalo, Email, Messenger, Meeting, Other); uploader and time recorded automatically | Files, product options, channel | Validate file type, size, scan result, ownership and product compatibility. In creation mode it creates the Design plus immutable V1; in an existing customer-provided lineage it creates the next immutable imported version only when the MFG-05 rule allows it. |
+| 6a | Record customer confirmation | Action with form | imported version, channel (Zalo, Email, Messenger, Phone, Meeting, Other), confirmed at (not in the future), note 1–500 characters, optional reference to a logged MFG-08 interaction | Version, channel, time | Records `CustomerProvidedConfirmation`: evidence that an **unchanged** imported version is the customer's own file. Not available for any version Dony created or changed, and never sets `CustomerApproval` (D-08). Stores who recorded it; makes the unchanged import eligible for quotation (S19 section 3.11); MFG-05 data, projected to S19/S20. |
+| 7 | Upload technical adjustment | Action with form | base version, file(s), change note 1–500 characters | Yes | Only on a customer-provided lineage; only ordinary production validation (S19 section 3.11); same file validation; creates an immutable version with source Dony technical adjustment. |
+| 8 | Upload new version | Action with form | file(s) and product options for the linked DesignRequest | Yes | Only while the request is Assigned or InProgress; same file validation. In creation mode for a request with no Design, the first successful upload creates the Design plus V1 and records `source_design_request_id`; later uploads create immutable versions on that design. |
+| 9 | Share with customer | Action | selected Draft version | — | Draft → Shared for review; the previously shared version becomes Superseded; the customer is notified after commit. |
+| 10 | expected_version / Idempotency-Key | Hidden | version plus key | Yes | Stale version 409; duplicate submit replays the original result. |
+| 11 | API errors | Field / control | standard API error envelope | — | 400 malformed; 403 prohibited; 404 inaccessible lead or request; 409 stale/duplicate; 413 file too large; 422 invalid file, options or state; 429 rate limit; 503 dependency failure. |
+
+| 10 | Reply to customer feedback | Action with form | Shared design_version_id, reply 1–5000 chars, 0–3 scanned image attachments <=10 MiB each | Text and version | Current owner/Admin; expected_version and key; append-only customer-visible S52 reply; no lifecycle or fee change. |
+
+Not on this screen: pipeline stage changes, design readiness, design checklist, Log interaction, Internal Notes, Admin Reviews, design service assessment, `committed_due_at` (all in S19/S20). Version-bound feedback and staff replies are supported; no realtime chat, typing indicators or external inbox is introduced.
+
+**Creation mode before `design_id` exists.** A Sales may need to start work before there is a Design record: (a) a customer-provided file received outside WeaveLink, or (b) an eligible DesignRequest whose first Dony version has not been uploaded yet. S19/S20 therefore open `/consultant/design-workspace/new?lead={consultation_id}` and optionally pass `request_id`. Creation mode shows the same workspace shell with no version history. `Add customer-provided design` or the first eligible `Upload new version` creates the Design and immutable V1 atomically; after commit the browser replaces the URL with `/consultant/design-workspace/{design_id}`. A failed create leaves no partial Design or DesignVersion.
 
 ## 4. States
 
 | State | What the user sees | Trigger |
 |---|---|---|
-| Loading | Load the S21 Consultation Detail view model and show labelled progress; keep writes disabled until route data and authorization are resolved. | Request starts |
-| Empty | No Consultation Detail records match the current route/filter; preserve inputs and show only the screen’s authorized next action. | Screen has no eligible or matching record |
-| Forbidden/not found | Return a safe 401/403/404 for S21 Consultation Detail without revealing inaccessible record, customer, staff or payment details. | 401/403/404 |
-| Error | For S21 Consultation Detail, show the API code, message, field_errors and request_id; preserve safe user-entered values. | Request failure |
-| Retry | Retry transient reads for S21 Consultation Detail; retry a mutation only with its original idempotency key and identical payload, never as a new side effect. | Recoverable failure |
-| Success | Refresh the committed Consultation Detail data and show the next action permitted by its lifecycle and actor. | Valid action commits |
-| Conflict | The Consultation Detail data or lifecycle changed concurrently; reload authoritative state and do not replay a stale mutation. | Stale version, duplicate or invalid lifecycle transition |
+| Loading | Summary and version list skeletons; actions disabled until data and authorization are resolved. | Request starts |
+| Empty | "No design versions yet." with the actions allowed for this design. | No version |
+| Forbidden/not found | Safe 401/403/404 without revealing the lead, customer, request or design. | 401/403/404 |
+| Uploading | Per-file progress; the form keeps entered values and selected files. | Upload in progress |
+| Error | API code, message, field_errors and request_id; failed files are listed with the reason. | Request failure |
+| Retry | Reads retry; uploads and share retry only with the original idempotency key and identical payload. | Recoverable failure |
+| Success | New version at the top of the list; toast names the action ("V3 shared with the customer"). | Valid action commits |
+| Conflict | "This design changed since you opened it"; data reloads without replaying the stale action. | Stale version or invalid state |
+
 ## 5. Interactions and navigation
 
 | # | Element | User action | System response | Goes to screen |
 |---|---|---|---|---|
-| 1 | Update consultation | Activate | Apply permitted CRM transition with version check; notes remain staff-only. | S21 |
-| 2 | Deliver design | Activate | Validate assets/options; create immutable version; notify owner after commit. | S20 |
-| 3 | Reopen closed CRM | Activate | Sales Admin only; set InProgress with audit. | S21 |
+| 1 | Add customer-provided design | Submit | Validate and create an imported version; event projected to S19/S20. | S21 |
+| 1a | Record customer confirmation | Submit | Store the confirmation on the version; event projected to S19/S20. | S21 |
+| 2 | Upload technical adjustment | Submit | Validate and create an adjustment version. | S21 |
+| 3 | Upload new version | Submit | Validate and create a request version. | S21 |
+| 4 | Share with customer | Confirm | Share the version; notify the customer; S19/S20 show the event. | S21 |
+| 5 | Back to lead | Activate | Open the lead detail panel. | S19 / S20 |
 
-Portal: Assigned Consultant/Sales Admin. Route: /consultant/design-requests/{request_id}. Back preserves the originating route and filters. Fallback: Customer→S26; Sales Admin→S28; Sales→S20; System Admin→S41; Guest→S01. Enforce role, ownership and assignment before rendering.
+Portal: Sales / Sales Admin. Back preserves the originating lead panel. Fallback: Customer→S26; Sales Admin→S28; Sales→S20; System Admin→S41; Guest→S01. Enforce role, ownership and assignment before rendering.
 
 ## 6. Screen-level rules
 
 | Rule ID | Rule | Source |
 |---|---|---|
-| SR-001 | Access and ownership are checked server-side; do not trust submitted customer, company, role, price, or provider status. Apply 401/403/404 behavior and the field rules above. | Authorization and data ownership requirements |
-| SR-002 | IDs are UUIDs; timestamps are UTC and displayed in Asia/Ho_Chi_Minh; money and quantities are integers. Mutations use expected_version; significant create/sign/pay/batch operations use idempotency keys. | Data representation and concurrency requirements |
-| SR-003 | Apply the module lifecycle and validation rules linked below; preserve immutable submitted snapshots. | Module specification |
-| SR-004 | Selected product and technical defaults are project implementation decisions; do not invent factual company, author, client-approval, or course identifiers. | Project implementation assumptions |
+| SR-001 | Access and ownership are checked server-side; only the current lead owner or a Sales Admin can open the workspace or write. | Authorization and data ownership requirements |
+| SR-002 | IDs are UUIDs; timestamps are UTC and displayed in Asia/Ho_Chi_Minh. Every write uses expected_version and an Idempotency-Key. | Data representation and concurrency requirements |
+| SR-003 | Every saved design is an immutable version; editing creates a new version. Files are validated for type, size, scan result, ownership and product compatibility, and are served only through short-lived private links. | MFG-05 |
+| SR-004 | `CustomerProvidedConfirmation` and `CustomerApproval` are separate facts (D-08). An unchanged customer-provided import becomes eligible for quotation with customer-source evidence (S52 confirmation, or a `CustomerProvidedConfirmation` recorded here); any version Dony changed becomes eligible only after the customer approves it in S52. Staff cannot approve on behalf of the customer. | S19 D-01, section 3.11 |
+| SR-005 | Technical adjustments are limited to ordinary production validation and never change logo appearance, branding, main colours, fabric/material, product style or price-affecting elements without customer confirmation; larger work uses the Simple/Complex DesignRequest workflow. | S19 D-02, D-03 |
+| SR-006 | The customer sees only shared versions and their own feedback (S52); staff interactions are never returned to customer APIs. | MFG-05, MFG-08 BR-003 |
+| SR-007 | MFG-05 section 5.4 governs the integrated review loop; share is not terminal Delivered. S52 records owner decisions and S21 records staff replies. | Integrated module contract |
+| SR-008 | The workspace shows one design. S19/S20 read a projection of its events and state from MFG-05 and never store a copy; logged CRM interactions appear here read-only and cannot be edited or deleted here. | S19 D-06 |
 
 ### Acceptance scenarios
 
-1. Assigned consultant may deliver validated design, creating immutable version and notifying customer after commit.
-2. Unassigned consultant cannot retrieve private attachments or internal notes.
+1. Given a Sales who is not the lead owner, when they open the workspace, then 404 is returned.
+2. Given a tech pack received by Zalo, when the Sales adds it as a customer-provided design and records the customer's confirmation, then an immutable, confirmed version with uploader and channel Zalo is created and both events appear in S19/S20 Design Discussion.
+3. Given V2 is a Dony technical adjustment, then Record customer confirmation is not available for V2; V2 becomes eligible only when the customer approves it in S52, which MFG-05 records as `CustomerApproval`.
+4. Given a lead with Polo uniform and Jacket designs, then each opens its own workspace and shows only its own versions.
+5. Given the former route of a design request, then it redirects to the workspace of that request's design; if the request has no design yet, it redirects to creation mode with that request and lead context.
+6. Given a technical adjustment uploaded and shared, then the previous shared version becomes Superseded and the customer sees the new version in S52.
+7. Given the linked request is Approved but not yet Assigned, then Upload new version is disabled.
+8. Given an invalid or infected file, then the upload is rejected with the reason and no version is created.
+9. Given the screen, then it offers no stage change, readiness, note, Admin Review, assessment or committed due date control.
+10. Given a lead with no Design yet, when S19/S20 opens S21 creation mode and the Sales successfully imports the customer's first file or uploads the first eligible DesignRequest version, then Design + V1 are created atomically and the route becomes `/consultant/design-workspace/{design_id}`; on failure no partial Design exists.
 
 ## 7. Linked requirements
 
 | FR ID (from the module spec) | What this screen does for it |
 |---|---|
-| MFG-08/F-ORD-007 | **Update Consult** — Show consultation status, notes and linked record summaries to assigned consultant or Sales Admin. |
-| MFG-08/F-ORD-008 | **Update Consult** — Advance valid consultation status with trimmed 1–5000 character notes, version checks and idempotency; only Admin may reopen a closed consultation. |
-| MFG-05/F-DES-010 | **Send Design** — Deliver an immutable validated design for an Assigned/InProgress request atomically, recording source_design_request_id. |
-| MFG-05/F-DES-011 | **Send Design** — Notify the owning customer after design delivery. |
-Additional linked modules: [MFG-05](../specs/spec-MFG-05.md).
-
-
+| MFG-05/F-DES-010 | **Send Design** — Create immutable validated design versions for an Assigned/InProgress request, recording source_design_request_id; also technical-adjustment versions under MFG-05 section 5.4; unchanged imports use F-DES-019. |
+| MFG-05/F-DES-011 | **Send Design** — Notify the owning customer after a version is shared. |
 
 ## 8. Responsive and accessibility notes
 
-Support 360px through desktop; stack columns and use labelled horizontal-scroll tables on narrow screens. Controls are keyboard-operable with visible focus, logical headings, associated form labels, and aria-live status/error announcements. Text contrast is at least 4.5:1 (large text 3:1); pointer targets are at least 24px. Preserve user-entered data after recoverable failures. Confirm destructive actions, disable duplicate submit while pending, and enforce idempotency on the server.
+Support 360px through desktop; below 1024px the summary stacks above the version list. File inputs have visible labels and keyboard access; upload progress and results are announced through aria-live; design previews have text alternatives. Text contrast is at least 4.5:1 (large text 3:1); pointer targets are at least 24px. Confirm Share with customer and disable duplicate submit while pending.
 
 ## 9. Open questions
 
 | # | Question | Blocking? | Status |
 |---|---|---|---|
-| 1 | No unresolved screen behavior questions remain; routes, fields, permissions, and defaults are resolved in this specification and its linked module requirements. | No | Resolved |
+| 1 | MFG-05 section 5.4 and S52 define the version lifecycle, feedback and approval. | No | Resolved |
 
 ## Completion checklist
 
 - [x] Route, actor, module, priority, and mockup status are identified.
-- [x] Element fields, actions, validation, and data ownership are documented.
-- [x] Loading, empty, forbidden, error, retry, success, and conflict states are documented.
+- [x] Narrowed responsibility (design execution only) and removed CRM functions are documented.
+- [x] Loading, empty, forbidden, uploading, error, retry, success, and conflict states are documented.
 - [x] Navigation and acceptance scenarios are explicit.
-- [x] Responsive and accessibility requirements follow the shared baseline.
-- [x] No unresolved screen-level decisions remain.
+- [x] MFG-05 version contracts and S52 feedback/approval are integrated.
+
+
+## 10. Integrated version and reply contract
+
+MFG-05 section 5.4 is authoritative. Imported originals retain source evidence without being relabelled as a customer's authored version; reference attachments are not automatically promoted to versions. An unchanged import is Saved/orderable only after exact customer-source confirmation. Dony changes remain ProofDelivered/non-orderable until the customer approves in S52. A newer Draft does not replace the current accepted/shared version until explicitly shared or confirmed. Staff cannot approve a changed version.
+
+The current owner or Sales Admin may append a customer-visible reply to a selected shared design_version_id (1–5000 trimmed characters; up to three scanned PNG/JPEG/WebP attachments, 10 MiB each), using expected_version and Idempotency-Key. S52 shows the same immutable reply; a reply alone does not change design, request, fee or approval state. Customer APIs never receive private Draft versions, internal CRM interactions or notes. Existing DesignRequest cancellation restrictions still apply while the request remains InProgress through review.
+
+Creation mode requires a linked registered Customer and a classified lead; a prospective/unclassified lead cannot create an owned design. MFG-05/F-DES-019 imports unchanged files; F-DES-020 records source evidence; F-DES-021 records staff replies. F-DES-010 covers upload/share and technical versions.

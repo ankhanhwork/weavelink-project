@@ -13,7 +13,7 @@
 | UC-M08 | Change password | Member | None | MFG-02/F-PROF-004, MFG-02/F-PROF-005 |
 | UC-C01 | Design product | Customer | None | MFG-05/F-DES-001, MFG-05/F-DES-002, MFG-05/F-DES-003 |
 | UC-C02 | Product Customization | Customer | Includes UC-C01, UC-C03, UC-C04 | MFG-05/F-DES-001, MFG-05/F-DES-002, MFG-05/F-DES-003 |
-| UC-C03 | View saved design | Customer | None | MFG-05/F-DES-004 |
+| UC-C03 | View designs and review shared versions | Customer | Assigned Sales / Sales Admin (replies) | MFG-05/F-DES-004, MFG-05/F-DES-017, MFG-05/F-DES-018, MFG-05/F-DES-020 |
 | UC-C04 | Request design service | Customer | Sales Admin (complexity assessment); System (notifications) | MFG-05/F-DES-005, MFG-05/F-DES-006, MFG-05/F-DES-007, MFG-05/F-DES-008, MFG-05/F-DES-012, MFG-05/F-DES-013 |
 | UC-C05 | Finalize order | Customer | None | MFG-06/F-PAY-001, MFG-06/F-PAY-002, MFG-06/F-PAY-003 |
 | UC-C06 | Choose merge option | Customer | None | MFG-10/F-MER-001, MFG-10/F-MER-002, MFG-10/F-MER-003 |
@@ -25,7 +25,7 @@
 | UC-C12 | Make payment | Customer | None | MFG-06/F-PAY-004, MFG-06/F-PAY-005, MFG-06/F-PAY-006 |
 | UC-S01 | View assignment | Sales | None | MFG-08/F-ORD-005, MFG-08/F-ORD-006 |
 | UC-S02 | Update customer consultation | Sales | None | MFG-08/F-ORD-007, MFG-08/F-ORD-008 |
-| UC-S03 | Send design to customer | Sales | None | MFG-05/F-DES-009, MFG-05/F-DES-010, MFG-05/F-DES-011 |
+| UC-S03 | Prepare/share design and reply to feedback | Sales | Sales Admin; Customer (version decisions) | MFG-05/F-DES-009, MFG-05/F-DES-010, MFG-05/F-DES-011, MFG-05/F-DES-019, MFG-05/F-DES-020, MFG-05/F-DES-021 |
 | UC-S04 | Update order status | Sales | Sales Admin (Dony fulfillment) | MFG-07/F-ORD-005, MFG-07/F-ORD-006, MFG-07/F-ORD-007 |
 | UC-C14 | Generate contracts | Sales Admin | None | MFG-09/F-CONTR-001, MFG-09/F-CONTR-002, MFG-09/F-CONTR-003, MFG-09/F-CONTR-004, MFG-09/F-CONTR-005 |
 | UC-C15 | Manage contract templates and unsigned revisions | Sales Admin | None | MFG-09/F-CONTR-006, MFG-09/F-CONTR-007 |

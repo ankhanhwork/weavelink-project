@@ -64,6 +64,12 @@ Portal: Authenticated user. Route: /notifications. Back preserves the originatin
 
 Send deduplicated negative-benefit advance warnings, waiting-expiry approval requests and missed-plan/deadline-risk notices to Sales Admin. The operational link opens [S42](S42-merge_console_screen.md) with the order/run context after fresh authorization, preserving unread/handled status. A delivered notice, click or read acknowledgement does not approve a plan, convert a flexible order or start production. Customer notices describe only their own committed terms and genuinely approved/started plan, not other customers or a pending recommendation.
 
+### Sales pipeline and design collaboration notices
+
+Persist assignment/reassignment notices for affected staff/customer recipients, Pending Admin Review notices for Sales Admin and decision notices for the requester, deduplicated per committed event and recipient. Missing committed_due_at on an eligible assigned request may notify Sales Admin; a missing date is not an overdue event. Staff links open the reauthorized S19/S20 lead or S21 workspace.
+
+Customer design notices open S52 request detail or the exact shared design/version. Sharing, feedback, a staff reply, approval, source confirmation and request/fee decisions notify only authorized participants. Customer payloads omit CRM notes, internal discussions, Admin Review text and private Draft versions. An old notification never bypasses current ownership/assignment checks. Mark-read does not approve a design, accept a fee or change a stage.
+
 ## 6. Screen-level rules
 
 | Rule ID | Rule | Source |
