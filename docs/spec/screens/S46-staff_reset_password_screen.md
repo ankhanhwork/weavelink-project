@@ -68,8 +68,8 @@
 
 | FR ID (from the module spec) | What this screen does for it |
 |---|---|
-| MFG-01/F-USER-010 | Resets an employee password using an eligible portal-bound token. |
-| MFG-01/F-USER-011 | Rejects expired, reused or wrong-portal tokens. |
+| MFG-01/F-USER-010 | Verify employee-token purpose, portal binding, expiry and consumption; reject expired, reused or wrong-portal tokens. |
+| MFG-01/F-USER-011 | Atomically consume the eligible employee token, replace the password hash and revoke sessions. |
 
 ## 8. Responsive and accessibility notes
 

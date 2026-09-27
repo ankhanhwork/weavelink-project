@@ -42,7 +42,7 @@ Written behavior below takes precedence over obsolete sample content.
 | 11 | transaction_id | Field / control | UUID | As specified | Returned browser route is lookup-only; poll status, never mark paid from browser. |
 | 12 | Idempotency-Key | Field / control | UUID, required on initiation | As specified | Same key/payload returns same attempt; changed payload conflicts. |
 | 13 | promo_code/marketing_consent/second merge consent | Field / control | absent | As specified | No promo controls; merge policy is already snapshotted at order submission. |
-| 14 | Initiate/retry payment | Action | Reuse active Pending attempt for this order/purpose or create a new reference after failure; use exact server amount. | Available when authorized | Destination: External VNPay |
+| 14 | Initiate/retry payment | Action | Reuse active Pending attempt for this order/purpose or create a new reference after failure; use exact server amount; zero remaining balance creates no BALANCE attempt. | Available when authorized | Destination: External VNPay |
 | 15 | Browser return | Action | Ignore claimed success, poll authoritative transaction. | Available when authorized | Destination: S35 |
 | 16 | Verified success | Action | DEPOSIT success shows `Confirmed`; BALANCE success shows `Completed`. | Available when authorized | Destination: S27 |
 | 17 | Failed/expired/processing | Action | Keep `AwaitingDeposit` or `DeliveredAwaitingBalance`; show retry/processing without false success. | Available when authorized | Destination: S35 |
@@ -82,7 +82,7 @@ Portal: Customer owner. Route: /orders/{order_id}/payment. Back preserves the or
 ### Acceptance scenarios
 
 1. Signed/`AwaitingDeposit` exposes only the exact DEPOSIT; accepted callback advances once to `Confirmed`.
-2. Receipt-confirmed/`DeliveredAwaitingBalance` exposes only the exact BALANCE; accepted callback advances once to `Completed`.
+2. Receipt-confirmed/`DeliveredAwaitingBalance` with positive balance exposes only the exact BALANCE; accepted callback advances once to `Completed`. With zero balance, MFG-06 completes automatically, no provider attempt is created, and S35 shows the authoritative completed state with navigation to S27.
 3. Browser return cannot mark paid; failed/expired attempts preserve the current order state and enable purpose-specific retry.
 
 ## 7. Linked requirements

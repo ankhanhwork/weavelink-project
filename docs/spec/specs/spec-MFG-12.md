@@ -4,9 +4,9 @@
 | --- | --- |
 | Module ID | `MFG-12` |
 | Module name | System Operations |
-| Spec version | v1.1 |
+| Spec version | v1.3 |
 | Author (team member) | Group B |
-| Date | 2026-09-22 |
+| Date | 2026-09-26 |
 | Status | Draft |
 | Approved by (Client role) | No approver identified |
 | DBIZ2 source | Function List MFG-12, No. 87–94, `F-SYS-001`–`F-SYS-008`; UC-S09, UC-S10, UC-S11; screens S39–S40 |
@@ -164,6 +164,10 @@ sequenceDiagram
 | BR-006 | MFG-10 merge policy and rolling-window values are read-only configuration and may change only through a reviewed policy version; estimates label setup cost/time as assumptions. | Preserve customer commitments and avoid presenting assumptions as measured factory results. |
 
 Configuration notices list changed key names, actor, version and time only; secret values are excluded. In-app inbox is authoritative and email delivery is retried; notification failure never rolls back configuration. Restore success revokes sessions. During maintenance, provider callbacks are durably queued and reconciled idempotently after recovery.
+
+### Analytics evidence integration (MFG-11)
+
+MFG-11 analytics events/results are not the general audit log. Its confirmed rolling 12-month reporting window and 366-day maximum span use MFG-11 5.7: raw analytics events live 13 calendar months, needed normalized facts survive while supporting reportable cohorts/open work, results expire after seven days and successful export files after seven days (each download URL remains valid for at most 10 minutes, capped by file expiry). This module's 365-day audit retention is unchanged. AI conversation content is page-memory-only, never part of stored logs, exports or database backups; no persistent chat-history store is introduced. Cleanup must preserve source commercial records and needed cohort evidence. Do not activate MFG-12 management screens merely to collect standard-order evidence. System Admin diagnostics for analytics/AI contain only safe request IDs, status/error codes and timing; omit prompt bodies, commercial answers, customer text and secrets. System Admin has no implicit permission to commercial result/cache/export records. If backup/restore is activated, rebuild/reconcile analytics projections from surviving authoritative evidence with deduplication, invalidate affected cached results and disclose unsupported watermarks rather than serving pre-restore results as current. Provider configuration is chosen at Plan; no new editable settings or external provider is assumed here.
 
 ## 6. Key entities (mandatory)
 

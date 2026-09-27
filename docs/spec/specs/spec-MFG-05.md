@@ -4,9 +4,9 @@
 | --- | --- |
 | Module ID | `MFG-05` |
 | Module name | Product Design |
-| Spec version | v1.1 |
+| Spec version | v1.3 |
 | Author (team member) | Group B |
-| Date | 2026-09-22 |
+| Date | 2026-09-26 |
 | Status | Draft |
 | Approved by (Client role) | No approver assigned |
 | DBIZ2 source | Historical IDs retained: Function List No. 36-46; `F-DES-001` .. `F-DES-011`; `UC-C02` .. `UC-C04`, `UC-S03`; S09, S13, S15-S22, S38. External DBIZ2 comparison is not required. |
@@ -228,6 +228,10 @@ sequenceDiagram
 | BR-005 | Attachments are 0-5 PNG/JPEG/WebP files <=10 MiB each, actual MIME checked/scanned. | Protect users and storage. |
 | BR-006 | Consultation CRM state is independent and never changes order status. | Keep sales workflow separate from fulfillment. |
 | BR-007 | Customer accepts exact Complex proposal amount/version; store customer_id, accepted_fee_vnd, accepted_fee_version equal to proposal_version, and accepted_at. Proposal/approval is immutable; changed work/fee requires eligible cancellation and a new request. All mutations use expected_version and idempotency; no request payment/refund. | Preserve explicit consent and concurrency safety. |
+
+### Analytics evidence integration (MFG-11)
+
+For MFG-11/F-DA-004, S13 contributes workspace-ready evidence and successful immutable-save evidence; failed saves and preview requests are not conversions. Service submission, approval (Simple or accepted Complex), delivery, rejection and cancellation are projected from committed request/design records with source identity, version and provenance. Preserve sample-related design revisions as versions, not new customer orders. A delivered design is not delivered merchandise; one design lineage can support multiple orders and does not define a journey. S17 re-entry may start an existing-design checkout without a fresh product view or design save; do not manufacture those earlier stages. Journey entry route remains separate from `source_design_request_id`. An explicit new design creates a fresh intent; editing/resuming the same work, saving versions and sample revision retain it. An explicit new order/reorder from S17 creates a new checkout intent, while continuing an existing draft checkout retains its reference. Replays and shared same-intent tabs deduplicate; authorization/account changes cannot attach another customer's work. Product-entry links are explicit navigation evidence, not a guessed match by customer/product. Follow [MFG-11 sections 5.3/5.4](spec-MFG-11.md#53-funnel-templates-identity-and-formulas) for correlation and unknown coverage; no service analytics branch is enabled before the assessed-service feature itself.
 
 ## 6. Key entities (mandatory)
 

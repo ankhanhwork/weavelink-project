@@ -19,10 +19,10 @@ This repository contains the software design documentation for the DBIZ 3 Group 
 
 | Area | Contents | Location |
 |---|---|---|
-| Function list | 12 MFG modules and 96 module-qualified function entries | [`docs/function-list.md`](docs/function-list.md) |
+| Function list | 12 MFG modules and 98 module-qualified function entries | [`docs/function-list.md`](docs/function-list.md) |
 | Use cases | 49 use cases with resolved actors, relationships, and functions | [`docs/architecture/use-case.md`](docs/architecture/use-case.md) |
 | Architecture | Context diagram, system configuration, and end-to-end usage flow | [`docs/architecture/`](docs/architecture/) |
-| Sequence diagrams | 10 sequences covering SD-01 through SD-09, including SD-05A and SD-05B | [`docs/architecture/sequence.md`](docs/architecture/sequence.md) |
+| Sequence diagrams | Business and operations sequences through SD-14, including SD-05A/05B and SD-13A prompt analysis | [`docs/architecture/sequence.md`](docs/architecture/sequence.md) |
 | Screen catalogue | 45 documented screen entries; S16 is intentionally retired, and Customer/employee authentication screens are separate | [`docs/screen-list.md`](docs/screen-list.md) |
 | Screen specifications | 45 detailed screen specs; S16 has no screen or image because design-service fees are not paid as a separate transaction | [`screens/`](screens/) |
 | Module specifications | Scope, actors, scenarios, flows, requirements, entities, business rules, success criteria, decisions, and traceability | [`specs/`](specs/) |
@@ -52,9 +52,9 @@ This repository contains the software design documentation for the DBIZ 3 Group 
 | MFG-08 | Sales | 8 | 3 | [`spec-MFG-08.md`](specs/spec-MFG-08.md) |
 | MFG-09 | Contract Management | 9 | 6 | [`spec-MFG-09.md`](specs/spec-MFG-09.md) |
 | MFG-10 | Order Optimization (Merge) | 7 | 4 | [`spec-MFG-10.md`](specs/spec-MFG-10.md) |
-| MFG-11 | Data Analytics | 3 | 3 | [`spec-MFG-11.md`](specs/spec-MFG-11.md) |
+| MFG-11 | Data Analytics | 5 | 3 | [`spec-MFG-11.md`](specs/spec-MFG-11.md) |
 | MFG-12 | System Operations | 8 | 3 | [`spec-MFG-12.md`](specs/spec-MFG-12.md) |
-| **Total** | | **96** | **49** | |
+| **Total** | | **98** | **49** | |
 
 ## MVP Scope
 
@@ -72,15 +72,15 @@ The MVP scope is defined by feature priority. It does not remove lower-priority 
 | **Could** | Assessed Design Service Request | MFG-05 | Simple work is free; accepted Complex fee is collected with the first order from the delivered design |
 | **Could** | Sales Assignment & Task Dashboard | MFG-08 | Needed when consultation volume requires a dedicated queue |
 | **Won't** | Profile & Settings | MFG-02 | Deferred from MVP; hide Profile/S06 and Change Password/S07 navigation/routes while retaining account recovery in MFG-01. |
-| **Won't** | Data Analytics Dashboard & Data Export | MFG-11 | Deferred until sufficient order history exists |
+| **Should** | Analytics Dashboard, Funnel, Prompt Analysis & Export | MFG-11 | Requested improvement: S43 Overview and Journey & conversion, contextual read-only AI, and matching exports; publish only supported evidence/coverage. Service and merge branches follow their owning modules. |
 | **Won't** | Dony Staff Account Administration & System Operations | MFG-03, MFG-12 | Invitation/role-management UI, configurable operations, logs, backup and restore are deferred. Pre-provision one `Sales Admin` for order/sample/contract operations, one `Sales` identity for role/assignment checks, and one `System Admin` bootstrap identity; also seed one verified Customer test account. These are demo identities, not self-registration or live credentials. |
 
 ### MVP Priority Summary
 
 - **Must:** MFG-01, MFG-04, self-design in MFG-05, and MFG-06.
-- **Should:** Full MFG-07 and MFG-09 capabilities beyond the minimum order-completion slices required for the MVP vertical path.
+- **Should:** Full MFG-07 and MFG-09 capabilities beyond the minimum order-completion slices required for the MVP vertical path; MFG-11 analytics improvement, with the confirmed product scope below and runtime AI configuration at Plan.
 - **Could:** assessed design service in MFG-05, MFG-08, and MFG-10.
-- **Won't:** MFG-02 profile/settings screens, MFG-03 staff-account UI, MFG-11 analytics, and MFG-12 system-operations screens are omitted in MVP. Hide the Profile/S06 link; account recovery remains available through the relevant Customer or staff recovery screens.
+- **Won't:** MFG-02 profile/settings screens, MFG-03 staff-account UI, and MFG-12 system-operations screens are omitted in MVP. Hide the Profile/S06 link; account recovery remains available through the relevant Customer or staff recovery screens.
 
 **MVP implementation slice:** “Should” describes the full MFG-07/MFG-09 modules, not permission to omit their order-critical minimums. Implement one end-to-end standard order path in this sequence:
 
@@ -89,6 +89,16 @@ The MVP scope is defined by feature priority. It does not remove lower-priority 
 3. **Quote, order and physical sample:** create a standard quote and order; Customer approves the digital design; Sales Admin manually records sample preparation and dispatch evidence/tracking; Customer records sample receipt and approval. A requested revision returns to a new design/quote approval cycle.
 4. **Contract and deposit:** after sample approval, Sales Admin explicitly selects Generate in S33; the system generates the Customer's immutable contract from the single fixed Dony template (no automatic generation or template picker in MVP). Record consent, authenticated Customer acceptance/name, contract version and timestamp before allowing the exact VNPay deposit. This application acknowledgement is not represented as a certified digital signature.
 5. **Production, delivery and balance:** Sales Admin manually advances the paid order through InProduction and Shipped with required evidence/tracking. The Customer may confirm receipt; otherwise verified delivery evidence starts MFG-06 BR-007's 3-calendar-day auto-confirmation timer. MVP has no customer dispute workflow: when the timer expires, the system records receipt and enables the exact VNPay balance. The classroom balance deadline is 7 calendar days after verified delivery. Verified deposit/balance notifications, cancellation/refund protections and final order completion remain mandatory; staff cannot mark an order paid manually.
+
+### Analytics improvement boundary (2026-09-26)
+
+MFG-11 is promoted from Won't to Should for the requested improvement; this is a release target, not a claim that an application or tracking dataset exists. S43 remains a Sales Admin route in the internal CRM, with Overview, Journey & conversion and a contextual AI panel. All charts, exports and AI answers share server-owned metric definitions and reproducible result context. Other module priorities and the five-step required standard-order path above remain unchanged.
+
+F-DA-004 covers end-to-end funnel and drop-off analysis; F-DA-006 covers prompt-based analysis. F-DA-005 is not allocated because the supplied proposal uses it for a separate feature-evaluation dashboard outside this request. The proposal does not override current business rules or authorize its other features. Existing UC-C20/21/22 cover the extension; no new use-case IDs or screens are introduced.
+
+The user-confirmed choices are recorded in [MFG-11 section 10](specs/spec-MFG-11.md#10-confirmed-decisions-and-implementation-handoff): track only authenticated customers, never collect/stitch guest browsing; new design or explicit reorder starts a new intent while reload/edit/requote/payment retry resumes it; show observed nonprogression and explicit waiting/revision/cancellation without time-based abandonment; support the rolling last 12 calendar months and keep AI conversation only in memory for the open dashboard page. Product entries, explicit intents and orders have separate denominators.
+
+[MFG-11 section 5.7](specs/spec-MFG-11.md#57-reporting-window-retention-and-conversation-lifetime) specifies the technical retention defaults: raw analytics events for 13 calendar months, normalized prerequisite facts while needed by supported cohorts/open work, result snapshots for seven days and successful export files for seven days with download URLs lasting at most 10 minutes, capped by file expiry. Commercial source records keep their existing rules. Provider/model, budget and runtime limits are Plan decisions and do not block this product-specification update. Missing tracking and unconfigured AI remain explicit unavailable states; no guessed links or fabricated history are allowed. Analytics collection does not wait for the model, and MFG-12 management UI is not a prerequisite.
 
 ## Use Case ID convention
 
