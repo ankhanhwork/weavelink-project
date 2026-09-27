@@ -103,6 +103,36 @@ sequenceDiagram
     end
 ```
 
+## UC-G02 extension: Product Finder (MFG-04/F-PROD-012, Should)
+
+The Must full-search flow above remains available. When enabled, suggestions and paginated results share the matching rules in [MFG-04 sections 5.3–5.4](../../specs/spec-MFG-04.md#53-keyword-matching-model-f-prod-012) and [S08](../../screens/S08-product_catalog_screen.md). Physical index storage is a Plan decision. No search analytics are introduced.
+
+```mermaid
+sequenceDiagram
+    actor Buyer as Guest/Member
+    participant S08
+    participant SearchService
+    participant Catalogue
+    Buyer->>S08: focus empty field or type query
+    S08->>SearchService: settled q and active scope/filters
+    SearchService->>SearchService: validate q <=100 and allowlisted constraints
+    alt invalid input
+        SearchService-->>S08: 400/422; preserve input, no broader search
+    else valid input
+        SearchService->>Catalogue: current Published/version-eligible candidate data
+        Catalogue-->>SearchService: public products under active constraints
+        alt trimmed query empty
+            SearchService-->>S08: at most 4 featured products
+        else keyword entered
+            SearchService->>SearchService: normalise and match all query tokens; rank
+            SearchService-->>S08: at most 10 matches, total count, stored attribute reasons
+            S08-->>Buyer: four visible rows or labelled no-match alternatives
+        end
+        S08->>S08: discard responses for previous query/filter state
+        Buyer->>S08: choose product or full results
+        Note over S08,Catalogue: S09 rechecks Published status; full S08 search keeps query/filters
+    end
+```
 # UC-C02: Design product — SD-05A: Self Design Product
 
 ```mermaid
