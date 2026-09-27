@@ -23,8 +23,8 @@ flowchart TD
     Editor --> Designs
     Designs --> OrderInput["S22: sizes and shipping"]
     OrderInput -->|MVP standard path| Review
-    OrderInput -->|After MFG-10 activation| Merge{"S23: opt in?"}
-    Merge -->|Yes| Policy["S24: accept merge policy"]
+    OrderInput -->|After reviewed MFG-10 activation| Merge{"S23: eligible flexible terms offered and accepted?"}
+    Merge -->|Yes| Policy["S24: read terms; explicit acceptance on S23"]
     Policy --> Review["S25: review quote and separate design fee"]
     Merge -->|No| Review
     Review -->|Expired or changed| OrderInput
@@ -41,9 +41,9 @@ flowchart TD
     Retry -->|Retry| Deposit
     Retry -->|Cancel| Cancel["S27: Cancelled; refund if paid"]
     Deposit -->|Verified deposit| Confirmed["Confirmed order"]
-    Confirmed -->|Eligible cancellation and no batch| Cancel
-    Confirmed -->|Merge opted in| Batch["S42: system recommends compatible groups for 7 days; Sales Admin reviews and starts batch; scheduler starts individual fallback at expiry"]
-    Confirmed -->|Standard| Production["S29: InProduction"]
+    Confirmed -->|Eligible preproduction cancellation; release schedule and revalidate lock| Cancel
+    Confirmed -->|MFG-10 active; standard or flexible| Batch["S42: daily-capacity sewing plan; flexible waits 7 workdays then 8-14 production workdays; Admin approves/locks/starts; expiry only notifies"]
+    Confirmed -->|MVP standard path| Production["S29: InProduction"]
     Batch --> Production
     Production --> Shipped["S29: carrier and tracking; Shipped"]
     Shipped --> Received["S27 / System: customer receipt or existing proof-based timer; DeliveredAwaitingBalance"]

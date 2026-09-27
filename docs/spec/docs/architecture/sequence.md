@@ -343,37 +343,28 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
-    actor Customer as Customer
-    actor CompanyAdmin as Sales Admin
-    actor Scheduler as Trusted scheduler
-    participant CheckoutModule as MFG-06 Checkout
-    participant MergeModule as Merge module
-    participant Database as Database
-    participant OrderModule as MFG-07 Order module
-    participant OutboxWorker as Outbox worker
-    Customer->>MergeModule: Review versioned policy and opt in on quote
-    MergeModule->>CheckoutModule: Save preference and accepted policy version
-    CheckoutModule->>Database: Recompute discount and issue replacement quote
-    Customer->>CheckoutModule: Submit current quote
-    CheckoutModule->>Database: Create AwaitingDigitalApproval order and immutable snapshots
-    Note over OrderModule,MergeModule: Digital approval, physical sample approval, contract signing and verified deposit make an order Confirmed
-    CompanyAdmin->>MergeModule: View compatible candidate pool and estimate
-    MergeModule->>Database: Recompute compatibility, limits and savings
-    MergeModule-->>CompanyAdmin: Candidates, exclusions, savings and deadlines
-    Scheduler->>MergeModule: Recompute and publish recommendations for compatible rolling 7-day pool
-    MergeModule-->>CompanyAdmin: Candidate groups, deadlines, exclusions and savings (including negative net)
-    CompanyAdmin->>MergeModule: Review selected members and explicitly start batch
-    MergeModule->>Database: Lock and revalidate eligibility, versions, quantity and deadline
-    MergeModule->>Database: Create InProduction batch with immutable membership and estimate
-    MergeModule->>OrderModule: Atomically advance all selected orders to InProduction
-    OutboxWorker-->>Customer: Notify committed batch/status event
-    alt No Admin-started batch after rolling seven-day window
-        Scheduler->>MergeModule: Process fallback
-        MergeModule->>OrderModule: Start Individual Production through MFG-07
-        OutboxWorker-->>Customer: Notify individual production fallback
-    else Admin declines recommendation
-        MergeModule->>Database: Keep order unreserved and eligible until its deadline
+    actor Customer
+    actor Admin as Sales Admin
+    participant Checkout as MFG-06
+    participant Merge as MFG-10
+    participant Order as MFG-07
+    participant Scheduler
+    Customer->>Checkout: Choose standard or offered flexible terms and policy
+    Checkout->>Checkout: Check materials/capacity, snapshot price and readiness-based terms
+    Note over Checkout,Order: Design/sample approval, contract signing and deposit establish production_ready_at
+    Order->>Merge: Ready Confirmed order; derive day-7 wait and separate 8-14-day production dates
+    Merge-->>Admin: Existing open run first, otherwise flexible group or individual plan
+    Admin->>Merge: Approve schedule/addition with expected versions
+    Merge->>Merge: Persist exclusively assigned sewing membership and approved schedule
+    Note over Merge,Order: Scheduled assignment is not InProduction
+    Admin->>Merge: Lock membership, then explicitly start on schedule
+    Merge->>Order: Atomically advance all locked members to InProduction
+    alt Flexible waiting deadline without approved feasible placement
+        Scheduler->>Merge: Detect expiry; send deduplicated approval-required notice
+        Admin->>Merge: Review; approve individual plan and explicitly start
+        Merge->>Order: Advance only after explicit human approval/start
     end
+    Note over Customer,Order: Preserve each customer's price, deadline and private order tracking
 ```
 
 # MFG-11: Dony analytics, funnel and matching export — SD-13
@@ -404,7 +395,7 @@ sequenceDiagram
     Worker->>Results: Persist success or actionable failure
     Admin->>UI: Poll and download
     UI->>Metrics: Authorized job request
-    Metrics-->>UI: Job state#59; successful private URL expires within 10 minutes and before file expiry
+    Metrics-->>UI: Job state#59, successful private URL expires within 10 minutes and before file expiry
 ```
 
 When the original snapshot cannot be reproduced, export fails explicitly instead of substituting current data. Interaction evidence cannot settle orders; committed timeline/outbox events are projected idempotently. MFG-11 5.3 owns resolved authenticated product-entry/intent/order formulas and coverage; 5.7 owns 12-month reporting and seven-day result/export lifetimes. Guest views are neither collected nor replayed at login.

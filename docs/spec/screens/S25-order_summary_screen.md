@@ -31,7 +31,7 @@ Written behavior below takes precedence over obsolete sample content. MVP omits 
 | 2 | Route | Navigation target | /orders/summary?quote_id={id} | Yes | Access checked on server. |
 | 3 | quote_id | Field / control | UUID | As specified | quote_id: UUID; server quote lasts 30 minutes and binds product/design/policy versions. |
 | 4 | subtotal_vnd | Field / control | sum(quantity*(unit_price_vnd+option_surcharge_vnd)), integer. | As specified | subtotal_vnd: sum(quantity*(unit_price_vnd+option_surcharge_vnd)), integer. |
-| 5 | merge_discount_vnd | Post-MVP field | MFG-10 v3 amount | No | MVP always displays 0 and has no opt-in control; after MFG-10 activation show `min(subtotal_vnd, 840000)` when opted in, otherwise 0. |
+| 5 | merge_discount_vnd | Post-MVP field | MFG-10 v4 proposal amount | No | MVP always displays 0 and has no opt-in control; after MFG-10 activation show `min(floor(subtotal_vnd*5/100),250000)` when eligible flexible terms are accepted, otherwise 0; standard internal batching never creates a discount. |
 | 6 | price_breakdown | Read-only quote breakdown | integer VND | Yes | MVP shows subtotal, zero merge discount, shipping, tax, separate design_fee_vnd and total; merge fee is 0. Design fee is outside subtotal and never discounted or quantity-multiplied. |
 | 7 | quote_id / expected_version / Idempotency-Key | Field / control | required submission contract | As specified | Never submit a client total; an expired/superseded quote returns to requote and explicit review. |
 | 8 | API errors | Field / control | standard API error envelope | As specified | 400 malformed; 422 invalid fields; 409 stale/duplicate; 429 rate limit; 503 dependency failure |
@@ -39,12 +39,16 @@ Written behavior below takes precedence over obsolete sample content. MVP omits 
 | 10 | Edit quantities/address | Action | Requote and show changed breakdown before submit. | Available when authorized | Destination: S22 |
 | 11 | Change merge preference | Post-MVP action | Requote with explicit preference only after MFG-10 activation. | Post-MVP only | Destination: S23; omit from MVP UI and API input. |
 
+### Production terms after MFG-10 activation
+
+Render the chosen policy/version next to the immutable price breakdown: standard versus accepted flexible choice, incentive, readiness trigger and calendar/counting basis. Flexible terms are 7 Monday–Friday waiting days plus a separate 8–14-working-day production range; full-wait maximum is readiness working day 21. Before readiness, show this relative rule and keep absolute production_due_at unavailable rather than deriving it from quote creation or an unverified deposit. Once readiness exists, [S27](S27-customer_order_detail_screen.md) displays the calculated waiting and maximum due dates. Distinguish a quantity-based operational estimate from the accepted maximum commitment. Match [S23](S23-merge_option_screen.md), [S24](S24-merge_terms_screen.md) and [S34](S34-contract_detail_screen_customer.md); none of these screens approves production.
+
 ## 4. States
 
 | State | What the user sees | Trigger |
 |---|---|---|
 | Loading | Load the S25 Order Summary view model and show labelled progress; keep writes disabled until route data and authorization are resolved. | Request starts |
-| Empty | Show quote lines and zero merge discount when no merge batch is selected; do not invent a promo-code field. | Screen has no eligible or matching record |
+| Empty | If the quote is unavailable/expired, preserve safe inputs and request a replacement. No batch is selected at checkout. A valid flexible quote retains its incentive even without a match; standard quotes have no flexible incentive. | No valid quote |
 | Forbidden/not found | Return a safe 401/403/404 for S25 Order Summary without revealing inaccessible record, customer, staff or payment details. | 401/403/404 |
 | Error | For S25 Order Summary, show the API code, message, field_errors and request_id; preserve safe user-entered values. | Request failure |
 | Retry | Retry transient reads for S25 Order Summary; retry a mutation only with its original idempotency key and identical payload, never as a new side effect. | Recoverable failure |
@@ -79,7 +83,7 @@ Portal: Customer owner. Route: /orders/summary?quote_id={id}. Back preserves the
 
 | FR ID (from the module spec) | What this screen does for it |
 |---|---|
-| MFG-06/F-PAY-002 | **Finalize Order** — Recompute quote from validated quantities/address with 30-minute expiry; in MVP force merge_opt_in=false and merge_discount_vnd=0; enable the versioned MFG-10 v3 branch only after MFG-10 activation. Derive separate design_fee_vnd from request provenance and allocation state. |
+| MFG-06/F-PAY-002 | **Finalize Order** — Recompute quote from validated quantities/address with 30-minute expiry; in MVP force merge_opt_in=false and merge_discount_vnd=0; enable the versioned MFG-10 v4 proposal branch only after MFG-10 activation. Derive separate design_fee_vnd from request provenance and allocation state. |
 | MFG-06/F-PAY-003 | **Finalize Order** — Atomically create one `AwaitingDigitalApproval` order from a current quote with immutable snapshots and idempotency; lock/revalidate and claim any design-fee allocation under BR-008. |
 
 

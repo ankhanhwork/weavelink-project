@@ -1,108 +1,104 @@
 # Screen Spec: S42 Merge Recommendations and Batch Console
 
 | Field | Value |
-|---|---|
+| --- | --- |
 | Screen ID | `S42` |
 | Screen name | Merge Recommendations and Batch Console |
 | Actor | Sales Admin |
-| Priority | P2 |
+| Priority | P2; post-MVP module |
 | Belongs to module | [MFG-10](../specs/spec-MFG-10.md) |
 | Route | `/admin/merge-batches` |
 | Mockup image | img/S42-merge_console_screen.png |
-| Status | Resolved implementation specification |
+| Status | Draft aligned with MFG-10 v4 proposal; operational validation required |
 
 ## 1. Purpose
 
-**Shown when:** The Sales Admin reviews system-recommended compatible Dony order groups, sees each group's savings estimate (including negative net savings), then explicitly starts or declines a proposed batch. The system cannot start a batch on the Admin's behalf. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
-
-**The user leaves this screen when:** An authorized action in section 5 succeeds, the user follows a role-allowed global route, or they return to the validated originating route.
+Sales Admin reviews compatible open sewing runs first, then flexible groups using saved product eligibility/threshold and quantity/capacity settings. Orders share garment type/material and sewing only; different print/embroidery methods remain separate downstream work. Admin approves every plan, locks and explicitly starts. Scheduler only recommends and notifies; at waiting expiry a flexible order remains flexible and Confirmed until human approval. No speculative individual slot is reserved.
 
 ## 2. Mockup
 
 ![Historical visual reference](img/S42-merge_console_screen.png)
 
-This screenshot is obsolete and must be recreated before submission: it depicts a 72-hour window, automatic scheduler batch start, and Planned-batch remove/dissolve actions. The current behavior below is authoritative: seven-day recommendations, Sales Admin final approval/start, and negative savings shown without blocking.
+This historical screenshot is obsolete and must be recreated before submission. Written behavior and MFG-10 v4 proposal take precedence over its old timing, automatic batch start and pricing. The new console distinguishes scheduling, lock and actual production.
 
 ## 3. Element inventory
 
-| # | Element | Type | Content / data source | Required | Validation |
-|---|---|---|---|---|---|
-| 1 | Screen heading | Heading | Merge Recommendations and Batch Console | Yes | Static route title. |
-| 2 | Route | Navigation target | /admin/merge-batches | Yes | Access checked on server. |
-| 3 | recommendations / filters | Field / control | product, material, colour, print method, confirmed_at | As specified | System recommends only confirmed-after-deposit, opted-in, uncancelled and unbatched Dony orders whose rolling seven-day windows overlap. Different buyer organizations may share a technically compatible batch. Suggestions reserve no orders. |
-| 4 | selected_order_ids | Field / control | UUID array, minimum 2 | As specified | Sales Admin explicitly selects members and starts; server locks/revalidates atomically; total quantity <=10000; all windows must be open; one batch per order. |
-| 5 | setup_cost_vnd | Field / control | integer, read-only | As specified | Planning assumption 2800000; selected-batch gross saving=(order_count-1)*2800000. |
-| 6 | selected_batch_discount_vnd / selected_batch_net_saving_vnd | Field / control | integer VND | As specified | Selected-batch discount is the sum of immutable member discounts (each ≤840000); selected-batch net=gross-discounts. Under stated assumptions, a compatible batch of at least two has nonnegative setup-only net before other operating costs. |
-| 7 | programme_to_date_gross_saving_vnd / discount_vnd / net_saving_vnd | KPI card | integer VND | As specified | Net=actual gross setup savings from started batches minus discounts for all opted-in orders reaching production, including individual fallback; this programme-level value can be negative and must be shown clearly without blocking batch start. |
-| 8 | merge_window / fallback status | Field / control | UTC datetime/status | As specified | Show confirmed_at + 7 days window end, earliest due date, live eligible pool and automatic individual-fallback status; no weekday cutoff. |
-| 9 | setup_minutes_saved | Field / control | integer, read-only estimate | As specified | Selected batch estimate=(order_count-1)*120; does not alter customer deadline. |
-| 10 | batch_status | Field / control | InProduction, Completed | As specified | A batch is created directly as InProduction only after Sales Admin explicitly starts it; membership is immutable after start. |
-| 11 | Refresh recommendations | Action | Recompute compatible opted-in Confirmed order groups in overlapping seven-day windows. | Available when authorized | Destination: S42 |
-| 12 | Estimate | Action | Compute selected-batch gross/net/discount, quantity and setup minutes; refresh programme-to-date gross/discount/net separately. | Available when authorized | Destination: S42 |
-| 13 | Start selected batch | Action | Sales Admin makes the final decision and starts the selected compatible group after reviewing members and savings. | At least two eligible orders selected; all windows open | Destination: S42 |
+| # | Element | Type | Source / validation |
+| --- | --- | --- | --- |
+| 1 | Open runs and recommendations | Ordered list | Existing ScheduledOpen runs first; ready standard/flexible orders may join. Otherwise show ready flexible groups or individual plans. Suggestions reserve nothing. |
+| 2 | Members and readiness | Order list | Saved garment type/material, aggregate quantity, product merge_enabled/small-order threshold, approvals/sample/contract/deposit, separate print/embroidery tasks and versions. Internal staff access only. |
+| 3 | Daily capacity and calendar schedule | Feasibility panel | Shared type/material profile and saved garments/day; total quantity; required_workdays=ceil(quantity/capacity); flexible estimate=max(8,required_workdays), excluded if >14. Show residual slots after all approved profile assignments, intended start and each maximum due date. Full-wait terms: 7 working days waiting plus 8–14 production days, Monday–Friday inclusive day-1 counting. Profile editing is in S14, not a duplicate capacity input here; separate decoration needs Admin review. |
+| 4 | Avoided setup and labor | Read-only estimate | Genuine avoided setup count; trial 390000 VND and 6 person-hours each. Base-run setup still exists; labor hours are not elapsed completion time. |
+| 5 | Coordination / incentives / modeled net | Read-only estimate | Trial 90000 VND once per sewing run; actual immutable incentives=min(floor(subtotal*5/100),250000) per flexible order, zero for standard. Net=gross−coordination−incentives. Recompute whole-run economics after additions. Never count avoided print/embroidery setup when only sewing is shared. |
+| 6 | Programme economic report | KPI panel | Started shared runs' gross−coordination−all flexible incentives on production orders, including individual fallback. Distinguish modeled value from observed cost, revenue and realized profit. Negative values remain visible. |
+| 7 | Flexible waiting / approval requirement | Deadline/notice panel | Show readiness working day 1, last waiting date (day 7), production-window first date (day 8), estimated finish and accepted maximum (day 21), separately from actual human start. Earlier approved runs may finish sooner; late approval does not reset dates. Keep flexible choice while awaiting approval; no speculative individual reservation. |
+| 8 | Batch lifecycle and history | Status panel | ScheduledOpen → Locked → InProduction → Completed. A base run may have one efficient order; new flexible groups need at least two. Assignment is not production. |
+| 9 | Refresh / Estimate | Actions | Recompute authoritative readiness, compatibility, feasibility and aggregate run economics; separate programme report. |
+| 10 | Approve schedule / Add members | Actions | Sales Admin only; exclusive assignment, order/batch expected versions and idempotency key. Add only to ScheduledOpen with feasible capacity and all existing/new deadlines preserved. |
+| 11 | Lock membership | Action | Sales Admin freezes ready membership for preparation; no additions after lock. |
+| 12 | Approve individual plan / Start production | Actions | Individual submission requires explicit Sales Admin approval. Starting either a locked shared plan or an approved individual plan requires explicit human confirmation and atomic readiness/quantity/capacity/deadline/version checks. Read/acknowledge notice never starts production. |
+
+### Operational advance-warning input
+
+Sales Admin saves `warning_lead_workdays` as an integer 1–6 for negative-benefit reminders before the seven-working-day waiting expiry. Require this operational setup before activating reminder operation; it does not edit customer incentive/duration terms or approve production. Version/audit changes and use the saved value to calculate a notice date. Scheduler sends deduplicated notices at that date and at expiry; if still unhandled or a committed promise becomes at risk/overdue, keep the item visible for Admin review. Acknowledgement/reading is distinct from plan approval and actual start.
 
 ## 4. States
 
-| State | What the user sees | Trigger |
-|---|---|---|
-| Loading | Load the S42 Merge Recommendations and Batch Console view model and show labelled progress; keep writes disabled until route data and authorization are resolved. | Request starts |
-| Empty | Show no eligible merge recommendations, active policy version, and zero estimated savings. | Screen has no eligible or matching record |
-| Forbidden/not found | Return a safe 401/403/404 for S42 Merge Recommendations and Batch Console without revealing inaccessible record, customer, staff or payment details. | 401/403/404 |
-| Error | For S42 Merge Recommendations and Batch Console, show the API code, message, field_errors and request_id; preserve safe user-entered values. | Request failure |
-| Retry | Retry transient reads for S42 Merge Recommendations and Batch Console; retry a mutation only with its original idempotency key and identical payload, never as a new side effect. | Recoverable failure |
-| Success | Create batch only after Sales Admin approval and explicit start; show recalculated savings. | Valid action commits |
-| Conflict | Recommendation membership/policy changed: recalculate totals and savings, then require Sales Admin review. | Stale version, duplicate or invalid lifecycle transition |
+| State | Behavior | Trigger |
+| --- | --- | --- |
+| Loading | Label progress; disable writes until authorization and authoritative versions load | Request starts |
+| Empty | No feasible recommendations; show exclusions, existing run state and policy status. Preserve programme totals even when recommendations are empty | No suitable recommendation |
+| Forbidden/not found | Safe 401/403/404 without leaking customer or staff data | Unauthorized access |
+| Error | Show safe API code/message/field_errors/request_id and preserve inputs | Request failure |
+| Retry | Retry reads; replay mutations only with identical payload/original key | Transient failure |
+| Success | Show committed schedule/add/lock/start state; do not label schedule approval as production start | Mutation commits |
+| Conflict | Reload authoritative order/batch versions, feasibility and economics for Admin review | Stale versions, competing assignment, cancellation or fallback |
+| Approval overdue / missed schedule | Alert Admin and expose original deadline risk without changing preference, route, promise or fulfillment automatically | Unhandled waiting expiry or invalid/late approved plan |
+
 ## 5. Interactions and navigation
 
-| # | Element | User action | System response | Goes to screen |
-|---|---|---|---|---|
-| 1 | Refresh recommendations | Activate | Query opted-in Confirmed candidates with matching Dony production key and overlapping rolling seven-day windows; no order is reserved. | S42 |
-| 2 | Estimate | Activate | Compute gross/net savings, discount total, quantity and setup minutes saved; negative result is shown but does not gate operation. | S42 |
-| 3 | Start selected batch | Activate | Revalidate Admin authority, all order versions, eligibility, quantity and window deadlines; atomically create an InProduction batch and advance all selected orders. | S42 |
+Refresh/Estimate stays on S42; system recomputes quantity/capacity estimates from saved inputs and decoration details. Approve/Add persists an exclusive planned sewing assignment while orders remain Confirmed. Lock freezes members; explicit start advances all members atomically. At waiting expiry, Admin reviews the notice and approves either a feasible shared plan or an individual plan; only confirmed start changes fulfillment. Negative estimates are shown and alerted before expiry, not automatically rejected. Declining/reading a notice does not approve or extend anything.
 
-Portal: Sales Admin. Route: /admin/merge-batches. Back preserves the originating route and filters. Fallback: Customer→S26; Sales Admin→S28; Sales→S20; System Admin→S41; Guest→S01. Enforce role, ownership and assignment before rendering.
+Back preserves validated origin and filters; authorized Sales Admin fallback is S28. Enforce Sales Admin authority server-side. UUIDs, integer money, UTC timestamps displayed in Asia/Ho_Chi_Minh, expected versions and idempotency keys follow shared conventions.
 
-## 6. Screen-level rules
+### 5.1 Layout and consistency with existing screens
 
-| Rule ID | Rule | Source |
-|---|---|---|
-| SR-001 | Access and ownership are checked server-side; do not trust submitted customer, company, role, price, or provider status. Apply 401/403/404 behavior and the field rules above. | Authorization and data ownership requirements |
-| SR-002 | IDs are UUIDs; timestamps are UTC and displayed in Asia/Ho_Chi_Minh; money and quantities are integers. Mutations use expected_version; significant create/sign/pay/batch operations use idempotency keys. | Data representation and concurrency requirements |
-| SR-003 | Apply the module lifecycle and validation rules linked below; preserve immutable submitted snapshots. | Module specification |
-| SR-004 | Promise production_due_at at deposit +7 calendar days for standard production and +10 for merge. Setup-time savings never shorten this customer promise; if no Sales Admin-started batch includes the order within seven days of confirmed_at, scheduler starts individual production at the promised merge discount. | Project implementation assumptions |
-| SR-005 | Selected product and technical defaults are project implementation decisions; do not invent factual company, author, client-approval, or course identifiers. | Project implementation assumptions |
+Use the staff navigation, page heading, order table, filter/pagination patterns and role-based actions from [S28 Order List](S28-order_list_admin_screen.md). Use the order identity, read-only commercial snapshot, readiness evidence and event timeline conventions from [S29 Order Detail](S29-order_detail_admin_screen.md). Production-batch badges are separate from canonical order-status badges: ScheduledOpen/Locked must not replace Confirmed in an order row.
 
-### Acceptance scenarios
+Keep scheduling and batch operation within S42 rather than introducing a duplicate screen. The main view shows existing open runs, candidate recommendations and waiting/fallback status. Selecting a run/recommendation opens a detail panel within the same route containing members, shared/separate work, capacity and schedule evidence, per-order deadlines, aggregate economics and audit history. Present the allowed Approve/Add, Lock and Start actions according to the selected state; do not expose edits after lock or production start. Selecting a member's order identity opens S29, subject to fresh authorization, and Back restores S42's selection and filters.
 
-1. Recommendations do not reserve orders. Sales Admin is the only actor who can start a batch; starting atomically revalidates at least two eligible Dony orders and total quantity <=10000.
-2. Programme-to-date net savings include discounts on fallback orders; a negative value remains clearly visible and does not block batch start or require separate acknowledgement. Keep this distinct from selected-batch net savings.
-3. If no Admin-started batch includes an order by its seven-day window end, scheduler starts individual production; the opted-in discount and merge due-date snapshot remain unchanged.
+Use [S39 Configuration](S39-system_configuration_and_backup_restore_screen.md)'s read-only policy/version/status pattern for trial parameters. Use [S43 Analytics](S43-analytics_dashboard_screen.md)'s unit, as-of timestamp, coverage and estimate/observed labeling for economic panels; S42 remains the operational view, with no new analytics functionality implied. Committed notifications follow [S38 Notification Panel](S38-notification_panel_screen.md). Customer-facing terminology and promises match [S23](S23-merge_option_screen.md), [S24](S24-merge_terms_screen.md) and the immutable breakdown in [S25](S25-order_summary_screen.md); never copy the internal multi-customer member panel into customer pages.
+
+## 6. Screen-level rules and acceptance scenarios
+
+1. A standard small order can join an open compatible base run at unchanged price and deadline without flexible opt-in. A not-ready small order never delays the base run.
+2. ScheduledOpen may receive members after capacity/deadline revalidation. Locked/InProduction/Completed reject additions. Scheduling/locking leaves order state Confirmed.
+3. Approved assignments are exclusive and reserve capacity; recommendations do not. Preproduction cancellation releases assignment and invalidates the affected plan/lock for revalidation under MFG-07. InProduction membership is immutable.
+4. At waiting expiry, system alerts Sales Admin and requires approval; an unhandled notice leaves the order flexible/Confirmed. Admin approval chooses a shared or individual plan; explicit human start is separate. Retain discount and promised deadline; late approval remains visible as risk rather than extending the promise.
+5. Economic examples reconcile to MFG-10: two standard additions +690000; four flexible orders at the 250000 cap +80000; a pair at the cap −200000; individual production at the cap −250000 VND. Count coordination once per shared sewing run. Warn about negative benefit before waiting expiry for Admin review; losses never authorize a system production action.
+6. Quantity/capacity example: 350 garments at 50/day requires 7 workdays and displays an 8-workday flexible estimate. At 20/day it requires 18 and is excluded from the 14-day policy; capacity already assigned to other runs is subtracted, not reused. Customer notifications reveal only their own order and commitment. Batch completion never substitutes for order shipping, receipt or payment completion.
 
 ## 7. Linked requirements
 
-| FR ID (from the module spec) | What this screen does for it |
-|---|---|
-| MFG-10/F-MER-004 | **View Eligible** — Recommend compatible Dony order groups and show exclusion reasons using server-recomputed eligibility, without reserving or starting orders. |
-| MFG-10/F-MER-005 | **View Eligible** — Compute selected-batch gross/discount/net, quantity, setup minutes and due-date estimates; separately report programme-to-date net including discounts on fallback orders; show negative programme net without blocking. |
-| MFG-10/F-MER-006 | **Confirm Merge** — System recommends eligible groups; Sales Admin makes the final decision and explicitly starts a revalidated batch; individual fallback starts automatically after the rolling seven-day window. |
-| MFG-10/F-MER-007 | **Confirm Merge** — Notify each customer and production planning after committed batch events, deduplicating recipients. |
-
+| FR | Screen responsibility |
+| --- | --- |
+| MFG-10/F-MER-004 | Existing-run-first recommendations, shared setup, readiness, workload, capacity, deadlines and exclusions |
+| MFG-10/F-MER-005 | Gross, coordination, incentives, modeled benefit and all-outcome programme reporting |
+| MFG-10/F-MER-006 | Admin schedule/add/lock, approval of individual production and explicit human start; read-only automatic deadline/negative-benefit notices and exclusive audited membership |
+| MFG-10/F-MER-007 | Deduplicated, private committed schedule/status notifications |
 
 ## 8. Responsive and accessibility notes
 
-Support 360px through desktop; stack columns and use labelled horizontal-scroll tables on narrow screens. Controls are keyboard-operable with visible focus, logical headings, associated form labels, and aria-live status/error announcements. Text contrast is at least 4.5:1 (large text 3:1); pointer targets are at least 24px. Preserve user-entered data after recoverable failures. Confirm destructive actions, disable duplicate submit while pending, and enforce idempotency on the server.
+Support 360px through desktop, keyboard operation, visible focus, associated labels, logical headings and aria-live errors/status. Stack feasibility panels; use labeled horizontal-scroll tables on narrow screens. Contrast is at least 4.5:1 for text, 3:1 for large text; targets at least 24px. Preserve safe input and prevent duplicate submission.
 
-## 9. Open questions
+## 9. Specification status
 
-| # | Question | Blocking? | Status |
-|---|---|---|---|
-| 1 | No unresolved screen behavior questions remain; routes, fields, permissions, and defaults are resolved in this specification and its linked module requirements. | No | Resolved |
+MFG-10 remains a draft proposal. Trial values are read-only assumptions, not editable configuration or verified factory measurements. Operating parameters require confirmation before implementation.
 
 ## Completion checklist
 
-- [x] Route, actor, module, priority, and mockup status are identified.
-- [x] Element fields, actions, validation, and data ownership are documented.
-- [x] Loading, empty, forbidden, error, retry, success, and conflict states are documented.
-- [x] Navigation and acceptance scenarios are explicit.
-- [x] Responsive and accessibility requirements follow the shared baseline.
-- [x] No unresolved screen-level decisions remain.
+- [x] Existing-run priority, standard/flexible distinction and lifecycle are documented.
+- [x] Feasibility, economics, privacy, cancellation and concurrency are linked.
+- [x] Quote incentives and fallback are preserved across outcomes.
+- [x] User decisions fix daily-capacity units, separate waiting/production clocks and explicit human approval/start; factory estimates remain subject to operational validation.
+- [ ] Recreate historical screenshot before submission.

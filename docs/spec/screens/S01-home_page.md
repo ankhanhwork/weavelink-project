@@ -21,7 +21,7 @@
 
 ![Dony made-to-order customer storefront](img/S01-home_page.png)
 
-The homepage's informational process copy must match MFG-06: digital-design approval, physical-sample shipment and approval, contract/deposit, production/delivery, then balance payment. Merge copy must use the versioned MFG-10 discount and timeline; it must not claim a percentage promotion or immediate stock availability.
+The homepage informational process copy must match MFG-06: digital-design approval, physical-sample shipment/approval, contract/deposit, production/delivery and balance. After MFG-10 activation, advertise flexible terms only for eligible products: 5% of merchandise subtotal capped at 250000 VND, with the same versioned waiting/completion terms as S23/S24. Standard internal sewing batching adds no incentive. Do not imply universal eligibility, guaranteed merging or ready-made stock availability.
 
 ## 3. Element inventory
 

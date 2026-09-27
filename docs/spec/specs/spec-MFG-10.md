@@ -1,13 +1,13 @@
-# Spec Document: Order Optimization (Merge)
+# Spec Document: Production Scheduling and Flexible Orders (Merge)
 
 | Field | Value |
 | --- | --- |
 | Module ID | `MFG-10` |
 | Module name | Order Optimization (Merge) |
-| Spec version | v3.1 |
+| Spec version | v4.2-draft |
 | Author (team member) | Group B |
-| Date | 2026-09-26 |
-| Status | Draft |
+| Date | 2026-09-27 |
+| Status | Draft proposal for Group B discussion; not Dony-approved operating policy |
 | Approved by (Client role) | No approver identified |
 | DBIZ2 source | Function List MFG-10, No. 77–83, `F-MER-001`–`F-MER-007`; UC-C06, UC-C17, UC-C18, UC-C16; screens S23–S25, S29, S38, S42 |
 
@@ -15,212 +15,252 @@
 
 ## 1. Purpose and scope (mandatory)
 
-Customers commissioning made-to-order garments from Dony may opt into merge production and accept a versioned policy. This applies both to companies ordering employee uniforms and Reseller Shops commissioning garments from their own designs for resale; Dony does not sell ready-made wholesale stock. The system continuously identifies and recommends compatible candidate groups. A Sales Admin reviews the candidates, sees the savings estimate (including negative values), makes the final decision and explicitly starts each batch. A trusted scheduler maintains recommendations and automatically starts individual-production fallback when an order's seven-day merge window expires without an Admin-started batch. The module manages recommendations, batches and auditable events; MFG-06 owns quotes, orders and payment/refund snapshots, and MFG-07 owns fulfillment states.
+Dony produces made-to-order garments for Business Buyers and Reseller Shops, rather than selling ready-made wholesale stock. MFG-10 prioritizes compatible orders joining production runs that already have a committed schedule. Where extra waiting is useful, eligible customers may accept flexible production terms in exchange for a published incentive. Orders without an approved shared-production plan run individually within their original commitments.
 
-MVP priority: **Could**. This specification is the canonical source for MFG-10 policy numbers and formulas; other specs, screens and checklists must reference its active version rather than redefine the policy. Opt-in terms apply even if no batch forms. Per opted-in order, discount is 840,000 VND (30% of the 2,800,000 VND setup-cost assumption), capped at order subtotal. Each additional order in a batch saves an assumed 2,800,000 VND setup cost and 120 setup minutes. Standard production is due seven calendar days after deposit; merged production is due ten calendar days after deposit. These are production-completion commitments, not carrier delivery promises. No batch is created at checkout or automatically by the scheduler.
+The commercial principle is **discount in exchange for customer time flexibility**. Internal batching within a standard order's original commitment creates no additional discount. Quantity pricing remains MFG-06's normal quote policy. An independently efficient order can anchor a scheduled run and never waits for another customer to approve a sample, sign or pay.
+
+MVP priority remains **Could**, outside standard-order MVP. Until reviewed activation, the existing standard MVP terms remain governed by MFG-06 BR-011; the trial five-working-day standard promise below belongs to the proposed future policy. This proposal replaces the v3.1 merge model for future MFG-10 planning; it does not activate the module, change existing signed terms, or claim Dony approval. MFG-06 owns immutable quotes, orders and payment/refund snapshots; MFG-07 owns order fulfillment transitions; MFG-09 renders the same contract terms. MFG-10 owns production recommendations, schedules, membership and economic estimates.
+
+Flexible incentive is 5% of merchandise subtotal capped at 250000 VND. Flexible terms allow seven Monday–Friday working days to find an approved sewing run, followed by a separate 8–14-working-day production window; waiting is not included in that production window. The full-wait completion horizon is therefore 15–21 working days, counting the first eligible working date as day 1. Production readiness requires current design/sample approval, signed contract and verified deposit. If readiness occurs on a weekend, day 1 is the next Monday–Friday date. A ready early match may start sooner with human approval; retain the incentive and original deadline. Shipping is separate. Admin enters saved product capacity in garments per working day; the system computes quantity-based duration/capacity estimates, never starts production automatically.
 
 ## 2. Actors (mandatory)
 
-| Actor | Role in this module | Where it comes from |
+| Actor | Role | Source |
 | --- | --- | --- |
-| Customer | Views merge option/terms and opts in or out on a quote | MFG-10 resolved contract; UC-C06 |
-| Sales Admin | Reviews system-recommended compatible groups and the business-value estimate, then explicitly starts or declines each proposed batch | MFG-10 resolved contract; UC-C17/UC-C18 |
-| System / scheduler | Evaluates rolling seven-day windows, refreshes compatible-order recommendations, automatically starts individual fallback at expiry, and emits durable status events | MFG-10 module contract |
-| MFG-06 / MFG-07 | Owns quote/order/payment and order fulfillment state | Module boundaries |
+| Customer | Reviews standard/flexible terms, explicitly accepts flexible policy when offered, and follows only their own order | UC-C06; proposed commercial policy |
+| Sales Admin | Reviews feasibility and economics; approves scheduling, member additions, membership lock and batch start | UC-C17/UC-C18 |
+| System / scheduler | Recommends compatible sewing runs, calculates estimates and notifies Sales Admin about negative benefit and waiting expiry; cannot approve/assign/lock/start production or convert flexible orders to individual production | User decisions; MFG-10 boundary |
+| MFG-06 / MFG-07 / MFG-09 | Own commercial snapshots, order transitions and contract rendering | Module boundaries |
 
 ## 3. User scenarios and acceptance criteria (mandatory)
 
-### US-1: Choose merge option (Could)
+### US-1: Choose production terms (Could)
 
-Customer sees standard and merge price/deadline, accepts the current policy version and saves the preference. A preference change supersedes the prior quote and issues a fresh immutable quote for 30 minutes.
+1. Given a product is not merge-enabled or aggregate quantity exceeds its Sales Admin-set inclusive small-order threshold, when quoting, then use normal quantity pricing and standard terms; do not offer a flexible incentive. Threshold is per product, separate from normal MOQ and per-order quantity bounds.
+2. Given a small standard order can fit an existing open run within all commitments, when assigned, then retain its quoted price and standard deadline; internal assignment requires no flexible opt-in.
+3. Given a merge-enabled product within its saved small-order threshold and no suitable open run at quote/requote time, when the customer chooses flexible terms before quote confirmation, then compare prices, waiting limit, completion promise, fallback requiring Admin approval and separate shipping. Saving a choice issues a fresh immutable 30-minute quote; stale/expired quotes revalidate eligibility. Later plan changes never claw back an accepted incentive.
+4. Given flexible terms were accepted, when an immediate match or individual fallback occurs, then retain the confirmed incentive and deadline; do not reclaim the incentive or charge a fallback fee.
+5. Given any shared run, when a customer views their order, then do not reveal other customers' artwork, identities, quantities or commercial data.
 
-1. **Given** the customer opts in, **when** the quote is issued, **then** the discount (up to 840,000 VND, capped at subtotal) and ten-day-after-deposit production commitment appear consistently on S23/S25.
-2. **Given** the quote is submitted, **when** the order is created, **then** preference and policy version are snapshotted and no batch is assigned.
-3. **Given** the customer changes preference, **when** it is saved, **then** a new quote ID and refreshed breakdown are issued; the prior quote is not mutated.
+### US-2: Prioritize existing scheduled production (Could)
 
-### US-2: View eligible orders and estimate (Could)
+1. Given ready orders have the same garment production type and material, even with different logos or print/embroidery methods, when recommending an open run, then share compatible sewing only and preserve separate decoration operations; check full sewing-plus-decoration completion feasibility for each order.
+2. Given a base order has a firm schedule, when a proposed small order is not ready, then run the base order on schedule without waiting for it.
+3. Given a run is Locked, InProduction or Completed, when addition is requested, then reject it. Quantity alone cannot prove spare capacity across different designs/processes.
+4. Given an existing run with 300 polo shirts and allocated capacity equivalent to 360 of those shirts, when ready compatible orders of 30 and 20 shirts are added, then 350 fits only if the workload and all deadlines also remain feasible. Neither 300 nor 360 is a general policy threshold.
 
-Sales Admin sees Dony candidates and exclusion reasons. The estimate shows gross setup savings, customer discount, estimated net savings, saved setup minutes, total quantity and production due date.
+### US-2a: Calculate calendar and capacity (Could)
 
-1. **Given** candidates differ by Dony production compatibility key, are not Confirmed after a verified deposit, are not opted in, are batched/cancelled/fallback-marked, or have non-overlapping seven-day windows, **when** eligibility is recomputed, **then** they are excluded.
-2. **Given** a compatible group exists, **when** the recommendation service evaluates the pool, **then** it shows the proposed group, eligibility, deadline and savings estimate to Sales Admin without creating or starting a batch.
-3. **Given** no Sales Admin starts a batch by an order's seven-day window end, **when** the scheduler runs fallback, **then** it starts Individual Production through MFG-07 and alerts Sales Admin if the start fails.
-4. **Given** estimate net savings are negative, **when** estimate is shown, **then** the negative value remains clearly visible as a business measurement; it does not block or require a separate acknowledgement to start the batch.
+1. Given readiness on a working date, when dates are derived, then that date is day 1; weekend readiness rolls to the next working date. Day 7 is the last waiting date and day 8 begins the separate production window, whose 8–14 workdays end on readiness days 15–21.
+2. Given 350 garments and a saved capacity of 50/day, when estimating a flexible plan without competing allocations, then required_workdays=7 and the policy estimate=8; at 20/day the estimate exceeds 14 and is marked infeasible.
+3. Given two proposals consume the same profile/date slots, when concurrent Admin approvals commit, then version/allocation revalidation allows only feasible exclusive allocations; a recommendation alone consumes no slots.
+4. Given an open run is amended, when totals/allocations are recalculated, then include its base quantities once and replace/credit its existing ledger allocation once, preserving its firm start and all accepted deadlines.
+5. Given Admin approves/starts after waiting expiry, when the customer sees dates, then original maximum due stays fixed and lateness/risk remains visible; the system does not create a fresh 7-day wait or 14-day promise.
 
-### US-3: Confirm and operate batch (Could)
+### US-3: Form a flexible group or fall back (Could)
 
-At least two eligible orders with overlapping seven-day windows and matching production keys are presented as a system recommendation. Only Sales Admin can make the final decision and explicitly start the selected batch. Starting revalidates all selected orders and atomically creates an InProduction batch and advances its orders through MFG-07; the system never auto-starts a batch. If no Admin-started batch includes an order before that order's seven-day window expires, the scheduler automatically starts its individual production through MFG-07. A recommendation is not a reservation and does not prevent cancellation before batch start.
-
-1. **Given** the system recommends a valid compatible group, **when** a Sales Admin reviews its members and estimate, **then** a recommendation is shown without reserving orders or changing their state.
-2. **Given** an authorized Sales Admin explicitly starts the selected group before its members' window expires, **when** server-side eligibility and versions are revalidated, **then** one InProduction batch is committed atomically and every member order advances to InProduction.
-3. **Given** no Sales Admin starts a batch for an order by its rolling seven-day window end, **when** fallback runs, **then** the scheduler starts Individual Production through MFG-07 and the order retains its discounted price and promised due date.
-4. **Given** concurrent cancellation, Admin batch start, fallback or state changes, **when** mutations contend, **then** one wins and no partial batch membership is committed.
+1. Given no existing run fits, when at least two ready flexible orders share sewing preparation and have a feasible schedule, then show the candidate group and its benefit or loss for Sales Admin review. A negative estimate is flagged and warned, not automatically rejected; do not wait for a target group size.
+2. Given an Admin approves a schedule, when membership is persisted, then reserve capacity and record assignment while orders remain Confirmed; a recommendation alone makes no reservation and does not start production.
+3. Given a flexible order reaches its waiting deadline without an approved shared plan, when the system checks it, then notify Sales Admin and expose an approval-required operational flag. The order remains flexible and Confirmed; only a human Admin approval submits an individual plan and only explicit human start advances fulfillment through MFG-07.
+4. Given an approved schedule becomes invalid or threatens a member deadline, when detected, then alert Sales Admin with the affected commitments and alternatives; never automatically convert an order, start production, extend a promise or reset waiting.
+5. Given concurrent human assignment, cancellation, approval, lock or start, when actions contend, then one commits and no partial membership/fulfillment transition occurs; a scheduler notice cannot itself mutate the production plan.
 
 ### Edge cases
 
-- Minimum batch is two orders; aggregate quantity cannot exceed 10,000.
-- Negative net savings are displayed transparently and do not block operation.
-- Production completion does not mark individual orders shipped or delivered.
+- Standard orders are never held for the flexible waiting window.
+- Display negative economic values, including fallback subsidies. Economic evaluation does not override capacity, readiness or deadline gates.
+- Batch Completed does not mean its orders are shipped, received, paid or Completed.
 
 ## 4. Flows (mandatory)
 
 ### 4.1 Usage flow
 
 ```mermaid
-flowchart LR
-  OptIn[Customer accepts merge policy] --> Quote[Quote snapshots discount and due date]
-  Quote --> Order[Submit AwaitingDigitalApproval order]
-  Order --> Paid[Digital and physical sample approved; contract signed; deposit verified]
-  Paid --> Window{Compatible orders overlap within rolling 7 days?}
-  Window -->|Yes, at least 2| Candidates[System recommends group and estimate]
-  Candidates --> Review[Sales Admin reviews members, compatibility and net savings]
-  Review -->|Approve and start before deadline| Start[Admin starts batch; orders InProduction]
-  Review -->|Decline or no action| Wait[Keep orders eligible until each deadline]
-  Wait --> Window
-  Window -->|Seven-day deadline expires without Admin start| Fallback[Scheduler starts Individual Production via MFG-07]
-  Fallback --> SameTerms[Keep discount and due date; notify Sales Admin]
+flowchart TD
+  Quote[Check materials and capacity; quote standard or eligible flexible terms] --> Ready[Design and sample approved; signed contract; verified deposit]
+  Ready --> Existing{Compatible ScheduledOpen run fits all promises?}
+  Existing -->|Yes| Review[Sales Admin reviews addition and schedule]
+  Existing -->|No; standard| Individual[Individual production on committed schedule]
+  Existing -->|No; flexible| Pool[Recommend compatible flexible group]
+  Pool -->|Feasible sewing group and displayed benefit or loss| Review
+  Pool -->|Waiting deadline; no feasible approved solution| Fallback[System notifies; Sales Admin approves individual plan; human confirms start]
+  Review --> Approve[Admin approves exclusive sewing membership and feasible schedule; orders remain Confirmed]
+  Approve --> Lock[Sales Admin locks membership]
+  Lock --> Start[Sales Admin starts production; all orders InProduction]
+  Fallback --> Terms[Keep incentive and promised completion; no surcharge]
 ```
 
 ### 4.2 Sequence for the main flow
 
-
 ```mermaid
 sequenceDiagram
-    actor Customer as Customer
-    actor SalesAdmin as Sales Admin
-    actor Scheduler as Trusted scheduler
-    participant CheckoutModule as MFG-06 Checkout
-    participant MergeModule as Merge module
-    participant Database as Database
-    participant OrderModule as MFG-07 Order module
-    participant OutboxWorker as Outbox worker
-    Customer->>MergeModule: Review versioned policy and opt in on quote
-    MergeModule->>CheckoutModule: Save preference and accepted policy version
-    CheckoutModule->>Database: Recompute discount and issue replacement quote
-    Customer->>CheckoutModule: Submit current quote
-    CheckoutModule->>Database: Create AwaitingDigitalApproval order and immutable snapshots
-    Note over OrderModule,MergeModule: Design/sample approval, signing and verified DEPOSIT make eligible order Confirmed
-    SalesAdmin->>MergeModule: View candidates and request estimate
-    MergeModule->>Database: Recompute compatibility, limits and savings
-    MergeModule-->>SalesAdmin: Candidates, exclusions and estimate
-    Scheduler->>MergeModule: Recompute and publish recommendations for compatible rolling 7-day pool
-    MergeModule-->>SalesAdmin: Candidate groups, deadlines, exclusions and savings (including negative net)
-    SalesAdmin->>MergeModule: Review selected members and explicitly start batch
-    MergeModule->>Database: Lock and revalidate eligibility, versions, quantity and deadline
-    MergeModule->>Database: Create InProduction batch with immutable membership and estimate
-    MergeModule->>OrderModule: Atomically advance all selected orders to InProduction
-    OutboxWorker-->>Customer: Notify committed batch/status event
-    alt No Admin-started batch after rolling seven-day window
-        Scheduler->>MergeModule: Process fallback
-        MergeModule->>OrderModule: Start Individual Production through MFG-07
-        OutboxWorker-->>Customer: Notify individual-production plan/status
-    else Admin declines recommendation
-        MergeModule->>Database: Keep order unreserved and eligible until its deadline
+    actor Customer
+    actor Admin as Sales Admin
+    participant Checkout as MFG-06
+    participant Merge as MFG-10
+    participant Order as MFG-07
+    participant Scheduler
+    Customer->>Checkout: Choose standard or offered flexible terms and policy
+    Checkout->>Checkout: Check materials/capacity, snapshot price and readiness-based terms
+    Note over Checkout,Order: Design/sample approval, contract signing and deposit establish production_ready_at
+    Order->>Merge: Ready Confirmed order; derive day-7 wait and separate 8-14-day production dates
+    Merge-->>Admin: Existing open run first, otherwise flexible group or individual plan
+    Admin->>Merge: Approve schedule/addition with expected versions
+    Merge->>Merge: Persist exclusively assigned sewing membership and approved schedule
+    Note over Merge,Order: Scheduled assignment is not InProduction
+    Admin->>Merge: Lock membership, then explicitly start on schedule
+    Merge->>Order: Atomically advance all locked members to InProduction
+    alt Flexible waiting deadline without approved feasible placement
+        Scheduler->>Merge: Detect expiry; send deduplicated approval-required notice
+        Admin->>Merge: Review; approve individual plan and explicitly start
+        Merge->>Order: Advance only after explicit human approval/start
     end
+    Note over Customer,Order: Preserve each customer's price, deadline and private order tracking
 ```
-
 
 ## 5. Functional requirements (mandatory)
 
-| FR ID | DBIZ2 Subfunction ID | Requirement (system MUST ...) | Actor | Priority |
+| FR ID | DBIZ2 ID | System MUST | Actor | Priority |
 | --- | --- | --- | --- | --- |
-| FR-001 | F-MER-001 | Show standard versus merge price/deadline and eligibility summary for saved eligible designs; do not create a batch. | Customer | Could |
-| FR-002 | F-MER-002 | Display versioned merge policy text and record accepted policy version. | Customer | Could |
-| FR-003 | F-MER-003 | Save preference on owned quote, compute the versioned capped discount server-side and issue a new immutable 30-minute quote. | Customer | Could |
-| FR-004 | F-MER-004 | Recommend compatible Dony order groups and show exclusion reasons using server-recomputed eligibility, without reserving or starting orders. | System / Sales Admin | Could |
-| FR-005 | F-MER-005 | Compute selected-batch gross setup savings, member discounts, net savings, setup minutes, quantity and due date, and separately report programme-to-date net savings including discounts on fallback orders. | Sales Admin / System | Could |
-| FR-006 | F-MER-006 | Refresh compatible-order recommendations; allow only Sales Admin to explicitly start a selected batch after final review; automatically start individual fallback at each order's seven-day window expiry; retain immutable membership history. | System / Sales Admin | Could |
-| FR-007 | F-MER-007 | Notify each customer and production planning after committed batch events, deduplicating recipients. | System | Could |
+| FR-001 | F-MER-001 | Compare standard and eligible flexible terms before quote confirmation; existing-run assignment does not create a discount or expose other customers. | Customer | Could |
+| FR-002 | F-MER-002 | Show versioned flexible terms and record explicit acceptance on S23, not on a terms-page view. | Customer | Could |
+| FR-003 | F-MER-003 | Save standard/flexible choice on an owned quote and issue a replacement immutable 30-minute quote with the applicable incentive and time basis. | Customer | Could |
+| FR-004 | F-MER-004 | Recommend existing ScheduledOpen runs first, then compatible flexible groups; show readiness, shared preparation, workload, capacity, deadlines and exclusions. | System / Sales Admin | Could |
+| FR-005 | F-MER-005 | Estimate genuinely avoided preparation, coordination cost, committed incentives and economic benefit; report all programme outcomes including individual fallback. | Sales Admin / System | Could |
+| FR-006 | F-MER-006 | Allow Sales Admin to approve schedules/additions, lock, approve individual fallback and explicitly start production; system only recommends and notifies, preserving audited approval and membership history. | Sales Admin / System | Could |
+| FR-007 | F-MER-007 | Notify owners and planning after committed schedule/status events via deduplicated outbox messages; reveal only the recipient's order. | System | Could |
 
 ### 5.1 Input / Output contract
 
-| FR ID | Input field | Type | Required | Output field | Type | Notes / validation |
-| --- | --- | --- | --- | --- | --- | --- |
-| FR-001 | product/design and session | IDs/session | Yes | comparison view model | Object | Merge option only for eligible saved design |
-| FR-002 | policy_version | Version | Yes | readable policy | Text/object | Read-only versioned terms |
-| FR-003 | quote_id, merge_opt_in, policy_version, expected quote version | UUID, boolean, version | Yes | new quote and breakdown | Object | Stale 409; invalid option 422 |
-| FR-004 | authenticated Sales Admin session, filters, pagination | Session/allowlisted values | Optional | recommended candidate groups, deadlines and exclusion reasons | Paginated object | Dony data only; suggestions do not reserve orders |
-| FR-005 | candidate order IDs | UUID array | Yes | selected_batch_gross_setup_saving_vnd, selected_batch_discount_total_vnd, selected_batch_net_setup_saving_vnd, setup_minutes_saved, total_quantity, earliest_due_at, window_end_at, programme_to_date_gross_saving_vnd, programme_to_date_discount_vnd, programme_to_date_net_saving_vnd | Estimate/report object | Selected batch net=gross−its member discounts; programme net=actual gross savings from started batches−discounts on all opted-in orders reaching production, including individual fallback. Programme net may be negative and must remain visible. |
-| FR-006 | Sales Admin start action; selected order IDs; expected versions; Idempotency-Key | Enum, IDs, versions, key | By action | started batch/fallback state, immutable membership snapshot, affected orders | Object | 2≤members≤10,000 orders; aggregate quantity≤10,000; Admin authorization and all windows unexpired; system scheduler cannot invoke Admin start |
-| FR-007 | committed batch event and member IDs | Internal event | Yes | customer/planning outbox IDs | UUID array | Recipients resolved from persisted membership |
+| FR | Inputs | Outputs / validation |
+| --- | --- | --- |
+| FR-001/002 | Owned design/quote, policy version | Eligibility, standard/flexible comparison and readable terms; draft assumptions labeled; no batch created at checkout |
+| FR-003 | quote_id, merge_opt_in, accepted policy_version when flexible, expected quote version | Replacement quote; `merge_opt_in` means acceptance of flexible terms, not permission for internal standard batching. `merge_discount_vnd` is the promised flexible incentive. Stale 409; ineligible 422. |
+| FR-004 | Authorized Sales Admin, filters, saved daily-output profile/version, ready candidate quantities and approved allocations | Ordered existing-run/new-group recommendations with quantity sums, ceil-based workdays, remaining daily slots, planned dates, sewing-versus-decoration evidence, every member due date and exclusions |
+| FR-005 | Target run if any, proposed member IDs, versioned cost/workload assumptions | Avoided setup count and labor hours, gross avoided cost, one run-level coordination cost, committed member incentives, modeled net benefit; programme totals with fallback and assumption/measurement provenance |
+| FR-006 | Explicit Admin schedule/add/lock/approve_individual/start action; expected order/batch versions; Idempotency-Key | Audited plan and separate approval/start evidence. Scheduler notices/recommendations never constitute approval, individual conversion or a fulfillment transition. Revalidate readiness, shared sewing, capacity and all deadlines atomically. |
+| FR-007 | Committed schedule/membership/start/fallback/completion event | Customer/planning outbox IDs; persisted recipients; no cross-customer information |
 
 ### 5.2 Business rules
 
-| Rule ID | Rule | Why it exists |
+| Rule ID | Rule | Reason |
 | --- | --- | --- |
-| BR-001 | Discount = min(order subtotal, 30% × 2,800,000 VND setup cost) = at most 840,000 VND per order. Standard due = deposit_at + 7 calendar days; merge due = deposit_at + 10 calendar days. The discount, policy version, rolling window and due date are immutable quote/order snapshots. | Protect Dony's setup-cost margin and make customer commitment explicit. |
-| BR-002 | Merge catalogue is limited to MFG-04 products/variant combinations marked `merge_enabled`. Eligibility requires the same Dony facility, product/material/color/print-method key; verified deposit and Confirmed state; opt-in; unbatched, uncancelled, not fallback-marked; and before `window_end_at`. | Batch only compatible paid made-to-order work. |
-| BR-003 | `window_end_at=confirmed_at+7 days`. The system refreshes live compatible-order recommendations at least every five minutes. At least two eligible orders with overlapping seven-day windows and aggregate quantity ≤10,000 may be recommended. Only a Sales Admin can explicitly start a recommended batch; server-side revalidation and batch creation/order transitions commit atomically. No calendar-day or fixed-clock cutoff is used. | Increase opportunities to combine compatible orders while preserving human final approval. |
-| BR-004 | For n members, gross setup saving=(n−1)×2,800,000 VND; total customer discount=sum of immutable member discounts; net savings=gross−discount; setup minutes saved=(n−1)×120. At the full 840,000 VND discount per order, a pair nets 1,120,000 VND and a triple nets 3,080,000 VND before other operating costs. At batch size k, programme break-even requires at least `30%×k/(k−1)` of opted-in orders to be batched (60% for pairs; 45% for triples). Show negative net as a measured result, not a confirmation gate. Programme net = gross savings for started batches minus discounts on all opted-in orders reaching production, including fallback. | Quantify business value honestly, including subsidy cost and batch-rate threshold. |
-| BR-005 | At `window_end_at`, if no Sales Admin-started batch includes the order, the scheduler records fallback and immediately starts the order as Individual Production through MFG-07; notify Customer and Sales Admin. Retry transient failures with backoff and flag/alert operational failure. | Avoid stranded orders and keep made-to-order production moving when the Admin does not approve a batch in time. |
-| BR-006 | Recommendations reserve no orders and have no durable Planned batch state. A Sales Admin start action locks and revalidates all selected members, creates the batch directly in InProduction with immutable membership/estimate snapshots, and advances every order atomically. A batch production due date is the earliest member due date. Orders not started together remain eligible until their own window expires. | Make final approval/launch authority explicit and eliminate unstarted batches that can strand orders. |
+| BR-001 | Standard internal batching retains ordinary price and deadline. Flexible discount=min(floor(merchandise_subtotal_vnd*5/100),250000), applied once after normal quantity pricing, excluding shipping, tax and design fee. Calculate server-side in integer VND, snapshot policy/amount and display the cap with the percentage. Retain the accepted amount on immediate match or individual production; no reclaim, second discount or fallback fee. | Stronger selective time-flexibility incentive without blanket discounting. |
+| BR-002 | Use Monday–Friday local dates in Asia/Ho_Chi_Minh. production_ready_at records all approval/signing/deposit gates; readiness_day_1 is its local date if a working date, otherwise the next working date, counted inclusively as day 1. Flexible waiting ends after working day 7; the separate production window begins on working day 8 and lasts 8–14 working days. Full-wait completion is on working day 15–21. Quote/order/contract snapshot durations, incentive and calendar/counting basis; derive absolute due dates when readiness is known. Earlier approved production can finish earlier; a late human approval never resets waiting or pushes the accepted due date. Standard post-activation terms retain the existing five-working-day commitment; MVP and previously signed snapshots remain MFG-06-owned. | Separate waiting from production and preserve fixed commercial promises. |
+| BR-003 | Check materials and schedule feasibility before committing terms. A flexible order remains flexible while waiting; do not preassign or reserve a speculative individual slot. At waiting expiry notify Sales Admin and request approval; Admin must approve submission to production, shared or individual. Plans cover separate decoration and every due date. If approval is late, show the original deadline risk/overdue condition and escalate without silently extending it. System does not approve, convert or start anything. | Human-controlled production with honest deadline risk. |
+| BR-004 | Sales Admin enables merge only for selected products and sets each inclusive small_order_max_quantity in MFG-04/S14. Flexible eligibility requires merge_enabled, aggregate quantity from normal MOQ through the threshold, a saved positive daily-output profile producing a quantity estimate no longer than 14 production workdays, and no fitting ScheduledOpen run at quote/requote. Matching requires the same garment production type and material; print/embroidery method, logo and artwork may differ. Share only sewing preparation/operations, leaving decoration/tooling/inspection separate per order. Include their time in completion feasibility. Standard orders may join fitting open runs without flexible consent or a discount. Preserve each design and customer privacy. | Product-specific eligibility and sewing-only sharing. |
+| BR-005 | A base run may begin with one independent order on a firm schedule and receive ready compatible orders while ScheduledOpen without delaying its members. New flexible sewing groups need at least two; negative benefit receives human review rather than automatic rejection. Sales Admin saves daily_output_capacity (positive integer garments/working day) per product production-type/material planning profile. System sums garment quantities, calculates ceil(total_quantity/daily_output_capacity) workdays and residual daily slots, accounting for approved assignments against the same profile. Product per-order quantity/MOQ bounds remain distinct. Proposed flexibility production duration is at least 8 and at most 14 working days; an estimate beyond 14 is infeasible, never silently clamped. Admin also reviews separate decoration and materials before approval. | Use saved daily throughput rather than inventing run limits or automatic production. |
+| BR-006 | Batch lifecycle: ScheduledOpen → Locked → InProduction → Completed. Only Sales Admin approves schedules/additions, locks and submits plans; only explicit human confirmation starts production. Recommendations reserve nothing; approved assignments are exclusive. Lock freezes the sewing list; start revalidates and atomically advances all members to InProduction. No additions after lock. Individual production requires separate Admin approval and human start; flexible consent is not production approval. Scheduler has no production-transition authority. | Distinguish commercial choice, approval, submission and actual start. |
+| BR-007 | Confirmed orders remain cancellable before production under MFG-07. Cancellation atomically releases scheduled/locked membership and invalidates the affected plan/lock for Admin revalidation; started membership is immutable. Human approvals/cancellation/starts contend on expected versions; notices cannot commit production mutations. | Preserve cancellation and prevent double production. |
+| BR-008 | Modeled net = genuinely avoided shared sewing preparation cost − incremental coordination cost − committed flexible incentives. Trial gross for m additions to a base run=m*390000 if m sewing setups are avoided; new n-order group=(n−1)*390000 if n−1 are avoided. Coordination=90000 once per shared run, including later addition actions; recompute the aggregate estimate. Avoided sewing labor=avoided setups*6 person-hours. Printing/embroidery setup remains per order and is not counted as saved. | Count only genuinely shared sewing benefits. |
+| BR-009 | Programme modeled net sums started shared-run gross minus run-level coordination and all accepted flexible discounts on orders actually reaching production, including Admin-approved individual production. An unmatched order merely awaiting approval contributes no started-production benefit. Individual production has zero avoided sewing setup and negative impact equal to its retained discount, before unmodeled waiting administration. Estimates are not realized profit or guaranteed cash savings. | Include subsidy cost without misreporting pending plans as production. |
+| BR-010 | Negative selected-run benefit is visible and does not automatically reject the plan. Notify Sales Admin a few days before the waiting deadline, using the saved positive Sales Admin-set warning_lead_workdays (1–6 working days), for review/rearrangement. At expiry without a feasible approved solution, require explicit Admin approval to submit the order for production; show retained incentive and loss estimate. Deduplicate warnings by order/waiting deadline and distinguish negative-benefit warning, waiting-expiry notice, Admin approval and actual start in the audit. | Give humans time to resolve losses while retaining final authority. |
 
-Duplicate IDs, unsupported variants and incompatible production keys are rejected with 422; stale candidate/order versions return 409. Mutations are idempotent. There is one Dony factory/system boundary, not tenant-by-customer-company authorization. The scheduler only recommends groups and starts individual fallback; Sales Admin alone authorizes and starts a batch. MFG-07 owns resulting order transitions.
+UUIDs, UTC timestamps displayed in Asia/Ho_Chi_Minh, integer VND, expected versions and idempotency keys follow shared contracts. Unauthorized actors return 401/403; stale/concurrent human actions return 409; incompatible/infeasible plans return 422. Durable outbox notices follow persisted events; notifications are permitted automatic side effects, never production approvals.
+
+### 5.3 Calendar and daily-capacity calculation
+
+Define `working_date(d)` as Monday–Friday and `wd(d,k)` as the kth working date on or after d, with k=1 inclusive. Calendar calculations use local dates before UTC storage; monetary calculations use integer VND. The demo calendar has no additional public-holiday rule; any later holiday calendar is a reviewed version, not an implicit change to accepted promises.
+
+For a flexible order:
+
+- `readiness_day_1 = wd(local_date(production_ready_at),1)`.
+- `last_waiting_date = wd(readiness_day_1,7)`; the waiting window includes all of that local date. `wait_end_exclusive_at` is midnight at the beginning of the next local calendar date, converted to UTC.
+- `production_window_first_date = wd(readiness_day_1,8)`.
+- The published completion range is from `wd(production_window_first_date,8)` through `wd(production_window_first_date,14)`: readiness working days 15–21. The latter date is the maximum contractual production-completion date, inclusive; display its end-of-date boundary consistently. The estimated date within that range is operational context and cannot silently shorten or extend the snapshotted maximum promise.
+- Readiness does not mean actual production start. Human start has its own timestamp. A feasible early shared run may complete earlier; an approval after waiting expiry leaves the original maximum due date unchanged and must visibly disclose remaining capacity/time or overdue risk.
+
+For a candidate run, `Q` is total garment quantity across all its sizes/orders and `C` is the saved positive daily throughput for its garment-type/material profile. `required_workdays = ceil(Q/C)` is a quantity-based estimate at full allocated capacity. `estimated_production_workdays = max(8,required_workdays)` for the flexible policy; if that exceeds 14, exclude that proposal as infeasible rather than replacing the result with 14. Never interpret 6 saved person-hours as elapsed production days or deduct them from the promise.
+
+Allocate Q against residual capacity of actual Monday–Friday dates at the intended start, after subtracting already approved assignments using that same profile. The quantity-only sewing finish is the date by which accumulated allocation covers Q. Recompute the allocated workday span and the flexible production estimate as max(8,allocated_workday_span), then review separate decoration against that date; a span beyond 14 is infeasible even when the empty-ledger ceil estimate was within 14. Keep sewing finish, complete-order estimate and accepted maximum due date distinct. For an existing run, preserve its firm scheduled start and existing members commitments. Recompute the amended whole-run allocation against the ledger with that run own prior allocations credited back exactly once; include base quantities exactly once and subtract other runs assignments. Alternatively allocate only additions against the unused slots of that scheduled run. Never subtract the base allocation then charge its quantity a second time, or count an added order as both individually assigned and shared. Commit release/replacement atomically only after Admin approval; do not allocate full capacity again to each run/order. For a new flexible group, choose a feasible start and allocation fitting all accepted due dates; unused individual fallback slots are not reserved in advance. Confirmation locks profile/allocation versions so competing approvals cannot double-book them.
+
+Keep profile capacity separate from per-order `max_units_per_order` and from the small-order eligibility threshold. Products that represent the same production type/material must reference the same capacity profile instead of creating duplicate independent capacity for the same resource. Treat the saved throughput as a planning estimate for the declared product/material scope; quantity-only math does not prove decoration completion. Sales Admin must review the separate printing/embroidery workload against the proposed complete-order date before approving. This feature supplies a quantity-based plan with human feasibility review, not an automatic detailed machine/stage optimizer.
+
+Example: readiness on Monday 2026-09-28 gives waiting day 7 on Tuesday 2026-10-06 and post-wait production day 1 on Wednesday 2026-10-07. The 8–14-working-day production range ends between Friday 2026-10-16 and Monday 2026-10-26. Readiness on Saturday 2026-10-03 instead makes Monday 2026-10-05 day 1. For 350 garments at 50/day, required_workdays=7 and the flexible estimate is 8 working days, subject to existing allocations and separate decoration review. At 20/day the quantity-only requirement is 18 working days, so that candidate cannot be advertised as a feasible 14-day run.
+
+The negative-benefit advance-warning interval is a Sales Admin-set operational integer warning_lead_workdays from 1 through 6. Derive warning_date by stepping that many working dates backward from last_waiting_date; send at/on that notice date and immediately on the next check if the warning condition is first detected later. Send an independent approval-required notice once wait_end_exclusive_at is reached. Its value must be present before enabling reminder operation; use its saved version to derive the notice date. The system sends notices and deduplicates them; notice expiry/read/acknowledgement never constitutes production approval.
+
+### 5.4 Evaluation assumptions and examples
+
+All numbers below are classroom trial assumptions, pending Dony validation. Six person-hours may be parallel labor; they are not six elapsed production hours. Each shared run retains its own setup. Additional artwork/tooling/inspection effort is not automatically avoided.
+
+| Parameter | Trial assumption |
+| --- | --- |
+| Shared sewing preparation for one separate run | 6 person-hours |
+| Converted labor value | 65,000 VND/person-hour |
+| Shared sewing preparation cost | 390,000 VND/run |
+| Incremental coordination | 90,000 VND/shared run, counted once |
+| Flexible incentive | 5% of merchandise subtotal, rounded down to integer VND, capped at 250000 VND/order; accepted policy |
+| Standard internal batching incentive | 0 VND |
+
+| Scenario | Avoided setup cost | Coordination | Incentives | Modeled net | Avoided labor |
+| --- | --- | --- | --- | --- | --- |
+| A: two standard small orders join a base run | 2×390000=780000 | 90000 | 0 | 690000 VND | 12 person-hours |
+| B: four flexible orders at the discount cap form a new sewing run | 3×390000=1170000 | 90000 | 4×250000=1000000 | 80000 VND | 18 person-hours |
+| C: one flexible order at the cap is approved and started individually | 0 | Shared-run coordination absent; waiting administration unmodeled | 250000 | −250000 VND | 0 |
+
+A 100-small-order scenario has 40 standard orders on 20 base runs, 40 flexible orders on ten four-order sewing runs and 20 flexible orders approved/started individually. Assume all 60 flexible orders reach the 250000 VND cap; base orders are outside the 100. Gross=27300000, coordination=2700000, discounts=15000000, net=9600000 VND (13800000+800000−5000000). Lower subtotals generate smaller actual discounts; always sum immutable amounts. The separate/no-incentive baseline excludes software, decoration costs not avoided and waiting administration; this is modeled economic benefit, not a validated profit forecast.
 
 ### Analytics evidence integration (MFG-11)
 
-MFG-11 may segment active order analysis by the immutable merge opt-in/policy and actual batch/individual-fallback events only after this module is activated. The allowed waiting window is operational context, not automatic abandonment; production_due_at is a production promise, not a delivery SLA. Batch Completed is not order Completed. Preserve the distinction between selected-batch estimates, programme-to-date setup savings and actual business revenue; never present an estimate as realized profit. AI remains read-only and cannot start/decline a batch or change discount policy. The v3 commercial policy and all numeric assumptions in this module are unchanged by this documentation revision.
+Keep commercial choice (standard/flexible), actual routing (base-run addition/new shared run/individual), waiting, schedule/lock/start and fallback events distinct. A standard order may be batched without flexible opt-in; an opted-in order may run individually. Batch Completed is not order Completed. Report assumption-based estimates separately from measured setup time, cost, production timeliness and revenue. AI remains read-only and cannot approve, lock, start or change policy.
 
 ## 6. Key entities (mandatory)
 
-| Entity | Attributes (from Input/Output fields) | Relationships |
+| Entity | Attributes | Relationships |
 | --- | --- | --- |
-| MergePreference | quote_id, merge_opt_in, policy_version, accepted_at | Quote preference/version is copied into immutable order snapshot at submission. |
-| MergeRecommendation | candidate order IDs, compatibility key, exclusions, estimated gross/discount/net savings, setup minutes, total quantity, earliest window_end_at, refreshed_at | Recomputed suggestion only; does not reserve orders, mutate order state, or authorize a batch. |
-| ProductionBatch | UUID, compatibility key, state InProduction/Completed, approved_by, started_at, immutable membership and approved estimate snapshots, timestamps/version | Created only by an authorized Sales Admin start action after server-side revalidation; contains at least two compatible orders. Buyer organizations do not define the batch authorization boundary. |
-| Order merge snapshot | preference, policy version, discount, production due date, batch_id? | MFG-06 owns order snapshot; MFG-07 owns fulfillment progression. |
-
-Distinct customer artwork remains distinct inside a shared production batch.
+| FlexiblePreference / production plan | quote_id, merge_opt_in, accepted policy_version, accepted_at, snapshotted incentive; actual production route?, individual_approved_by/at?, human_started_by/at? | Flexible choice remains unchanged while awaiting review; actual shared/individual route is set only by human approval, never a notice. Preserve original flexible commercial terms after individual routing. |
+| ProductionReadiness | production_ready_at, readiness_day_1, calendar version, waiting_workdays=7, production_window_min_workdays=8, production_window_max_workdays=14, wait_end_exclusive_at, production_window_first_date, production_due_at | Day 7 is the last waiting date; full-wait production starts counting on day 8; accepted date promises are not reset by late approval |
+| MergeRecommendation | target run/new group, member IDs/versions, type/material profile, saved capacity/version, total_quantity, required_workdays, per-working-date allocations/residuals, planned start/completion, decoration feasibility, due dates, exclusions, costs/incentives, refreshed_at | Nonbinding, calculated with approved profile allocations; no speculative individual reservation or automatic assignment |
+| ProductionCapacityProfile | id, production_type_key, material_id, daily_output_capacity, expected/version, updated_by/at | Shared saved garments-per-working-day scope; approved date allocations consume its finite daily slots; editing is in MFG-04/S14 |
+| ProductionBatch | UUID, same garment production type/material, base/new-sewing-group kind, ScheduledOpen/Locked/InProduction/Completed, scheduled_start_at, planned_completion_at, saved capacity inputs, quantity totals, approved_by/approved_at, locked_at?, started_at?, version | One efficient base order allowed; exclusive approved assignment and separately audited human start; decoration jobs remain per member |
+| BatchMembership | batch_id, order_id, assignment/release history, lock/start version | One active production assignment per order; immutable started membership; cancellation revalidates preproduction plan |
 
 ## 7. Screens involved
 
-| Screen ID | Screen name | Priority | Screen Spec file |
-| --- | --- | --- | --- |
-| S23 | Quote and merge choice | Could | [S23](../screens/S23-merge_option_screen.md) |
-| S24 | Merge policy | Could | [S24](../screens/S24-merge_terms_screen.md) |
-| S25 | Checkout summary | Could | Module boundary |
-| S29 | Production management | Could | Shared operations screen |
-| S38 | Notifications | Could | Shared notification screen |
-| S42 | Merge Recommendations and Batch Console | Could | [S42](../screens/S42-merge_console_screen.md) |
+| Screen | Behavior | Reference |
+| --- | --- | --- |
+| S12 / S14 | Sales Admin sets enabled products, inclusive small-order threshold and shared daily throughput | [S12](../screens/S12-product_edit_screen.md) / [S14](../screens/S14-product_design_rules_screen.md) |
+| S23 | Standard/flexible comparison and explicit consent when offered | [S23](../screens/S23-merge_option_screen.md) |
+| S24 | Versioned flexibility terms, no consent on view | [S24](../screens/S24-merge_terms_screen.md) |
+| S25 / S35 | Immutable quote/payment breakdown, no batch-triggered incentive | MFG-06 |
+| S27 / S29 / S38 | Private customer dates, human operational progress and safe committed notices | [S27](../screens/S27-customer_order_detail_screen.md) / [S29](../screens/S29-order_detail_admin_screen.md) / [S38](../screens/S38-notification_panel_screen.md) |
+| S42 | Existing run first, group economics, schedule/add/lock/start and fallback | [S42](../screens/S42-merge_console_screen.md) |
 
 ## 8. Success criteria (mandatory)
 
-| SC ID | Criterion | How it is measured |
+| SC ID | Criterion | Measurement |
 | --- | --- | --- |
-| SC-001 | Every opt-in quote and order preserves the fixed discount and deadline through batch or individual fallback. | Compare quote/order snapshots and resulting production due date. |
-| SC-002 | Batch membership and order transitions are all-or-nothing and meet eligibility limits. | Verify candidate matrix, limits, concurrent mutations and idempotent replay. |
-| SC-003 | Only Sales Admin starts a recommended group; a committed batch records approved_by, started_at, and immutable membership/estimate snapshots. | Exercise unauthorized/system start rejection and inspect the committed batch audit record. |
+| SC-001 | Every standard/flexible outcome retains committed price and deadline | Compare immediate assignment, later group and fallback against commercial snapshots |
+| SC-002 | Every assignment/start satisfies readiness, saved daily-output allocation and full sewing-plus-decoration promises | Exercise disabled/threshold products, zero capacity, shared-profile overbooking, >14-workday estimates, early/late approvals, different decoration methods and concurrent assignment/start |
+| SC-003 | Scheduled/locked membership is never mistaken for production start | Audit Admin actions and Confirmed → InProduction boundary |
+| SC-004 | Programme reports include fallback cost and distinguish modeled from observed benefit | Reconcile A/B/C and the 100-order illustration; count coordination once per run |
+| SC-005 | Trial evidence supports parameter selection | Collect sewing setup labor, coordination cost, flexible uptake, Admin approval response time, batching outcomes and on-time production; validate the appeal of 5% capped at 250000 and value of avoided sewing setup. |
 
 ## 9. Assumptions
 
-- Estimates assume 2,800,000 VND setup cost and 120 minutes saved per additional order; label these as classroom planning assumptions, not audited factory results.
-- Setup minutes do not shorten the promised production due date.
-- MVP priority is Could; policy values are versioned and cannot be edited as ordinary System Admin configuration.
+- Numeric prices, costs, durations, 300/360-shirt capacities and scenario mix are illustrations, not universal product rules or Dony commitments.
+- Normal quantity discounts remain normal quote policy; flexible incentives are separate and selective.
+- Dietl, Voigt and Kuhn (2024), [From rush to responsibility: Evaluating incentives on online fashion customers willingness to wait](https://edoc.ku.de/id/eprint/34085/1/1-s2.0-S1361920924002372-main.pdf), Transportation Research Part D 133, 104280, examines incentives for German-speaking online retail customers. It supports testing incentives for waiting; it does not establish that 5%/250000 VND or the proposed schedule is optimal for Dony business buyers/resellers. The earlier Bowers & Agarwal (2007) and Textile and Apparel (2018) references remain contextual leads pending full verification; no case-study percentage is asserted as Dony savings.
+- Existing signed policy snapshots are preserved; v4 adoption requires review rather than retroactive rewriting.
 
-## 10. Open questions
+## 10. Traceability to DBIZ2
 
-| # | Question | Blocking? | Owner | Status |
-| --- | --- | --- | --- | --- |
-| 1 | Resolved decisions: Group B; course DBIZ 3; no approver identified; course/demo use only; MVP priority Could. | No | Group B | Resolved |
-| 2 | No remaining open questions. | No | Group B | Resolved |
-
-## 11. Traceability to DBIZ2
-
-| Spec section | DBIZ2 source | Location |
-| --- | --- | --- |
-| 1–2 Scope and actors | MFG-10 Function List No. 77–83 | `F-MER-001`–`F-MER-007` |
-| 3 Scenarios | UC-C06, UC-C17, UC-C18, UC-C16 | Use-case labels and resolved flow |
-| 4 Flow | Preference, quote, batch and fallback lifecycle | Current MFG-10 resolved contract |
-| 5–6 FRs and entities | `F-MER-001`–`F-MER-007` | Function List MFG-10 |
-| 7 Screens | S23–S25, S29, S38, S42 | Screen List and module contract |
+| Section | Source |
+| --- | --- |
+| 1–3 | MFG-10 No. 77–83; UC-C06, UC-C17, UC-C18, UC-C16; supplied production-priority proposal |
+| 4–6 | F-MER-001–F-MER-007 revised contracts for standard routing, flexibility and scheduled-run lifecycle |
+| 7 | S23–S25, S29, S38, S42 |
 
 ## Completion checklist
 
-- [x] All seven MFG-10 functions have FR rows and contracts.
-- [x] Discount, production commitments, eligibility, estimate and fallback logic are explicit.
-- [x] Batch transitions, membership, idempotency and concurrency rules are recorded.
-- [x] Resolved inputs are recorded and no unresolved placeholders remain.
-- [x] Traceability identifies use cases, functions and screens.
+- [x] All seven function IDs remain traceable.
+- [x] Standard routing and flexible commercial choice are distinct.
+- [x] Scheduled/add/lock/start, individual fallback and concurrency boundaries are explicit.
+- [x] Illustrative arithmetic includes coordination and fallback incentives.
+- [x] User decisions define the duration basis, Monday–Friday counting, daily-capacity unit and human approval boundary.
+- [ ] Validate factory throughput/cost assumptions before operational use and finish verification of any additional academic claims.
+- [x] Calendar/capacity equations and boundary examples are documented for implementation planning.
 
 Template source: DBIZ3 Product Design Package specification template.
 

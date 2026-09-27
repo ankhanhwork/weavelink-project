@@ -37,6 +37,19 @@ Written behavior below takes precedence over obsolete sample content.
 | 8 | Save rules | Action | Validate supported options/area/surcharges, increment product version; old quotes require review. | Available when authorized | Destination: S10 |
 | 9 | Cancel | Action | Discard changes. | Available when authorized | Destination: S10 |
 
+### Deferred production-flexibility fields
+
+After MFG-10 activation, this existing rules editor also exposes:
+
+| Field | Validation / behavior |
+| --- | --- |
+| merge_enabled | Explicit Sales Admin boolean for this product; when disabled do not offer flexible quotes. |
+| small_order_max_quantity | Inclusive maximum aggregate quantity for a small flexible order; integer from the existing product MOQ through per-order capacity, required when merge_enabled. |
+| production_type_key / material identity | Saved garment type and supported material identities used to share sewing production; retain print/embroidery rules per individual order. |
+| capacity_profile_id / daily_output_capacity | Select the shared production-type/material profile and enter a positive integer garments per working day. Same-profile products consume one shared capacity ledger. Distinct from per-order quantity bounds and the small-order threshold; stale profile version 409, zero/missing value 422 for an enabled flexible setup. |
+
+Save atomically with the other product rules and expected_version. Rule changes invalidate unsubmitted quotes for eligibility review, never alter already accepted price/incentive snapshots. Show per-order quantity capacity, small-order threshold and garments-per-working-day capacity as separately labeled fields. S42 derives workdays and residual daily slots from the saved profile; do not label a daily throughput as a maximum batch quantity. Profile edits require revalidation of unstarted allocations while preserving accepted due dates and started audit snapshots. Use the same form/error/version conventions as [S12 Product Edit](S12-product_edit_screen.md). [S23 Merge Option](S23-merge_option_screen.md) consumes eligibility and [S42 Merge Console](S42-merge_console_screen.md) consumes saved matching rules; scheduling/production approvals remain in S42.
+
 ## 4. States
 
 | State | What the user sees | Trigger |

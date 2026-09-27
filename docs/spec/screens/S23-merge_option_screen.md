@@ -9,11 +9,11 @@
 | Belongs to module | [MFG-10](../specs/spec-MFG-10.md) |
 | Route | `/orders/merge?design_id={id}` |
 | Mockup image | `img/S23-merge_option_screen.png` |
-| Status | Resolved implementation specification |
+| Status | Draft aligned with MFG-10 v4 proposal; activation requires validation |
 
 ## 1. Purpose
 
-**Shown when:** The customer explicitly opts into or out of merging and reviews the versioned 840,000 VND per-order discount (30% of Dony's 2,800,000 VND setup-cost assumption), capped at subtotal. State merge production completes 10 days after deposit, compared with 7 days for a separate run. Show the number of compatible confirmed orders waiting without exposing identities. Compatible orders may be recommended to Sales Admin during the rolling seven-day window after deposit; only Sales Admin can approve and start a batch.
+**Shown when:** After MFG-10 activation, offer flexibility only for a merge-enabled product within the saved small-order threshold, with valid daily capacity and no fitting open sewing run at quote/requote. Compare standard terms with a 5% merchandise incentive capped at 250000 VND and 7 Monday–Friday waiting days followed by a separate 8–14-working-day production range; maximum completion is readiness working day 21. Readiness requires design/sample approval, signed contract and verified deposit; its working date is day 1, weekend readiness rolls forward. Show relative terms before readiness, calculated dates afterward. Early matches may finish earlier with the accepted incentive; any production needs human approval/start. Shipping is separate; other customer data is private.
 
 **The user leaves this screen when:** An authorized action in section 5 succeeds, the user follows a role-allowed global route, or they return to the validated originating route.
 
@@ -30,8 +30,8 @@ Written behavior below takes precedence over obsolete sample content.
 | 1 | Screen heading | Heading | Merge Option | Yes | Static route title. |
 | 2 | Route | Navigation target | /orders/merge?design_id={id} | Yes | Access checked on server. |
 | 3 | merge_opt_in | Field / control | explicit boolean | As specified | merge_opt_in: explicit boolean; default false; acceptance stores merge policy_version. |
-| 4 | merge_eligible | Field / control | server-derived boolean | As specified | Enable opt-in only for an eligible design/product; otherwise show the reason and keep the standard route available. |
-| 5 | merge_discount_vnd | Field / control | 840000 VND, capped at subtotal | As specified | Server applies min(subtotal_vnd, 840000); per-order discount is fixed by policy version. |
+| 4 | flexible_eligible / merge_eligible | Server-derived boolean | Saved MFG-04/S14 product version, quantity, open-run feasibility | Yes | Product merge_enabled; normal MOQ ≤ aggregate quantity ≤ saved small_order_max_quantity; no fitting open sewing run at quote/requote. Revalidate server-side; retain submitted snapshots. |
+| 5 | merge_discount_vnd | Read-only flexible incentive | MFG-10 versioned trial amount | Yes | min(floor(subtotal_vnd*5/100),250000) for accepted eligible flexible terms; zero for standard even when internally batched. Retain incentive for immediate match or fallback; no merge fee. |
 | 6 | checkout_effect | Field / control | read-only explanation | As specified | Saving preference issues a replacement quote; it creates no batch and applies no merge fee. |
 | 7 | API errors | Field / control | standard API error envelope | As specified | 400 malformed; 422 invalid fields; 409 stale/duplicate; 429 rate limit; 503 dependency failure |
 | 8 | Accept merge policy | Action | Persist explicit opt-in/version then request server quote. | Available when authorized | Destination: S25 |
@@ -59,6 +59,10 @@ Written behavior below takes precedence over obsolete sample content.
 
 Portal: Customer owner. Route: /orders/merge?design_id={id}. Back preserves the originating route and filters. Fallback: Customer→S26; Sales Admin→S28; Sales→S20; System Admin→S41; Guest→S01. Enforce role, ownership and assignment before rendering.
 
+### 5.1 Interface consistency
+
+Reuse the customer navigation, owned-design summary, quantity/address context and form/error conventions from [S22 Create Order](S22-create_order_screen.md). Present standard/flexible choices with the same VND labels, merchandise subtotal and separate fee rows as [S25 Order Summary](S25-order_summary_screen.md). Show the accepted policy version and readiness-based completion/wait terms consistently with [S24 Merge Terms](S24-merge_terms_screen.md). Reading terms preserves the current quote choice; only explicit acceptance on S23 records consent. Returning from terms or a recoverable error preserves safe inputs; saving either production choice requests a replacement quote before navigation to S25.
+
 ## 6. Screen-level rules
 
 | Rule ID | Rule | Source |
@@ -70,27 +74,25 @@ Portal: Customer owner. Route: /orders/merge?design_id={id}. Back preserves the 
 
 ### Acceptance scenarios
 
-1. Explicit opt-in stores policy version and server applies min(subtotal, 840000 VND), without creating a batch.
-2. Decline sets no discount; displayed promise still honored if no batch forms.
+1. Explicit eligible flexible acceptance snapshots the policy and incentive; saving creates a replacement quote, not a batch. Immediate matching or fallback retains the incentive.
+2. Standard choice has no flexible incentive and no additional batching wait. Internal assignment keeps standard terms and private order tracking.
 
 ## 7. Linked requirements
 
 | FR ID (from the module spec) | What this screen does for it |
 |---|---|
-| MFG-10/F-MER-001 | **Select Merge** — Show standard versus merge price/deadline and eligibility summary for saved eligible designs; do not create a batch. |
+| MFG-10/F-MER-001 | **Select Merge** — Compare standard/flexible terms only when offered; internal standard assignment creates no incentive. |
 | MFG-10/F-MER-002 | **Select Merge** — Display versioned merge policy text and record accepted policy version. |
-| MFG-10/F-MER-003 | **Select Merge** — Save preference on owned quote, compute versioned discount capped at 840,000 VND (30% of 2,800,000 VND setup-cost assumption) and issue a new immutable 30-minute quote. |
+| MFG-10/F-MER-003 | **Select Merge** — Save flexible acceptance/version and issue an immutable replacement 30-minute quote with the MFG-10 incentive, duration/calendar/readiness basis and fallback terms. |
 
 
 ## 8. Responsive and accessibility notes
 
 Support 360px through desktop; stack columns and use labelled horizontal-scroll tables on narrow screens. Controls are keyboard-operable with visible focus, logical headings, associated form labels, and aria-live status/error announcements. Text contrast is at least 4.5:1 (large text 3:1); pointer targets are at least 24px. Preserve user-entered data after recoverable failures. Confirm destructive actions, disable duplicate submit while pending, and enforce idempotency on the server.
 
-## 9. Open questions
+## 9. Specification status
 
-| # | Question | Blocking? | Status |
-|---|---|---|---|
-| 1 | No unresolved screen behavior questions remain; routes, fields, permissions, and defaults are resolved in this specification and its linked module requirements. | No | Resolved |
+The screen follows MFG-10's draft policy. Trial durations, incentive and operational parameters retain their assumption status; removing the module's questions section does not constitute operational approval.
 
 ## Completion checklist
 
@@ -99,4 +101,4 @@ Support 360px through desktop; stack columns and use labelled horizontal-scroll 
 - [x] Loading, empty, forbidden, error, retry, success, and conflict states are documented.
 - [x] Navigation and acceptance scenarios are explicit.
 - [x] Responsive and accessibility requirements follow the shared baseline.
-- [x] No unresolved screen-level decisions remain.
+- [x] User-confirmed commercial terms, separate waiting/production clocks and Monday–Friday counting are documented; factory capacity/cost values remain operational inputs.
