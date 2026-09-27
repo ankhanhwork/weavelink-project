@@ -19,12 +19,12 @@ This repository contains the software design documentation for the DBIZ 3 Group 
 
 | Area | Contents | Location |
 |---|---|---|
-| Function list | 12 MFG modules and 98 module-qualified function entries | [`docs/function-list.md`](docs/function-list.md) |
+| Function list | 12 MFG modules and 99 module-qualified function entries | [`docs/function-list.md`](docs/function-list.md) |
 | Use cases | 49 use cases with resolved actors, relationships, and functions | [`docs/architecture/use-case.md`](docs/architecture/use-case.md) |
 | Architecture | Context diagram, system configuration, and end-to-end usage flow | [`docs/architecture/`](docs/architecture/) |
 | Sequence diagrams | Business and operations sequences through SD-14, including SD-05A/05B and SD-13A prompt analysis | [`docs/architecture/sequence.md`](docs/architecture/sequence.md) |
-| Screen catalogue | 45 documented screen entries; S16 is intentionally retired, and Customer/employee authentication screens are separate | [`docs/screen-list.md`](docs/screen-list.md) |
-| Screen specifications | 45 detailed screen specs; S16 has no screen or image because design-service fees are not paid as a separate transaction | [`screens/`](screens/) |
+| Screen catalogue | 48 documented screen entries; S16 is intentionally retired, and Customer/employee authentication screens are separate | [`docs/screen-list.md`](docs/screen-list.md) |
+| Screen specifications | 50 detailed screen specs; S16 has no screen or image because design-service fees are not paid as a separate transaction | [`screens/`](screens/) |
 | Module specifications | Scope, actors, scenarios, flows, requirements, entities, business rules, success criteria, decisions, and traceability | [`specs/`](specs/) |
 
 ## Main actors
@@ -46,7 +46,7 @@ This repository contains the software design documentation for the DBIZ 3 Group 
 | MFG-02 | Profile & Settings | 5 | 4 | [`spec-MFG-02.md`](specs/spec-MFG-02.md) |
 | MFG-03 | Dony Staff Accounts | 8 | 4 | [`spec-MFG-03.md`](specs/spec-MFG-03.md) |
 | MFG-04 | Product Catalog | 11 | 7 | [`spec-MFG-04.md`](specs/spec-MFG-04.md) |
-| MFG-05 | Product Design | 13 | 5 | [`spec-MFG-05.md`](specs/spec-MFG-05.md) |
+| MFG-05 | Product Design | 16 | 5 | [`spec-MFG-05.md`](specs/spec-MFG-05.md) |
 | MFG-06 | Order & Payment | 6 | 2 | [`spec-MFG-06.md`](specs/spec-MFG-06.md) |
 | MFG-07 | Order Management | 7 | 3 | [`spec-MFG-07.md`](specs/spec-MFG-07.md) |
 | MFG-08 | Sales | 8 | 3 | [`spec-MFG-08.md`](specs/spec-MFG-08.md) |
@@ -54,7 +54,7 @@ This repository contains the software design documentation for the DBIZ 3 Group 
 | MFG-10 | Order Optimization (Merge) | 7 | 4 | [`spec-MFG-10.md`](specs/spec-MFG-10.md) |
 | MFG-11 | Data Analytics | 5 | 3 | [`spec-MFG-11.md`](specs/spec-MFG-11.md) |
 | MFG-12 | System Operations | 8 | 3 | [`spec-MFG-12.md`](specs/spec-MFG-12.md) |
-| **Total** | | **98** | **49** | |
+| **Total** | | **99** | **49** | |
 
 ## MVP Scope
 
@@ -64,7 +64,7 @@ The MVP scope is defined by feature priority. It does not remove lower-priority 
 |---|---|---|---|
 | **Must** | Role-based Authentication & Access (Customer, Sales, Sales Admin) | MFG-01 | Required login/authorization roles; initial Dony staff identities are pre-provisioned because staff-account administration is deferred |
 | **Must** | Product Catalog (browse, search, view product detail) | MFG-04 | Entry point for choosing a base product |
-| **Must** | Product Design Workspace (self-design, upload artwork, preview, save design) | MFG-05 | Core customization workflow |
+| **Must** | Product Design Workspace (self-design, fabric/chest placement, upload artwork, remove background, multi-angle preview, save design) | MFG-05 | Core customization workflow |
 | **Must** | Order & Payment (standard checkout, VNPay deposit and balance, order creation) | MFG-06 | MVP uses the standard single-order path; merge pricing/batching is deferred with MFG-10. The order path also requires the minimum MFG-07/MFG-09 slices below before the MVP is complete. |
 | **Should** | Order Tracking & Status Updates | MFG-07 | Full tracking automation is deferred; the MVP-required slice uses authenticated Dony staff to record sample preparation/dispatch, production and shipment, with Customer sample approval and receipt confirmation. |
 | **Should** | Digital Contract Generation & E-signature acknowledgement | MFG-09 | Full template administration/signature enhancements are deferred; the MVP-required slice uses one fixed contract template, immutable order/sample terms, and a recorded Customer acceptance before deposit. |
@@ -120,7 +120,7 @@ The authoritative actor association is recorded in [`docs/architecture/use-case.
 
 ## Traceability
 
-The documents retain the original identifier layers: `MFG-*`, `UC-*`, `F-*`, module-local `FR-*`, 45 active screen IDs (`S01`–`S15` and `S17`–`S46`; S16 is retired), `SD-*`, and `ILF-*`. Each module spec maps its scenarios, requirements, screens, entities, business rules, and success criteria back to these identifiers.
+The documents retain the original identifier layers: `MFG-*`, `UC-*`, `F-*`, module-local `FR-*`, 48 active screen IDs (`S01`–`S15` and `S17`–`S46`, plus `S49`–`S51`; S16 is retired), `SD-*`, and `ILF-*`. Each module spec maps its scenarios, requirements, screens, entities, business rules, and success criteria back to these identifiers.
 
 When documentation conflicts, apply this precedence for release scope and behavior: (1) README MVP implementation slice and explicit policy decisions, (2) relevant module specification, (3) screen specification, (4) architecture sequence diagram. The `MVP` column in [`docs/screen-list.md`](docs/screen-list.md) is authoritative only for whether a screen/subset ships. Screen `P1/P2/P3` and function-list `High/Medium/Low` are artefact-local rankings and do not replace project MoSCoW scope. Business-rule values must be defined in the owning module spec; lower-level documents reference them rather than redefining them.
 

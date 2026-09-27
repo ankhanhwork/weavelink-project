@@ -47,3 +47,6 @@ MVP is an explicit release-scope flag; `Yes` means build the screen or noted MVP
 | S44 | Dony Staff CRM Login | Provides Dony employees `/staff/login` and invitation acceptance using the internal CRM shell; behavior is specified by [S44-staff_login_screen.md](../screens/S44-staff_login_screen.md). | Yes — login only; invitation acceptance is deferred. |
 | S45 | Dony Staff CRM Forgot Password | Provides Dony employees `/staff/forgot-password` using the internal CRM shell; behavior is specified by [S45-staff_forgot_password_screen.md](../screens/S45-staff_forgot_password_screen.md). | Yes |
 | S46 | Dony Staff CRM Reset Password | Provides Dony employees `/staff/reset-password` using the internal CRM shell; behavior is specified by [S46-staff_reset_password_screen.md](../screens/S46-staff_reset_password_screen.md). | Yes |
+| S49 | Remove Background | Selected S13 artwork modal with original/result review; [spec](../screens/S49-remove_background_screen.md). | Yes |
+| S50 | Product Mockups | Shared draft, six calibrated 2D angles; [spec](../screens/S50-product_mockups_screen.md). | Yes |
+| S51 | Virtual Try On | Synthetic presets and consent-gated session-only OpenAI photo editing; [spec](../screens/S51-virtual_try_on_screen.md). | No (Could) |
