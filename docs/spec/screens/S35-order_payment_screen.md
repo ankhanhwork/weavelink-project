@@ -33,7 +33,7 @@ Written behavior below takes precedence over obsolete sample content.
 | 2 | Route | Navigation target | /orders/{order_id}/payment | Yes | Access checked on server. |
 | 3 | order_id / purpose | Field / control | UUID / DEPOSIT or BALANCE, required | As specified | Customer owns order; DEPOSIT requires Signed contract and AwaitingDeposit; BALANCE requires receipt evidence and DeliveredAwaitingBalance. |
 | 4 | subtotal_vnd | Field / control | integer, required | As specified | Immutable quote/order snapshot; sum quantity times unit price plus option surcharges. |
-| 5 | merge_discount_vnd | Field / control | integer VND, required | As specified | MVP is standard-order only: always 0 because `merge_opt_in=false`. After MFG-10 activation, an eligible immutable quote may carry `min(subtotal_vnd, 840000)`; otherwise 0. Never recalculate from a percentage at payment time. |
+| 5 | merge_discount_vnd | Field / control | integer VND, required | As specified | MVP is standard-order only: always 0 because `merge_opt_in=false`. After MFG-10 activation, an eligible accepted flexible immutable quote may carry `min(floor(subtotal_vnd*5/100),250000)`; otherwise 0. Never recalculate from a percentage at payment time. |
 | 6 | shipping_vnd | Field / control | integer, required | As specified | 30000 VND snapshot. |
 | 7 | merge_fee_vnd | Field / control | integer, required | As specified | 0 VND. |
 | 8 | tax_vnd | Field / control | integer, required | As specified | 0 VND under classroom demo pricing assumption. |
@@ -89,7 +89,7 @@ Portal: Customer owner. Route: /orders/{order_id}/payment. Back preserves the or
 
 | FR ID (from the module spec) | What this screen does for it |
 |---|---|
-| MFG-06/F-PAY-002 | **Finalize Order** — Recompute quote from validated quantities/address with 30-minute expiry; in MVP force merge_opt_in=false and merge_discount_vnd=0; enable the versioned MFG-10 v3 branch only after MFG-10 activation. Derive separate design_fee_vnd from request provenance and allocation state. |
+| MFG-06/F-PAY-002 | **Finalize Order** — Recompute quote from validated quantities/address with 30-minute expiry; in MVP force merge_opt_in=false and merge_discount_vnd=0; enable the versioned MFG-10 v4 proposal branch only after MFG-10 activation. Derive separate design_fee_vnd from request provenance and allocation state. |
 | MFG-06/F-PAY-004 | **Make Payment** — Initiate one purpose-specific `DEPOSIT` or `BALANCE` payment attempt for its exact stored payable amount and return hosted-provider redirect details. |
 | MFG-06/F-PAY-005 | **Make Payment** — Verify and deduplicate provider notifications by order and purpose; accept settlement once, perform the purpose-specific order transition, and support authorized reconciliation/refunds without resurrecting cancelled orders. |
 | MFG-06/F-PAY-006 | **Make Payment** — Show the owner's purpose-specific receipt/state, amount and commercial breakdown with S35 navigation; browser return remains read-only. |

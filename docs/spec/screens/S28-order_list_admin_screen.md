@@ -35,7 +35,7 @@ Written behavior below takes precedence over obsolete sample content.
 | 6 | API errors | Field / control | standard API error envelope | As specified | 400 malformed; 422 invalid fields; 409 stale/duplicate; 429 rate limit; 503 dependency failure |
 | 7 | Open order | Action | Sales Admin opens any Dony order; Sales opens an assigned-customer order only. | Available when authorized | Destination: S29 |
 | 8 | Manage next lifecycle action | Action | Sales Admin or assigned Sales may perform the allowed sample/production/shipping action; neither role may fake Customer approval, receipt, deposit or balance settlement. | Available when authorized | Destination: S29 |
-| 9 | Merge console | Action | Sales Admin only; open eligible merge candidates. | Available when authorized | Destination: S42 |
+| 9 | Merge console | Action | Sales Admin only after MFG-10 activation; open S42 existing runs, recommendations and waiting/fallback status. Preserve validated origin and order-list filters. | Available when authorized | Destination: S42 |
 
 ## 4. States
 
@@ -54,9 +54,13 @@ Written behavior below takes precedence over obsolete sample content.
 |---|---|---|---|---|
 | 1 | Open order | Activate | Sales Admin opens any Dony order; Sales opens an assigned-customer order only. | S29 |
 | 2 | Manage next lifecycle action | Activate | Open the order with server-derived allowed actions. | S29 |
-| 3 | Merge console | Activate | Sales Admin only; open eligible merge candidates. | S42 |
+| 3 | Merge console | Activate | Sales Admin only after MFG-10 activation; open S42 existing runs, recommendations and waiting/fallback status. Preserve validated origin and order-list filters. | S42 |
 
 Portal: Sales Admin / Assigned Sales. Route: /admin/orders. Back preserves the originating route and filters. Fallback: Customer→S26; Sales Admin→S28; Sales→S20; System Admin→S41; Guest→S01. Enforce role, ownership and assignment before rendering.
+
+### Production-console consistency
+
+[S42 Merge Console](S42-merge_console_screen.md) reuses this screen's staff navigation, order identity/table, filters, pagination and role checks. Opening the console never changes order state. ScheduledOpen/Locked batch status is displayed separately from Confirmed order status. Assigned Sales receives no S42 actions or access to other members' data.
 
 ## 6. Screen-level rules
 

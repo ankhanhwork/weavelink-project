@@ -9,7 +9,7 @@
 | Belongs to module | [MFG-10](../specs/spec-MFG-10.md) |
 | Route | `/merge-terms` |
 | Mockup image | img/S24-merge_terms_screen.png |
-| Status | Resolved implementation specification |
+| Status | Draft aligned with MFG-10 v4 proposal; activation requires validation |
 
 ## 1. Purpose
 
@@ -30,7 +30,7 @@ Written behavior below takes precedence over obsolete sample content.
 | 1 | Screen heading | Heading | Merge Terms | Yes | Static route title. |
 | 2 | Route | Navigation target | /merge-terms | Yes | Access checked on server. |
 | 3 | policy_version | Field / control | immutable terms version shown and included in order quote on explicit opt-in. | As specified | policy_version: immutable terms version shown and included in order quote on explicit opt-in. |
-| 4 | policy_terms | Field / control | versioned read-only content | As specified | Explain discount capped at min(subtotal, 840,000 VND = 30% of 2,800,000 VND setup-cost assumption); system may recommend compatible orders for up to seven days after deposit; Sales Admin makes the final decision and starts any batch; standard/merge production due 7/10 calendar days after deposit; no guarantee that other orders will merge. |
+| 4 | policy_terms | Read-only terms | MFG-10 policy/version | Yes | 5% merchandise discount capped at 250000 VND, floor rounding; exclude shipping/tax/design fee. Explain 7 Monday–Friday waiting days then 8–14 separate production days, maximum completion at readiness working day 21, inclusive day 1 and weekend roll-forward. Early approved production may finish sooner; late approval never resets the accepted promise. Shared sewing only, separate decoration, no guaranteed match. Waiting expiry alerts Admin; individual routing/start requires human approval; retain incentive with no surcharge. Page view is not consent. |
 | 5 | acceptance_effect | Field / control | read-only explanation | As specified | Opening terms records no consent; acceptance occurs only on S23 with the displayed policy version. |
 | 6 | API errors | Field / control | standard API error envelope | As specified | 400 malformed; 422 invalid fields; 409 stale/duplicate; 429 rate limit; 503 dependency failure |
 | 7 | Return to order choice | Action | Preserve validated origin; no preference is recorded by page view. | Available when authorized | Destination: S23 |
@@ -54,6 +54,10 @@ Written behavior below takes precedence over obsolete sample content.
 
 Portal: Guest/Customer. Route: /merge-terms. Back preserves the originating route and filters. Fallback: Customer→S26; Sales Admin→S28; Sales→S20; System Admin→S41; Guest→S01. Enforce role, ownership and assignment before rendering.
 
+### 5.1 Interface consistency
+
+Reuse the customer navigation and readable terms layout from the existing customer screens. Use exactly the production-choice labels and policy version shown by [S23 Merge Option](S23-merge_option_screen.md), and the same incentive/fee terminology as [S25 Order Summary](S25-order_summary_screen.md). The return action preserves S23's safe context and does not accept policy or change the quote. Public terms contain no internal batch membership or other customers' information.
+
 ## 6. Screen-level rules
 
 | Rule ID | Rule | Source |
@@ -66,7 +70,7 @@ Portal: Guest/Customer. Route: /merge-terms. Back preserves the originating rout
 ### Acceptance scenarios
 
 1. Opening terms alone does not set merge_opt_in; only return action preserves source route.
-2. Displayed terms state discount cap/calculation, rolling-window policy, 7/10-day production target after deposit, and batch non-guarantee.
+2. Terms distinguish standard internal assignment from flexible consent and explain the readiness trigger, calendar basis, waiting limit, completion promise, private order tracking and retained fallback incentive.
 
 ## 7. Linked requirements
 
@@ -79,11 +83,9 @@ Portal: Guest/Customer. Route: /merge-terms. Back preserves the originating rout
 
 Support 360px through desktop; stack columns and use labelled horizontal-scroll tables on narrow screens. Controls are keyboard-operable with visible focus, logical headings, associated form labels, and aria-live status/error announcements. Text contrast is at least 4.5:1 (large text 3:1); pointer targets are at least 24px. Preserve user-entered data after recoverable failures. Confirm destructive actions, disable duplicate submit while pending, and enforce idempotency on the server.
 
-## 9. Open questions
+## 9. Specification status
 
-| # | Question | Blocking? | Status |
-|---|---|---|---|
-| 1 | No unresolved screen behavior questions remain; routes, fields, permissions, and defaults are resolved in this specification and its linked module requirements. | No | Resolved |
+The screen follows MFG-10's draft policy. Trial durations, incentive and operational parameters retain their assumption status; removing the module's questions section does not constitute operational approval.
 
 ## Completion checklist
 
@@ -92,4 +94,4 @@ Support 360px through desktop; stack columns and use labelled horizontal-scroll 
 - [x] Loading, empty, forbidden, error, retry, success, and conflict states are documented.
 - [x] Navigation and acceptance scenarios are explicit.
 - [x] Responsive and accessibility requirements follow the shared baseline.
-- [x] No unresolved screen-level decisions remain.
+- [x] User-confirmed commercial terms, separate waiting/production clocks and Monday–Friday counting are documented; factory capacity/cost values remain operational inputs.

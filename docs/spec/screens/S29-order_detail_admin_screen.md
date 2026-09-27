@@ -40,7 +40,7 @@ Written behavior below takes precedence over obsolete sample content.
 | 11 | Start production / ship | Action | Advance `Confirmed→InProduction→Shipped`; shipping requires carrier and tracking. | State and role allowed | Destination: S29 |
 | 12 | Record delivery proof | Action | Store/verify the evidence timestamp, notify the Customer and start the MFG-06 BR-007 3-calendar-day timer; do not change status immediately or expose balance payment. | Sales Admin only | Destination: S29 |
 | 13 | Cancel order | Action | Sales Admin with reason and eligibility; Sales cannot cancel. | Available when authorized | Destination: S28 |
-| 14 | Merge batch | Action | Sales Admin opens the batch console. | Available when authorized | Destination: S42 |
+| 14 | Merge batch | Action | After MFG-10 activation, Sales Admin opens S42 for this order or its assigned run; preserve validated origin and order context. | Available when authorized | Destination: S42 |
 
 ## 4. States
 
@@ -62,9 +62,19 @@ Written behavior below takes precedence over obsolete sample content.
 | 3 | Start production / ship | Activate | Commit one valid fulfillment transition with required shipment evidence. | S29 |
 | 4 | Record delivery proof | Activate | Persist and verify evidence; keep order `Shipped`, show countdown, and let the scheduled MFG-06 event transition after three calendar days unless the Customer confirms sooner. | S29 |
 | 5 | Cancel order | Activate | Sales Admin supplies a reason; server rechecks eligibility. | S28 |
-| 6 | Merge batch | Activate | Sales Admin opens eligible candidates. | S42 |
+| 6 | Merge batch | Activate | Sales Admin opens S42 with the selected order/run context; reauthorize access and preserve return navigation. | S42 |
 
 Portal: Sales Admin / Assigned Sales. Route: /admin/orders/{order_id}. Back preserves the originating route and filters. Fallback: Customer→S26; Sales Admin→S28; Sales→S20; System Admin→S41; Guest→S01. Enforce role, ownership and assignment before rendering.
+
+### Production-console consistency
+
+After MFG-10 activation, show the order's standard/flexible choice, snapshotted incentive, readiness-based due date, waiting limit when applicable and assigned batch status separately from the canonical order state. Link operational batch actions to [S42 Merge Console](S42-merge_console_screen.md); reuse this screen's readiness evidence, commercial snapshots and audit-timeline presentation there. For an assigned ScheduledOpen/Locked order, disable independent Start production here and route authorized Sales Admin to S42's revalidated group start; Assigned Sales cannot bypass the batch gate. Shipping still follows the individual order lifecycle.
+
+Preproduction cancellation retains the existing role/reason/refund rules and atomically releases scheduled/locked membership under MFG-07. Refresh the authoritative order and affected schedule after commitment; do not display a canceled order as an active member or imply that locking started production.
+
+### Capacity and deadline presentation
+
+After MFG-10 activation, use the shared daily-capacity profile/version from [S14](S14-product_design_rules_screen.md) and scheduling detail from [S42](S42-merge_console_screen.md). Show the order quantity, garments/day estimate, readiness day 1, waiting day 7 and separate 8–14-working-day production range with its unchanged maximum due date. Distinguish scheduling estimate, Admin-approved plan and actual human start. A late review displays risk/overdue status instead of recalculating a new full waiting or production window. Assigned Sales cannot edit capacity or approve a shared/individual fallback plan.
 
 ## 6. Screen-level rules
 

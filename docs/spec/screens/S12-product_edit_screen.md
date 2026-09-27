@@ -60,6 +60,10 @@ Written behavior below takes precedence over obsolete sample content.
 
 Portal: Sales Admin. Route: /admin/products/{product_id}/edit. Back preserves the originating route and filters. Fallback: Customer→S26; Sales Admin→S28; Sales→S20; System Admin→S41; Guest→S01. Enforce role, ownership and assignment before rendering.
 
+### Production-rule navigation
+
+After MFG-10 activation, the existing Edit design rules action opens [S14](S14-product_design_rules_screen.md) to maintain merge-enabled products, the per-product small-order threshold, production-type/material identities and shared garments-per-working-day capacity profile. Keep these controls in the rules editor rather than creating duplicate product settings on S42. Preserve product identity, version and return context.
+
 ## 6. Screen-level rules
 
 | Rule ID | Rule | Source |

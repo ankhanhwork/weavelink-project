@@ -60,6 +60,10 @@ Written behavior below takes precedence over obsolete sample content.
 
 Portal: Authenticated user. Route: /notifications. Back preserves the originating route and filters. Fallback: Customer→S26; Sales Admin→S28; Sales→S20; System Admin→S41; Guest→S01. Enforce role, ownership and assignment before rendering.
 
+### Merge approval notices (post-MFG-10 activation)
+
+Send deduplicated negative-benefit advance warnings, waiting-expiry approval requests and missed-plan/deadline-risk notices to Sales Admin. The operational link opens [S42](S42-merge_console_screen.md) with the order/run context after fresh authorization, preserving unread/handled status. A delivered notice, click or read acknowledgement does not approve a plan, convert a flexible order or start production. Customer notices describe only their own committed terms and genuinely approved/started plan, not other customers or a pending recommendation.
+
 ## 6. Screen-level rules
 
 | Rule ID | Rule | Source |

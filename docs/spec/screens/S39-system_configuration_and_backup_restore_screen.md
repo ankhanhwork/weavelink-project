@@ -13,7 +13,7 @@
 
 ## 1. Purpose
 
-**Shown when:** The System Admin edits typed allowlisted Dony-wide configuration and runs backup/restore operations. Secret fields show status only; merge policy (840,000 VND cap, rolling seven-day pool, Sales Admin final approval/start, and 7/10 production days after deposit) is versioned and read-only here. Restore requires reauthentication, exact backup ID, verified log chain, pre-restore backup and maintenance mode. If provider replay references an order absent from the restored snapshot, do not create a ghost order; log ERROR, alert System Admin and manually refund via VNPay dashboard.
+**Shown when:** The System Admin edits typed allowlisted Dony settings and backup/restore operations. Secrets show status only. MFG-10 v4 draft flexibility/scheduling policy is read-only; review and validation are required before activation. Restore requires reauthentication, exact backup ID, verified log chain, pre-restore backup and maintenance mode. Provider events for absent orders must not create ghost orders; log ERROR, alert System Admin and manually refund via VNPay dashboard.
 
 **The user leaves this screen when:** An authorized action in section 5 succeeds, the user follows a role-allowed global route, or they return to the validated originating route.
 
@@ -34,8 +34,8 @@ Written behavior below takes precedence over obsolete sample content.
 | 5 | SMTP/VNPay secret references | Field / control | write-only secret-reference strings | As specified | Show configured/not configured only; never reveal secret values. |
 | 6 | design_service_fee_vnd | Field / control | integer | As specified | Suggested Complex assessment fee: range 1..9999999999 VND; default 200000. Changes affect future assessments only; Simple uses 0 and existing proposals/accepted fees remain unchanged. |
 | 7 | shipping_vnd | Field / control | integer | As specified | Configurable nonnegative VND; default 30000. |
-| 8 | merge_discount_policy | Read-only policy summary | MFG-10 policy version | Yes | Display v3 as `min(order_subtotal_vnd, 840000)` per opted-in order; do not present a percentage. MFG-10 owns the canonical formula and constants; this screen only displays the active policy version. |
-| 9 | standard_production_days / merge_extra_days | Read-only duration policy | Standard / merge durations | Yes | Fixed at 7 / 3 days; customer promise is production_due_at, not carrier delivery. Merge duration applies only after MFG-10 activation. |
+| 8 | merge_discount_policy | Read-only policy summary | MFG-10 version/status | Yes | Trial flexible incentive=min(floor(subtotal*5/100),250000); standard internal batching adds no incentive. Display draft/validation status and preserve signed policy snapshots. |
+| 9 | waiting / production durations and calendar | Read-only policy | MFG-10 version | Yes | Show 7 Monday–Friday waiting days followed by 8–14 separate production working days (15–21 at full wait); readiness working date is day 1, weekend readiness rolls forward. Display maximum accepted due date separately from quantity-based estimate. No automatic conversion/start at expiry; preserve MVP/prior signed terms. |
 | 10 | daily_backup_time | Field / control | HH:mm, editable | As specified | Asia/Ho_Chi_Minh; default 02:00. |
 | 11 | daily_retention_count / weekly_retention_count | Field / control | integers, editable | As specified | Daily 1..30 default 7; weekly 1..12 default 4; retain required transaction logs/assets for all retained bases. |
 | 12 | backup_id | Field / control | UUID, required for restore | As specified | Require reauth and exact confirmation; checksum/schema validation and pre-restore backup. |
@@ -91,7 +91,7 @@ Portal: System Admin. Route: /system/configuration. Back preserves the originati
 | MFG-12/F-SYS-003 | **Backup Data** — Show backup schedule/retention, base/log watermarks, recent jobs, operation lock and available controls. |
 | MFG-12/F-SYS-004 | **Backup Data** — Queue verified encrypted snapshot and return backup job state/manifest reference. |
 | MFG-12/F-SYS-005 | **Restore Data** — Restore selected verified base plus continuous transaction logs through pre-maintenance watermark under one restore lock. |
-| MFG-12/F-SYS-006 | **Config System** — Show typed allowlisted settings, masked write-only secret references, active version and validation guidance; canonical MFG-10 v3 merge policy values are read-only; design_service_fee_vnd is the suggested Complex assessment fee, not a submission charge. |
+| MFG-12/F-SYS-006 | **Config System** — Show typed allowlisted settings, masked write-only secret references, active version and validation guidance; canonical MFG-10 v4 proposal merge policy values are read-only; design_service_fee_vnd is the suggested Complex assessment fee, not a submission charge. |
 | MFG-12/F-SYS-007 | **Config System** — Validate entire typed config patch, atomically activate new version and audit; reject fixed policy edits; design_service_fee_vnd changes affect future assessments only, never existing proposals or accepted fees. |
 | MFG-12/F-SYS-008 | **Config System** — Notify active admins of committed configuration key names/version/time, excluding secret values. |
 

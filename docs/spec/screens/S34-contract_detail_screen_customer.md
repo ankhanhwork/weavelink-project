@@ -67,6 +67,10 @@ Written behavior below takes precedence over obsolete sample content.
 
 Portal: Customer owner. Route: /contracts/{contract_id}. Back preserves the originating route and filters. Fallback: Customer→S26; Sales Admin→S28; Sales→S20; System Admin→S41; Guest→S01. Enforce role, ownership and assignment before rendering.
 
+### Versioned production commitment
+
+For an activated MFG-10 flexible order, the contract matches [S25](S25-order_summary_screen.md) and [S24](S24-merge_terms_screen.md): 7 Monday–Friday waiting days followed by 8–14 additional production working days, readiness working date counted as day 1 (weekend rolls forward), and maximum completion at readiness working day 21. Before all readiness conditions are met, show the signed relative duration/counting rule, not an invented fixed date. The derived date follows that same immutable rule after readiness. Preserve the 5% capped incentive on early sharing or human-approved individual production; approval of the commercial contract is not production-start approval. Shipping remains separate.
+
 ## 6. Screen-level rules
 
 | Rule ID | Rule | Source |

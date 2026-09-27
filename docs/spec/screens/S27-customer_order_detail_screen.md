@@ -70,6 +70,10 @@ When staff records verified carrier/POD evidence, S27 shows the evidence timesta
 
 Portal: Customer owner. Route: /orders/{order_id}. Back preserves the originating route and filters. Fallback: Customer→S26; Sales Admin→S28; Sales→S20; System Admin→S41; Guest→S01. Enforce role, ownership and assignment before rendering.
 
+### Flexible-production dates (after MFG-10 activation)
+
+Match [S23](S23-merge_option_screen.md), [S24](S24-merge_terms_screen.md) and the [MFG-10 calendar](../specs/spec-MFG-10.md#53-calendar-and-daily-capacity-calculation). Display the accepted incentive and standard/flexible terms independently of actual routing. After readiness, show readiness working day 1, the day-7 waiting limit and the maximum completion date (day 21 for full-wait flexible terms). Clearly label any quantity-based estimated completion and actual production start separately; an approval-required notice is not InProduction. Before readiness, show the relative 7-day waiting plus 8–14-day production rule without invented absolute dates. Early completion keeps the incentive; late Admin approval cannot silently extend the promised maximum. Do not expose shared-run customers or their artwork/terms.
+
 ## 6. Screen-level rules
 
 | Rule ID | Rule | Source |
