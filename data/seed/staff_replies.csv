@@ -1,0 +1,8 @@
+staff_reply_id,feedback_id,author_staff_id,reply_text,created_at,idempotency_key
+145ac33d-c323-5ed8-b039-645fdd4e110a,3382bd39-71b1-514f-b704-06ccb233f8e1,99ae419b-75a7-5639-a66e-0219d35bb3e2,Đã tiếp nhận yêu cầu điều chỉnh giả lập số 6.,2026-09-16T04:00:00Z,350c0f2b-548b-5bb0-b6c8-3117fa41370a
+60e1ba6b-9d11-520f-97e2-b3dd0bd432a4,b48d6f4d-06a4-57fa-94b3-074ea4545e95,b8c0deb3-118f-5bca-9b2c-b919fc03dc6a,Đã tiếp nhận yêu cầu điều chỉnh giả lập số 7.,2026-09-17T04:00:00Z,9c057155-aead-5a86-8c2d-7fa133862770
+902958dc-9e25-59f2-9dc3-45f5184ac1df,822c5ddd-446d-5a09-a168-97876d37b16c,b8c0deb3-118f-5bca-9b2c-b919fc03dc6a,Đã tiếp nhận yêu cầu điều chỉnh giả lập số 3.,2026-09-13T04:00:00Z,1265ec49-295c-56b8-b24e-9080da0352db
+ad063169-2acd-5a25-9d86-19fe551d8004,800356c2-c065-588d-a3b8-3a954cd1beed,b8c0deb3-118f-5bca-9b2c-b919fc03dc6a,Đã tiếp nhận yêu cầu điều chỉnh giả lập số 5.,2026-09-15T04:00:00Z,c2eb3f73-efe5-561e-b739-98490d7ee5e4
+cc949862-c8cd-56b9-b31a-68f87cf9a368,02639903-5ff6-52c9-8e4a-7d92e36b7d1c,b8c0deb3-118f-5bca-9b2c-b919fc03dc6a,Đã tiếp nhận yêu cầu điều chỉnh giả lập số 1.,2026-09-11T04:00:00Z,19a3328d-6543-5494-a42e-41333104c224
+d3e1d739-85b9-5e00-9b27-a2d768b66ac4,7285da4e-e632-56d2-947e-78e7e97e3309,99ae419b-75a7-5639-a66e-0219d35bb3e2,Đã tiếp nhận yêu cầu điều chỉnh giả lập số 2.,2026-09-12T04:00:00Z,24ee83df-58d3-5a1f-acd8-21cb489e2a0e
+e7b01a86-f612-5618-ad94-c9ba4eef4e0e,dd8c8d0b-d1c0-5a0a-94f1-4484e6c4fd09,99ae419b-75a7-5639-a66e-0219d35bb3e2,Đã tiếp nhận yêu cầu điều chỉnh giả lập số 4.,2026-09-14T04:00:00Z,c564fc17-f67a-55f2-b7e7-3a9e2e22bfe3

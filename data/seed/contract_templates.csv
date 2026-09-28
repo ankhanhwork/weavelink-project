@@ -1,0 +1,6 @@
+contract_template_id,template_family_id,name,version,structured_body,status,created_at
+007cd5a6-9516-504f-b52d-4e28553a2d33,c45fc7a0-587c-5100-8398-b98ea4a059f9,Mẫu hợp đồng giả lập 2,1,Nội dung mẫu với các placeholder được cho phép.,Archived,2026-07-03T01:00:00Z
+0509d1aa-4746-5f6f-958e-6767c988a091,a17c4a9d-4a8e-5f75-9552-a85d82635aa7,Mẫu hợp đồng giả lập 3,1,Nội dung mẫu với các placeholder được cho phép.,Draft,2026-07-05T01:00:00Z
+5cf5addc-c5fb-59cf-9bcc-884fa538b77b,3c889b6f-3d4a-51a8-86a9-4c77030481d9,Mẫu hợp đồng giả lập 1,2,Nội dung mẫu với các placeholder được cho phép.,Draft,2026-07-02T01:00:00Z
+c7e0e3b8-0302-5aea-8b34-242301cb91f7,c45fc7a0-587c-5100-8398-b98ea4a059f9,Mẫu hợp đồng giả lập 2,2,Nội dung mẫu với các placeholder được cho phép.,Published,2026-07-04T01:00:00Z
+d6328bc6-eda4-5e48-b5e7-c61258f87b53,3c889b6f-3d4a-51a8-86a9-4c77030481d9,Mẫu hợp đồng giả lập 1,1,Nội dung mẫu với các placeholder được cho phép.,Published,2026-07-01T01:00:00Z

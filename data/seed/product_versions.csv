@@ -1,0 +1,7 @@
+product_version_id,product_id,version,name,description,category,branch,sub_type,base_unit_price_vnd,min_order_quantity,max_units_per_order,keywords,created_at
+3f0b17ce-d4a3-5b42-bca3-eb504eaa9457,9e12d36c-6b54-50ce-8027-da4c3687353c,1,Quần bảo hộ lao động,Mẫu may theo đơn giả lập cho quần bảo hộ lao động.,Bảo hộ,Đồ bảo hộ lao động,Quần dài,275000,10,10000,bảo hộ lao động,2026-06-06T01:00:00Z
+426800db-f7c2-565b-ac46-4e69916cfdea,afb1181f-8897-577d-8367-b38fec1ecf5f,1,Áo khoác đồng phục,Mẫu may theo đơn giả lập cho áo khoác đồng phục.,Khoác,Đồng phục,Áo khoác,225000,10,10000,đồng phục may theo đơn,2026-06-04T01:00:00Z
+43f4d619-a3f7-593c-b4a6-44ab4449e96a,3236c429-4b10-5647-8a55-fe5e58b006db,1,Sơ mi công sở,Mẫu may theo đơn giả lập cho sơ mi công sở.,Sơ mi,Đồng phục,Dài tay,200000,10,10000,đồng phục may theo đơn,2026-06-03T01:00:00Z
+a5cbec99-25ab-5937-80f0-3046727cd765,5c164018-f3c8-5a17-a8ac-71770c0d0e75,1,Áo thun cổ tròn,Mẫu may theo đơn giả lập cho áo thun cổ tròn.,Thun,Đồng phục,Cổ tròn,150000,10,10000,đồng phục may theo đơn,2026-06-01T01:00:00Z
+a6112bdf-4736-5cad-b741-0b1d9e731dd4,21124a4c-1e1c-5a53-80f4-33ce5433da2b,1,Áo bảo hộ phản quang,Mẫu may theo đơn giả lập cho áo bảo hộ phản quang.,Bảo hộ,Đồ bảo hộ lao động,Phản quang,250000,10,10000,bảo hộ lao động,2026-06-05T01:00:00Z
+e76dfcaf-a753-5422-85e4-b542208bb11f,35f37346-e794-57d5-b077-84d35fa8d11f,1,Áo polo doanh nghiệp,Mẫu may theo đơn giả lập cho áo polo doanh nghiệp.,Polo,Đồng phục,Có cổ,175000,10,10000,đồng phục may theo đơn,2026-06-02T01:00:00Z

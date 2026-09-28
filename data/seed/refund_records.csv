@@ -1,0 +1,4 @@
+refund_id,payment_transaction_id,amount_vnd,status,provider_reference,requested_at,settled_at,idempotency_key
+1b872975-9caf-5511-ba97-c33537bef9c1,5236cf71-c6bf-5bbb-aa40-ec019f53b206,840000,Requested,,2026-09-28T07:00:00Z,,4f815851-81a9-5511-a597-a9aed22f616d
+8b94e942-cf6a-5577-a60e-50f67f88b379,f9ddb56f-acc4-5991-9fdd-7737424ab20b,840000,Failed,,2026-09-28T07:00:00Z,,a87a9c68-d3ea-5352-9541-1bb39ca60023
+b84b1c63-aaba-5c6a-8f35-2c89693d9ce6,6f5105be-bafa-5a88-b75a-933a8c53d719,840000,Succeeded,REFUND-SYNTH-002,2026-09-28T07:00:00Z,2026-09-29T07:00:00Z,7bcd9d8a-2ac2-563e-9cad-975c6da0aed0

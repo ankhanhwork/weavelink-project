@@ -1,0 +1,8 @@
+invitation_id,staff_account_id,email_snapshot,role_snapshot,token_hash,expires_at,accepted_at,delivery_status,version
+08c38c0b-38b8-5dbc-9635-401308317609,99ae419b-75a7-5639-a66e-0219d35bb3e2,staff01@example.invalid,SalesAdmin,invitation-hash-1,2026-09-30T02:00:00Z,2026-09-28T02:00:00Z,Delivered,1
+2feae1c7-1f05-5b81-b0d9-3eaf0ba8d1d0,99ae419b-75a7-5639-a66e-0219d35bb3e2,staff06@example.invalid,SalesAdmin,invitation-hash-6,2026-09-30T02:00:00Z,,Delivered,1
+64016878-6b47-5ebb-afc2-a846bdf5966e,b8c0deb3-118f-5bca-9b2c-b919fc03dc6a,staff02@example.invalid,Sales,invitation-hash-2,2026-09-30T02:00:00Z,2026-09-28T02:00:00Z,Delivered,1
+865343bc-d031-5e5a-96c9-f0f2d2a5fe62,436870c9-d9ec-5583-96b0-6a03e29c5540,staff04@example.invalid,Sales,invitation-hash-4,2026-09-30T02:00:00Z,,Delivered,1
+8d725e59-9937-5d18-bacf-57958b0ae3d1,627dae88-b474-574e-a2be-ee8bb1444470,staff05@example.invalid,Sales,invitation-hash-5,2026-09-30T02:00:00Z,,Delivered,1
+c3c0577d-217b-5a42-bcf9-d388cf3dcd2b,b8c0deb3-118f-5bca-9b2c-b919fc03dc6a,staff07@example.invalid,Sales,invitation-hash-7,2026-09-30T02:00:00Z,,Failed,1
+c4de25d2-afd2-5e06-aa23-3ea1645a28aa,373cff83-d172-576c-b055-c0d04653d0e7,staff03@example.invalid,SystemAdmin,invitation-hash-3,2026-09-30T02:00:00Z,2026-09-28T02:00:00Z,Delivered,1

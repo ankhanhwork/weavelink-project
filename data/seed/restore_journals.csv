@@ -1,0 +1,4 @@
+restore_journal_id,backup_id,committed_watermark,state,started_at,completed_at,payment_event_reference,error_code
+63d24b00-8510-5d02-b5a0-92662006a239,fc2d5973-fee5-598f-bb25-9d143e720a4f,wm-restore-1,Succeeded,2026-09-21T20:00:00Z,2026-09-21T21:00:00Z,queued-provider-event-1,
+889ec564-0821-5f83-8904-88fae70173ea,c56bc58f-bfdd-5e0e-adfe-6b4fec4b63bc,wm-restore-3,Running,2026-09-23T20:00:00Z,,,
+a02a126d-49ff-550c-b0fc-62ca8e860d0c,29ecca4c-86f7-5fbb-9e08-adbe494d789f,wm-restore-2,Failed,2026-09-22T20:00:00Z,2026-09-22T21:00:00Z,,LOG_GAP

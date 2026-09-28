@@ -1,0 +1,6 @@
+material_profile_id,material_label,durability,breathability,wash_durability,wrinkle_resistance,abrasion_resistance,stain_resistance,suited_occupations_json,suited_seasons_json,pros_json,cons_json
+1860d293-6ec1-5403-9eb1-06bbde43d296,65/35 cotton-polyester,Medium,Medium,High,High,Medium,Medium,"[""văn phòng""]","[""quanh năm""]","[""dữ liệu demo có căn cứ kỹ thuật""]","[""cần xác nhận mẫu thực tế""]"
+1c486a19-06bb-51ac-965b-a9486cd473c3,Vải kaki bảo hộ,High,Medium,High,High,High,High,"[""xưởng sản xuất""]","[""quanh năm""]","[""dữ liệu demo có căn cứ kỹ thuật""]","[""cần xác nhận mẫu thực tế""]"
+39986368-dd9f-5aa3-93e8-6b6c154ff5ef,Vải phản quang,High,Medium,High,High,High,High,"[""xưởng sản xuất""]","[""quanh năm""]","[""dữ liệu demo có căn cứ kỹ thuật""]","[""cần xác nhận mẫu thực tế""]"
+aa9b48f9-6d77-5b95-a301-9ae3c8b7ff63,Polyester chống nhăn,High,Medium,High,High,Medium,Medium,"[""văn phòng""]","[""quanh năm""]","[""dữ liệu demo có căn cứ kỹ thuật""]","[""cần xác nhận mẫu thực tế""]"
+ce487a14-5588-5be2-8000-3e50237a57ac,100% cotton,Medium,High,High,Medium,Medium,Medium,"[""văn phòng""]","[""quanh năm""]","[""dữ liệu demo có căn cứ kỹ thuật""]","[""cần xác nhận mẫu thực tế""]"
