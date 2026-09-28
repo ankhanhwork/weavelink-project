@@ -141,7 +141,7 @@ sequenceDiagram
     alt [account/IP rate limit reached]
         AuthService-->>AuthController: rate limited
         AuthController-->>AuthUI: HTTP 429
-        AuthUI-->>Customer: display rate-limit response; no session
+        AuthUI-->>Customer: display rate-limit response, no session
     else [unknown identity, invalid credentials, or unverified Customer]
         AuthService-->>AuthController: generic authentication failure
         AuthController-->>AuthUI: HTTP 401 generic response
@@ -158,7 +158,7 @@ sequenceDiagram
         AuthService->>SessionStore: create revocable secure session
         SessionStore-->>AuthService: session created
         AuthService-->>AuthController: authentication success and session cookie
-        AuthController-->>AuthUI: HTTP 200; Set-Cookie HttpOnly, Secure, SameSite=Lax
+        AuthController-->>AuthUI: HTTP 200, Set-Cookie HttpOnly, Secure, SameSite=Lax
         AuthUI-->>Customer: redirect to allowlisted internal route
     end
 ```
