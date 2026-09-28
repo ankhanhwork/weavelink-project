@@ -7,9 +7,9 @@
 | Spec version | v1.3 |
 | Author (team member) | Group B |
 | Date | 2026-09-26 |
-| Status | Draft |
-| Approved by (Client role) | No approver identified |
-| DBIZ2 source | Function List MFG-12, No. 87–94, `F-SYS-001`–`F-SYS-008`; UC-S09, UC-S10, UC-S11; screens S39–S40 |
+| Status | Final Group B demo specification; client operating approval not claimed |
+| Approved by (Client role) | Group B (team approval, 2026-09-28); no client approver |
+| DBIZ2 source | Function List MFG-12, `F-SYS-001`–`F-SYS-008`; UC-S09, UC-S10, UC-S11; screens S49, S50 |
 
 ---
 
@@ -17,11 +17,11 @@
 
 System Admins inspect redacted audit events, create/inspect backups, perform controlled restoration and change typed system configuration. System Admin access does not grant customer-design/order mutation or Dony financial export. Restore and configuration changes require recent reauthentication.
 
-MVP priority: **Won't**; these functions remain specified for the complete system and are excluded from MVP release. S40 is the audit log viewer; S39 provides backup, restore and configuration controls.
+MVP priority: **Won't**; these functions remain specified for the complete system and are excluded from MVP release. S50 is the audit log viewer; S49 provides backup, restore and configuration controls.
 
 Audit events are append-only and retained 365 days. Severity is INFO for committed success, WARN for denied/invalid actions and ERROR for dependency/job failures; DEBUG is not persisted. Nightly encrypted base snapshot runs at 02:00 Asia/Ho_Chi_Minh, with seven daily and four weekly bases retained. A continuous verified transaction-log archive permits restore through the pre-maintenance committed watermark. Payment event/restore journal remains outside the restored snapshot to avoid duplicate fulfillment/refunds.
 
-Configuration stores secret references, never secret values. Allowlisted settings remain Dony public contacts, optional production-notification email, SMTP/VNPay secret references, design_service_fee_vnd (suggested Complex assessment fee, default 200000 VND, integer 1..9999999999), shipping_vnd and backup schedule/retention. Reviewed MFG-10 business policy is read-only here: flexible discount 5% of merchandise subtotal capped at 250000 VND; standard internal batching has no incentive; duration/calendar and negative-benefit warning interval follow the owning policy. Product eligibility/threshold/capacity rules belong to Sales Admin in MFG-04/S14, not System Admin configuration. Scheduler recommends/notifies only; all production-plan approval, conversion and starts require human action.
+Configuration stores secret references, never secret values. Allowlisted settings remain Dony public contacts, optional production-notification email, SMTP/VNPay secret references, design_service_fee_vnd (suggested Complex assessment fee, default 200000 VND, integer 1..9999999999), shipping_vnd and backup schedule/retention. Reviewed MFG-10 business policy is read-only here: flexible discount 5% of merchandise subtotal capped at 250000 VND; standard internal batching has no incentive; duration/calendar and negative-benefit warning interval follow the owning policy. Product eligibility/threshold/capacity rules belong to Sales Admin in MFG-04/S19, not System Admin configuration. Scheduler recommends/notifies only; all production-plan approval, conversion and starts require human action.
 
 ## 2. Actors (mandatory)
 
@@ -35,7 +35,7 @@ Configuration stores secret references, never secret values. Allowlisted setting
 
 ### US-1: Monitor system logs (Won't for MVP)
 
-System Admin searches S40 by severity, action, outcome, actor, company, target and UTC date with pagination. Results redact passwords, tokens and card details.
+System Admin searches S50 by severity, action, outcome, actor, optional buyer organization context, target and UTC date with pagination. Results redact passwords, tokens and card details.
 
 1. **Given** no events match valid filters, **when** searched, **then** an empty page with pagination metadata is returned.
 2. **Given** malformed date range or invalid paging, **when** submitted, **then** 422 or 400 is returned as appropriate.
@@ -93,7 +93,7 @@ flowchart LR
 sequenceDiagram
     actor SystemAdmin as System Admin
     actor Scheduler as Trusted scheduler
-    participant OperationsUI as S39-S40
+    participant OperationsUI as S49, S50
     participant OperationsModule as System operations module
     participant OperationalDB as Database and external journal
     participant JobWorker as Job worker
@@ -135,7 +135,7 @@ sequenceDiagram
 | FR-003 | F-SYS-003 | Show backup schedule/retention, base/log watermarks, recent jobs, operation lock and available controls. | System Admin | Won't (MVP) |
 | FR-004 | F-SYS-004 | Queue verified encrypted snapshot and return backup job state/manifest reference. | System Admin / scheduler | Won't (MVP) |
 | FR-005 | F-SYS-005 | Restore selected verified base plus continuous transaction logs through pre-maintenance watermark under one restore lock. | System Admin | Won't (MVP) |
-| FR-006 | F-SYS-006 | Show typed allowlisted settings, masked write-only secret references, active version and validation guidance; canonical MFG-10 v4 proposal merge-policy values are read-only; design_service_fee_vnd is the suggested Complex assessment fee, not a submission charge. | System Admin | Won't (MVP) |
+| FR-006 | F-SYS-006 | Show typed allowlisted settings, masked write-only secret references, active version and validation guidance; canonical MFG-10 v4 final demo policy merge-policy values are read-only; design_service_fee_vnd is the suggested Complex assessment fee, not a submission charge. | System Admin | Won't (MVP) |
 | FR-007 | F-SYS-007 | Validate entire typed config patch, atomically activate new version and audit; reject fixed policy edits; design_service_fee_vnd changes affect future assessments only, never existing proposals or accepted fees. | System Admin | Won't (MVP) |
 | FR-008 | F-SYS-008 | Notify active admins of committed configuration key names/version/time, excluding secret values. | System | Won't (MVP) |
 
@@ -143,7 +143,7 @@ sequenceDiagram
 
 | FR ID | Input field | Type | Required | Output field | Type | Notes / validation |
 | --- | --- | --- | --- | --- | --- | --- |
-| FR-001 | severity, action/outcome/actor/company/target filters, UTC date, page/page_size | Enums/IDs/date/integers | Optional | redacted audit rows and pagination | Paginated object | page_size 1–100; malformed range 422 |
+| FR-001 | severity, action/outcome/actor/buyer_organization_id/target filters, UTC date, page/page_size | Enums/IDs/date/integers | Optional | redacted audit rows and pagination | Paginated object | page_size 1–100; malformed range 422 |
 | FR-002 | search text ≤100 chars, allowlisted field, severity/date/pagination | Text/enums/filters | Optional | filtered redacted results | Paginated object | System Admin only |
 | FR-003 | session-derived Admin privilege | Session | Yes | schedule, retention, watermarks, recent jobs, lock/control state | View model | No client privilege flag |
 | FR-004 | manual trigger or trusted scheduler, Idempotency-Key | Enum/internal trigger/key | Yes | backup_id, manifest reference, status | Job object | Verify database/assets/checksums/schema/log watermark before success |
@@ -161,7 +161,7 @@ sequenceDiagram
 | BR-003 | Continuous transaction-log archive must verify sequence/checksums and restore to committed pre-maintenance watermark; missing/gapped/corrupt chain prevents activation. | Prevent incomplete restoration. |
 | BR-004 | Keep payment event/restore journal outside restored snapshot; reconcile queued provider events idempotently. | Prevent duplicate fulfillment/refunds. |
 | BR-005 | Config patch is allowlisted, fully validated, and atomically activated; secrets are references only. | Prevent partial, unsafe configuration changes. |
-| BR-006 | MFG-10 business constants remain versioned read-only policy here: 5% capped at 250000 VND, 7 waiting workdays plus 8–14 production workdays, Monday–Friday inclusive day-1 counting and human approval/start. Product enabled/threshold/shared daily throughput belong to Sales Admin in MFG-04/S14. Operational advance-warning lead days are maintained by Sales Admin on S42 and are distinct from customer commercial terms. Estimates label sewing cost/labor/throughput as assumptions, not factory measurements. | Preserve commercial commitments and authority boundaries. |
+| BR-006 | MFG-10 business constants remain versioned read-only policy here: 5% capped at 250000 VND, 7 waiting workdays plus 8–14 production workdays, Monday–Friday inclusive day-1 counting and human approval/start. Product enabled/threshold/shared daily throughput belong to Sales Admin in MFG-04/S19. Operational advance-warning lead days are maintained by Sales Admin on S46 and are distinct from customer commercial terms. Estimates label sewing cost/labor/throughput as assumptions, not factory measurements. | Preserve commercial commitments and authority boundaries. |
 
 Configuration notices list changed key names, actor, version and time only; secret values are excluded. In-app inbox is authoritative and email delivery is retried; notification failure never rolls back configuration. Restore success revokes sessions. During maintenance, provider callbacks are durably queued and reconciled idempotently after recovery.
 
@@ -182,8 +182,8 @@ MFG-11 analytics events/results are not the general audit log. Its confirmed rol
 
 | Screen ID | Screen name | Priority | Screen Spec file |
 | --- | --- | --- | --- |
-| S39 | System Configuration / backup and restore controls | Won't (MVP) | Module screen |
-| S40 | System Log Viewer | Won't (MVP) | Module screen |
+| S49 | System Configuration / backup and restore controls | Won't (MVP) | Module screen |
+| S50 | System Log Viewer | Won't (MVP) | Module screen |
 
 ## 8. Success criteria (mandatory)
 
@@ -197,24 +197,24 @@ MFG-11 analytics events/results are not the general audit log. Its confirmed rol
 
 - System Admin identity and recent reauthentication are available from the shared identity service.
 - Scheduler, private asset storage and durable job queue are available in complete-system deployment.
-- MVP priority is Won't; role-specific Sales Admin, Sales, System Admin and verified Customer identities are pre-provisioned as listed in README. The System Admin identity is bootstrap/recovery-only; Sales Admin operates the MVP order path.
+- MVP priority is Won't; role-specific Sales Admin, Sales, System Admin and verified Customer identities are pre-provisioned as listed in the [MVP scope](../mvp-scope-proposal.md). The System Admin identity is bootstrap/recovery-only; Sales Admin operates the MVP order path.
 
 ## 10. Open questions
 
 | # | Question | Blocking? | Owner | Status |
 | --- | --- | --- | --- | --- |
-| 1 | Resolved decisions: Group B; course DBIZ 3; no approver identified; course/demo use only; MVP priority Won't. | No | Group B | Resolved |
+| 1 | Resolved decisions: Group B; course DBIZ 3; approved by Group B; no client approver; course/demo use only; MVP priority Won't. | No | Group B | Resolved |
 | 2 | No remaining open questions. | No | Group B | Resolved |
 
 ## 11. Traceability to DBIZ2
 
 | Spec section | DBIZ2 source | Location |
 | --- | --- | --- |
-| 1–2 Scope and actors | MFG-12 Function List No. 87–94 | `F-SYS-001`–`F-SYS-008` |
+| 1–2 Scope and actors | MFG-12 Function List MFG-12 | `F-SYS-001`–`F-SYS-008` |
 | 3 Scenarios | UC-S09, UC-S10, UC-S11 | Use-case labels and resolved operations |
 | 4 Flows | Logs, backup, restore, configuration | Current MFG-12 contract |
 | 5–6 FRs and entities | `F-SYS-001`–`F-SYS-008` | Function List MFG-12 |
-| 7 Screens | S39–S40 | Screen List and module contract |
+| 7 Screens | S49, S50 | Screen List and module contract |
 
 ## Completion checklist
 

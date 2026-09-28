@@ -17,14 +17,15 @@ flowchart LR
     Platform -->|Outbox delivery| Mail["SMTP / development email sink"]
     Platform -->|Sanitized intent and approved aggregate facts only| AI["Restricted AI adapter; provider undecided"]
     AI -->|Typed query proposal and explanation; no business actions| Platform
+    Platform -->|Explicit Customer consent; transient photo and designed polo| TryOn["AI image-editing provider (selected at Plan): MFG-05 try-on"]
+    TryOn -->|Illustrative result bound to current session and draft| Platform
 ```
 
-Nodes found: 10
 
-Arrows found: 15
 
-Unreadable text: None.
 
 The AI provider/model is chosen and configured at Plan under MFG-11 I-01; its product data boundary and page-memory-only conversation policy are already defined in MFG-11 5.7. It has no direct database or business-action access. Sales Admin alone accesses commercial analytics; System Admin receives redacted operational diagnostics.
 
 Guest catalog browsing remains public but emits no analytics behavior events. Only authenticated Customer interactions and authoritative customer-linked business events feed MFG-11; no guest-to-login identity integration is introduced.
+
+The analytics adapter above is distinct from MFG-04's catalogue-grounded comparison/advisory workflow and MFG-05's consent-gated AI try-on integration. Catalogue comparison receives only Published product/material/print facts; its AI workflow service and runtime contract are selected at Plan. Try-on receives personal photos only after explicit consent and never contributes a production design, saved asset or analytics event. Application photo/result buffers remain session-only under MFG-05.

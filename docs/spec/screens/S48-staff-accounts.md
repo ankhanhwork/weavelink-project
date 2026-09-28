@@ -1,0 +1,113 @@
+# Screen Spec: S48 Dony Staff Accounts
+
+| Field | Value |
+|---|---|
+| Screen ID | `S48` |
+| Screen name | Dony Staff Accounts |
+| Actor | System Admin |
+| Priority | Could (MVP) |
+| Belongs to module | [MFG-03](../specs/spec-MFG-03.md) |
+| Route | `/system/staff` |
+| Mockup image | img/S48-01-staff-accounts.png |
+| Status | Resolved implementation specification |
+
+
+## 1. Purpose
+
+**Shown when:** A System Admin manages accounts for Dony employees, sends invitations, changes roles or employment status and soft-deletes eligible staff while protecting the last active System Admin. Business Buyers and Reseller Shops are customers and never appear here as tenants or staff-account owners. All identifiers and permissions come from the server session; list filters are allowlisted and recoverable failures preserve entered values.
+
+**The user leaves this screen when:** An authorized action in section 5 succeeds, the user follows a role-allowed global route, or they return to the validated originating route.
+
+## 2. Mockup
+
+![Dony employee accounts, invitations and last-admin protection](img/S48-01-staff-accounts.png)
+
+The mockup uses synthetic employee identities and the single-Dony System Console. It shows role/status filters, invitations, open work and last-admin protection; it does not provision customer organizations or manufacturer tenants.
+
+## 3. Element inventory
+
+| # | Element | Type | Content / data source | Required | Validation |
+|---|---|---|---|---|---|
+| 1 | Screen heading | Heading | Dony Staff Accounts | Yes | Static route title. |
+| 2 | Route | Navigation target | /system/staff | Yes | System Admin authorization checked on server. |
+| 3 | staff_account_id / version | Field / control | UUID / integer | As specified | Server-issued; expected_version required for edits. |
+| 4 | full_name / work_email | Field / control | strings, required | As specified | Name 1..100; email normalized and globally unique. |
+| 5 | role | Field / control | Sales, Sales Admin or System Admin | As specified | Internal Dony role only; Customer cannot be assigned here. |
+| 6 | status | Field / control | Invited, Active, Suspended, Deleted | As specified | Deleted is terminal; suspended staff cannot start authenticated actions. |
+| 7 | open_work_counts | Read-only summary | assigned customers, requests, orders, payment and production exceptions | When relevant | Unresolved work must be reassigned or resolved before removal. |
+| 8 | role/status/query filters | Search and filters | allowlisted enums and bounded text | No | Filters Dony employees only. |
+| 9 | API errors | Field / control | standard API error envelope | As specified | 400 malformed; 403 prohibited; 404 inaccessible staff; 409 duplicate/stale/last-admin/open-work; 422 invalid fields. |
+| 10 | Add employee | Action | Create one inactive Dony employee and 48-hour single-use invitation with idempotency. | Available when authorized | Destination: S48 |
+| 11 | Update employee | Action | Update allowlisted identity, role or status fields; audit and revoke obsolete sessions. | Available when authorized | Destination: S48 |
+| 12 | Resend invitation | Action | Invalidate the old invitation and issue a new 48-hour token. | Invited status only | Destination: S48 |
+| 13 | Suspend/reactivate | Action | Change employee access after last-admin and open-work checks. | Available when authorized | Destination: S48 |
+| 14 | Soft delete | Action | Confirm employee identity and consequences; retain history and revoke sessions. | Eligible staff only | Destination: S48 |
+
+## 4. States
+
+**Loading, access, errors and retry:** Show a labelled Loading state while reads resolve. A missing or inaccessible route returns a safe 401/403/404 without disclosing protected records. Error states show the API code, message, field_errors and request_id while preserving safe input. Retry transient reads; retry a mutation only with the original idempotency key and identical payload. Preserve safe user input after recoverable failures.
+
+| State | What the user sees | Trigger |
+|---|---|---|
+| Empty | Show “No staff accounts” and an authorized add-staff action; do not imply external-company tenants. | Screen has no eligible or matching record |
+| Success | Refresh the committed Dony Staff Accounts data and show the next action permitted by its lifecycle and actor. | Valid action commits |
+| Conflict | The Dony Staff Accounts data or lifecycle changed concurrently; reload authoritative state and do not replay a stale mutation. | Stale version, duplicate or invalid lifecycle transition |
+## 5. Interactions and navigation
+
+| # | Element | User action | System response | Goes to screen |
+|---|---|---|---|---|
+| 1 | Add employee | Activate | Validate unique work email and internal role; create inactive staff account and invitation atomically. | S48 |
+| 2 | Update employee | Activate | Apply allowlisted fields with expected-version and last-admin checks; audit committed changes. | S48 |
+| 3 | Resend invitation | Activate | Invalidate the prior token and enqueue one replacement invitation. | S48 |
+| 4 | Suspend/reactivate | Activate | Change staff access, revoke obsolete sessions and preserve history. | S48 |
+| 5 | Soft delete | Activate | Require reassignment of blocking work, confirm identity, revoke sessions and retain history. | S48 |
+
+Portal: System Admin. Route: /system/staff. Back preserves the originating route and filters. 
+
+## 6. Screen-level rules
+
+| Rule ID | Rule | Source |
+|---|---|---|
+| SR-001 | Check access and ownership on the server; never trust submitted customer, company, role, price, stage or provider status. Apply the documented 401/403/404 behavior and field rules. | Project baseline |
+| SR-002 | IDs are UUIDs; timestamps are UTC and displayed in Asia/Ho_Chi_Minh; money and quantities are integers. Mutations use expected versions and idempotency keys where specified. | Project baseline |
+| SR-003 | Apply the owning module's lifecycle and validation rules; preserve immutable submitted snapshots and design versions. | Project baseline |
+| SR-004 | Use documented project assumptions; do not invent factual company, author, client-approval or course identifiers. | Project baseline |
+
+### Acceptance scenarios
+
+1. Adding an employee creates no company or tenant; the 48-hour invitation accepts only Sales, Sales Admin or System Admin.
+2. Public Customer registration cannot grant an internal Dony role.
+3. Deleting, suspending or demoting the last active System Admin is rejected; blocking work must be reassigned and soft deletion retains business history.
+
+## 7. Linked requirements
+
+| FR ID (from the module spec) | What this screen does for it |
+|---|---|
+| MFG-03/F-ACC-001 | **Add Staff Account** — List Dony staff with pagination and role, status and text filters. |
+| MFG-03/F-ACC-002 | **Add Staff Account** — Render the employee creation form for an authorized System Admin. |
+| MFG-03/F-ACC-003 | **Add Staff Account** — Generate and deliver a hashed, single-use 48-hour Dony employee invitation. |
+| MFG-03/F-ACC-004 | **Add Staff Account** — Atomically create one inactive Dony staff account, invitation and outbox event. |
+| MFG-03/F-ACC-005 | **Update Staff Account** — Return an authorized Dony employee detail with role, status and open-work counts. |
+| MFG-03/F-ACC-006 | **Update Staff Account** — Update allowlisted employee fields, role or status with expected-version checks, last-admin protection and audit. |
+| MFG-03/F-ACC-007 | **Delete Staff Account** — Require explicit employee identity and operational-consequence confirmation before removal. |
+| MFG-03/F-ACC-008 | **Delete Staff Account** — Soft-delete or deactivate an eligible Dony employee, revoke sessions and retain audit history. |
+
+
+## 8. Responsive and accessibility notes
+
+Support 360px through desktop; stack columns and use labelled horizontal-scroll tables on narrow screens. Controls are keyboard-operable with visible focus, logical headings, associated form labels, and aria-live status/error announcements. Text contrast is at least 4.5:1 (large text 3:1); pointer targets are at least 24px. Preserve user-entered data after recoverable failures. Confirm destructive actions, disable duplicate submit while pending, and enforce idempotency on the server.
+
+## 9. Open questions
+
+| # | Question | Blocking? | Status |
+|---|---|---|---|
+| 1 | No unresolved screen behavior questions remain; routes, fields, permissions, and defaults are resolved in this specification and its linked module requirements. | No | Resolved |
+
+## Completion checklist
+
+- [x] Route, actor, module, priority, and mockup status are identified.
+- [x] Element fields, actions, validation, and data ownership are documented.
+- [x] Loading, empty, forbidden, error, retry, success, and conflict states are documented.
+- [x] Navigation and acceptance scenarios are explicit.
+- [x] Responsive and accessibility requirements are documented in this screen.
+- [x] No unresolved screen-level decisions remain.
