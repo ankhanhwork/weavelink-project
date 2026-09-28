@@ -20,12 +20,13 @@ This repository contains the software design documentation for the DBIZ 3 Group 
 | Area | Contents | Location |
 |---|---|---|
 | Function list | 12 MFG modules; module-qualified function entries including the Sales/design collaboration extension | [`docs/function-list.md`](docs/function-list.md) |
-| Use cases | 51 use cases with resolved actors, relationships, and functions | [`docs/architecture/use-case.md`](docs/architecture/use-case.md) |
+| Use cases | 52 use cases with resolved actors, relationships, and functions | [`docs/architecture/use-case.md`](docs/architecture/use-case.md) |
 | Architecture | Context diagram, system configuration, and end-to-end usage flow | [`docs/architecture/`](docs/architecture/) |
 | Sequence diagrams | Business and operations sequences through SD-14, including SD-05A/05B and SD-13A prompt analysis | [`docs/architecture/sequence.md`](docs/architecture/sequence.md) |
-| Screen catalogue | Screen catalogue including S52; S16 and S18 are intentionally retired, and Customer/employee authentication screens are separate | [`docs/screen-list.md`](docs/screen-list.md) |
-| Screen specifications | Detailed screen specs and the S18 retirement mapping; S16 has no screen or image because design-service fees are not paid as a separate transaction | [`screens/`](screens/) |
+| Screen catalogue | Workflow-grouped screens S01 through S50 with one MVP label per screen | [`docs/screen-list.md`](docs/screen-list.md) |
+| Screen specifications | Detailed specifications and mockups for the current screens | [`screens/`](screens/) |
 | Module specifications | Scope, actors, scenarios, flows, requirements, entities, business rules, success criteria, decisions, and traceability | [`specs/`](specs/) |
+| MVP scope | Approved Must/Should/Could/Won't release scope, MVP rules and seed data | [`mvp-scope-proposal.md`](mvp-scope-proposal.md) |
 
 ## Main actors
 
@@ -33,8 +34,8 @@ This repository contains the software design documentation for the DBIZ 3 Group 
 - `Member`: umbrella term for an authenticated user; manages profile, password, notifications, and logout.
 - `Customer`: the authorized representative of a Business Buyer or Reseller Shop; owns its designs and requests, approves samples, creates and tracks made-to-order production orders, acknowledges contracts, and pays.
 - Customer accounts register at `/sign-up` and sign in at `/login` through the storefront shell. Dony employees use the separate internal CRM at `/staff/login`; System Admin provisions staff accounts and invitations through MFG-03. Employees cannot self-register, and neither portal supports Google, Facebook, or other third-party sign-in.
-- `Sales`: a Dony employee who works only on assigned consultations, designs, customers, and permitted fulfilment records. Historical DBIZ2 material may call this role `Sales Consultant`.
-- `Sales Admin`: a Dony employee who manages Dony's product bases, customer requests, assignments, orders, contracts, payments, merge batches, and analytics. Historical DBIZ2 material may call this role `Company Admin`.
+- `Sales`: a Dony employee who works only on assigned consultations, designs, customers, and permitted fulfilment records.
+- `Sales Admin`: a Dony employee who manages Dony's product bases, customer requests, assignments, orders, contracts, payments, merge batches, and analytics.
 - `System Admin`: a Dony employee who manages Dony staff accounts and operates configuration, logs, backup, and restore. This role does not provision customer companies as system tenants.
 - `Payment Gateway (VNPay)`: external gateway; verified server IPN and reconciliation results are authoritative.
 
@@ -42,7 +43,7 @@ This repository contains the software design documentation for the DBIZ 3 Group 
 
 | Module | Name | Functions | Use cases | Specification |
 |---|---|---:|---:|---|
-| MFG-01 | Identity & Access | 11 | 5 | [`spec-MFG-01.md`](specs/spec-MFG-01.md) |
+| MFG-01 | Identity & Access | 13 | 6 | [`spec-MFG-01.md`](specs/spec-MFG-01.md) |
 | MFG-02 | Profile & Settings | 5 | 4 | [`spec-MFG-02.md`](specs/spec-MFG-02.md) |
 | MFG-03 | Dony Staff Accounts | 8 | 4 | [`spec-MFG-03.md`](specs/spec-MFG-03.md) |
 | MFG-04 | Product Catalog | 14 | 9 | [`spec-MFG-04.md`](specs/spec-MFG-04.md) |
@@ -54,95 +55,36 @@ This repository contains the software design documentation for the DBIZ 3 Group 
 | MFG-10 | Order Optimization (Merge) | 7 | 4 | [`spec-MFG-10.md`](specs/spec-MFG-10.md) |
 | MFG-11 | Data Analytics | 5 | 3 | [`spec-MFG-11.md`](specs/spec-MFG-11.md) |
 | MFG-12 | System Operations | 8 | 3 | [`spec-MFG-12.md`](specs/spec-MFG-12.md) |
-| **Total** | | **109** | **51** | |
+| **Total** | | **111** | **52** | |
 
 ## MVP Scope
 
-The MVP scope is defined by feature priority. It does not remove lower-priority modules from the complete-system documentation.
+The approved release scope is defined in [`mvp-scope-proposal.md`](mvp-scope-proposal.md), which is the single source for MVP priority. Each screen carries one MVP label (Must / Should / Could / Won't) in [`docs/screen-list.md`](docs/screen-list.md) and in its own Priority field; module FR priorities use the same labels. The complete-system documentation is retained for Should and Could items.
 
-| Priority | Feature / Item | MFG | Notes |
-|---|---|---|---|
-| **Must** | Role-based Authentication & Access (Customer, Sales, Sales Admin) | MFG-01 | Required login/authorization roles; initial Dony staff identities are pre-provisioned because staff-account administration is deferred |
-| **Must** | Product Catalog (browse, search, view product detail) | MFG-04 | Entry point for choosing a base product; Product Finder matching and suggestion panel (F-PROD-012) is a Should extension on S08. |
-| **Should** | AI Compare & Product Advisory | MFG-04 | Compare 2-4 Published products in one branch; guests can view results, while questions require login. F-PROD-013/014 use catalogue-grounded material/print guidance. |
-| **Must** | Product Design Workspace (self-design, fabric/chest placement, upload artwork, remove background, multi-angle preview, save design) | MFG-05 | Core customization workflow |
-| **Must** | Order & Payment (standard checkout, VNPay deposit and balance, order creation) | MFG-06 | MVP uses the standard single-order path; merge pricing/batching is deferred with MFG-10. The order path also requires the minimum MFG-07/MFG-09 slices below before the MVP is complete. |
-| **Should** | Order Tracking & Status Updates | MFG-07 | Full tracking automation is deferred; the MVP-required slice uses authenticated Dony staff to record sample preparation/dispatch, production and shipment, with Customer sample approval and receipt confirmation. |
-| **Should** | Digital Contract Generation & E-signature acknowledgement | MFG-09 | Full template administration/signature enhancements are deferred; the MVP-required slice uses one fixed contract template, immutable order/sample terms, and a recorded Customer acceptance before deposit. |
-| **Could** | Order Optimization / Merge | MFG-10 | Valuable after order volume increases; MFG-10 v4 proposal owns the draft production-priority/flexible policy and illustrative economics; validate assumptions before activation. Standard internal batching adds no incentive. |
-| **Could** | Assessed Design Service Request | MFG-05 | Simple work is free; accepted Complex fee is collected with the first order from the delivered design |
-| **Could** | Sales Assignment & Task Dashboard | MFG-08 | Needed when consultation volume requires a dedicated queue |
-| **Won't** | Profile & Settings | MFG-02 | Deferred from MVP; hide Profile/S06 and Change Password/S07 navigation/routes while retaining account recovery in MFG-01. |
-| **Should** | Analytics Dashboard, Funnel, Prompt Analysis & Export | MFG-11 | Requested improvement: S43 Overview and Journey & conversion, contextual read-only AI, and matching exports; publish only supported evidence/coverage. Service and merge branches follow their owning modules. |
-| **Won't** | Dony Staff Account Administration & System Operations | MFG-03, MFG-12 | Invitation/role-management UI, configurable operations, logs, backup and restore are deferred. Pre-provision one `Sales Admin` for order/sample/contract operations, one `Sales` identity for role/assignment checks, and one `System Admin` bootstrap identity; also seed one verified Customer test account. These are demo identities, not self-registration or live credentials. |
+| Priority | Scope summary |
+|---|---|
+| **Must** | End-to-end standard order path: Customer and staff authentication (MFG-01), notifications (S13), catalog browse/detail (MFG-04), 2D self-design and saved-design gallery (MFG-05), quote, order, digital-design and physical-sample approval, fixed-template contract, VNPay deposit and balance (MFG-06, MFG-07, MFG-09). |
+| **Should** | AI Compare, AI product advisory and AI virtual try-on; background removal and multi-angle mockups; keyword search and Product Finder; profile and change password (MFG-02); product administration S16–S18; payment list/reconciliation S41/S42; About/Contact; analytics Overview (S47). |
+| **Could** | Design-rules editor (S19), assessed design service (S24, S26, S29), Sales pipeline and assignment (MFG-08), contract template administration (S43–S45), staff accounts (MFG-03), post-deposit cancellation with in-system refund, receipt auto-confirmation timer and Overdue handling, analytics funnel/AI/export, merge (MFG-10). |
+| **Won't** | System operations (MFG-12): S49 configuration/backup/restore and S50 system logs. |
 
-### MVP Priority Summary
+**MVP implementation slice:** implement one end-to-end standard order path in this sequence:
 
-- **Must:** MFG-01, MFG-04, self-design in MFG-05, and MFG-06.
-- **Should:** MFG-04 Product Finder and AI Compare/advisory; full MFG-07 and MFG-09 capabilities beyond the minimum order-completion slices required for the MVP vertical path; MFG-11 analytics improvement, with the confirmed product scope below and runtime AI configuration at Plan.
-- **Could:** assessed design service in MFG-05, MFG-08, and MFG-10.
-- **Won't:** MFG-02 profile/settings screens, MFG-03 staff-account UI, and MFG-12 system-operations screens are omitted in MVP. Hide the Profile/S06 link; account recovery remains available through the relevant Customer or staff recovery screens.
+1. **Bootstrap and access:** seed the demo identities listed in the MVP scope (one Sales Admin, one Sales, one System Admin and one verified Customer) and one `CustomerAssignment` linking the demo Customer to the demo Sales. Sales Admin is the operational owner and lands on S36. Sales lands on S36 with read-only access to assigned-customer orders; an unassigned Sales account sees an empty list. System Admin is bootstrap-only and lands on S01. Routes of unreleased items return 404 and have no navigation link.
+2. **Catalog and design:** seed at least one complete Published product base; Customers browse it and self-design/save through MFG-04/MFG-05. Checkout has no merge option and `design_fee_vnd=0`.
+3. **Quote, order and physical sample:** create a standard quote and order; the Customer approves the digital design; Sales Admin records sample preparation and dispatch; the Customer records sample receipt and approval. A requested revision returns to a new design/quote approval cycle.
+4. **Contract and deposit:** after sample approval, Sales Admin explicitly selects Generate in S39 using the single fixed template; the Customer acknowledges it in S38 with consent and matching typed name before paying the exact VNPay deposit. This acknowledgement is not a certified digital signature.
+5. **Production, delivery and balance:** Sales Admin advances the paid order through InProduction and Shipped and records verified delivery evidence. The Customer confirms receipt, or Sales Admin confirms it on the Customer's behalf (MFG-06 BR-019); the exact VNPay balance then completes the order. Staff cannot mark an order paid.
 
-**MVP implementation slice:** “Should” describes the full MFG-07/MFG-09 modules, not permission to omit their order-critical minimums. Implement one end-to-end standard order path in this sequence:
+**MVP rules (MFG-06 BR-019):** cancellation only before a successful deposit; no in-system refund (a late deposit on a Cancelled order is flagged for manual refund); no 3-day auto-confirmation timer; `balance_due_at` is displayed without Overdue automation.
 
-1. **Bootstrap and access:** pre-provision the seed identities listed above; support Customer, Sales and Sales Admin authentication/authorization. Sales Admin is the MVP operational owner and lands on S28 after login; it can perform required Dony sample, contract and order updates without MFG-08 assignment queues. Seeded Sales and System Admin accounts are for authentication/authorization testing only: after login they land on public S01, with no staff-only MVP functions; attempts to open deferred S20/S41 or other unauthorized staff routes return 404/403 per the route-disclosure rule. System Admin is bootstrap-only; MFG-03/MFG-12 management screens are not MVP deliverables.
-2. **Catalog and design:** seed at least one complete, Published Dony product base with valid variants, size/colour/material/print options, prices, assets and compatible design rules before release; Customers browse it and self-design/save through MFG-04/MFG-05. MVP does not require product-admin CRUD screens. Exclude assessed design service and merge opt-in/discounts from MVP checkout.
-3. **Quote, order and physical sample:** create a standard quote and order; Customer approves the digital design; Sales Admin manually records sample preparation and dispatch evidence/tracking; Customer records sample receipt and approval. A requested revision returns to a new design/quote approval cycle.
-4. **Contract and deposit:** after sample approval, Sales Admin explicitly selects Generate in S33; the system generates the Customer's immutable contract from the single fixed Dony template (no automatic generation or template picker in MVP). Record consent, authenticated Customer acceptance/name, contract version and timestamp before allowing the exact VNPay deposit. This application acknowledgement is not represented as a certified digital signature.
-5. **Production, delivery and balance:** Sales Admin manually advances the paid order through InProduction and Shipped with required evidence/tracking. The Customer may confirm receipt; otherwise verified delivery evidence starts MFG-06 BR-007's 3-calendar-day auto-confirmation timer. MVP has no customer dispute workflow: when the timer expires, the system records receipt and enables the exact VNPay balance. The classroom balance deadline is 7 calendar days after verified delivery. Verified deposit/balance notifications, cancellation/refund protections and final order completion remain mandatory; staff cannot mark an order paid manually.
-
-### Analytics improvement boundary (2026-09-26)
-
-MFG-11 is promoted from Won't to Should for the requested improvement; this is a release target, not a claim that an application or tracking dataset exists. S43 remains a Sales Admin route in the internal CRM, with Overview, Journey & conversion and a contextual AI panel. All charts, exports and AI answers share server-owned metric definitions and reproducible result context. Other module priorities and the five-step required standard-order path above remain unchanged.
-
-F-DA-004 covers end-to-end funnel and drop-off analysis; F-DA-006 covers prompt-based analysis. F-DA-005 is not allocated because the supplied proposal uses it for a separate feature-evaluation dashboard outside this request. The proposal does not override current business rules or authorize its other features. Existing UC-C20/21/22 cover the extension; no new use-case IDs or screens are introduced.
-
-The user-confirmed choices are recorded in [MFG-11 section 10](specs/spec-MFG-11.md#10-confirmed-decisions-and-implementation-handoff): track only authenticated customers, never collect/stitch guest browsing; new design or explicit reorder starts a new intent while reload/edit/requote/payment retry resumes it; show observed nonprogression and explicit waiting/revision/cancellation without time-based abandonment; support the rolling last 12 calendar months and keep AI conversation only in memory for the open dashboard page. Product entries, explicit intents and orders have separate denominators.
-
-[MFG-11 section 5.7](specs/spec-MFG-11.md#57-reporting-window-retention-and-conversation-lifetime) specifies the technical retention defaults: raw analytics events for 13 calendar months, normalized prerequisite facts while needed by supported cohorts/open work, result snapshots for seven days and successful export files for seven days with download URLs lasting at most 10 minutes, capped by file expiry. Commercial source records keep their existing rules. Provider/model, budget and runtime limits are Plan decisions and do not block this product-specification update. Missing tracking and unconfigured AI remain explicit unavailable states; no guessed links or fabricated history are allowed. Analytics collection does not wait for the model, and MFG-12 management UI is not a prerequisite.
-
-## Use Case ID convention
-
-Use Case IDs use the format `UC-<actor initial><number>`:
-
-- `UC-G01` to `UC-G05`: public discovery/account access and AI comparison/advisory; advisory and follow-up questions require login.
-- `UC-M01` to `UC-M08`: Member or unauthenticated account-access flow.
-- `UC-C01` to `UC-C27`: Customer or Sales Admin; consult the actor column rather than inferring from the initial.
-- `UC-S01` to `UC-S11`: Sales or System Admin; consult the actor column rather than inferring from the initial.
-
-The authoritative actor association is recorded in [`docs/architecture/use-case.md`](docs/architecture/use-case.md). Because MFG-07 and MFG-08 both inherit `F-ORD-*` IDs, cross-module references always include the module, for example `MFG-07/F-ORD-003` and `MFG-08/F-ORD-003`.
-
-## Architecture and flows
-
-1. [`context.md`](docs/architecture/context.md) shows actors and external services around WeaveLink.
-2. [`system-configuration.md`](docs/architecture/system-configuration.md) shows logical frontend, backend, storage, worker, and integration boundaries.
-3. [`usage-flow.md`](docs/architecture/usage-flow.md) follows both design routes through contract, payment, production, and delivery.
-4. [`sequence.md`](docs/architecture/sequence.md) records the detailed message flows.
-
-## Traceability
-
-The documents retain the original identifier layers: `MFG-*`, `UC-*`, `F-*`, module-local `FR-*`, active screen IDs (`S01`–`S15`, `S17`, `S19`–`S46`, and `S49`–`S52`; S16/S18 are retired), `SD-*`, and `ILF-*`. Each module spec maps its scenarios, requirements, screens, entities, business rules, and success criteria back to these identifiers.
-
-When documentation conflicts, apply this precedence for release scope and behavior: (1) README MVP implementation slice and explicit policy decisions, (2) relevant module specification, (3) screen specification, (4) architecture sequence diagram. The `MVP` column in [`docs/screen-list.md`](docs/screen-list.md) is authoritative only for whether a screen/subset ships. Screen `P1/P2/P3` and function-list `High/Medium/Low` are artefact-local rankings and do not replace project MoSCoW scope. Business-rule values must be defined in the owning module spec; lower-level documents reference them rather than redefining them.
-
-## Open clarification areas
-
-The project is a classroom demo, uses clearly labelled fictional organization/contact data, has no external approver, and requires no further DBIZ2 source comparison. For a runnable classroom MVP, use the explicitly fictional demo assumptions in MFG-04 (MOQ 10, product variants/print areas, and sample volume-tier/surcharge data), MFG-06 (30,000 VND shipping, zero demo tax, full refund before InProduction, 3-day automatic receipt confirmation and 7-day balance deadline), and S22 (Business Buyer or Reseller Shop with a minimum Buyer Organization snapshot). MFG-05's existing design, asset, approval and revision logic remains authoritative; size is selected per order, not on S13. These values are coursework defaults, not verified Dony commercial commitments or legal/tax advice; replace them with approved business/legal values before production deployment.
+Business rules have a single source: the owning module specification.
 
 ## Suggested reading order
 
-1. [`docs/architecture/context.md`](docs/architecture/context.md)
-2. [`docs/architecture/system-configuration.md`](docs/architecture/system-configuration.md)
-3. [`docs/architecture/use-case.md`](docs/architecture/use-case.md)
-4. [`docs/function-list.md`](docs/function-list.md)
-5. The relevant module file in [`specs/`](specs/)
-6. The linked screen and sequence documents
-
-
-## Sales pipeline and website design collaboration (2026-09-27)
-
-S19/S20 now specify the shared Kanban/List Sales pipeline with role-scoped lead panels; S18 is retired into S19. Unknown-model leads are Admin-only Unclassified triage until classified. Closed Won is the historical verified-deposit outcome, separate from later order/refund outcomes. Eligible Approved design requests automatically follow the current lead owner; Sales Admin may set committed_due_at afterward, with Missing distinct from Overdue.
-
-S17 is the customer design gallery. S52 owns request status, exact fee acceptance/cancellation and complete shared-version review/feedback/approval; staff upload/share/import and replies happen in S21. MFG-05 section 5.4 defines the immutable version/provenance and owner-approval contracts. F-DES-017..021 are new; existing F-DES-014..016 retain their design-tool meanings. CustomerProvidedConfirmation of an unchanged import is separate from owner approval of any Dony change. Original references are not automatically DesignVersions.
-
-Reseller Shops use CustomerProvided designs: Dony supports ordinary technical adjustments or assessed rebuilding/rework of supplied artwork; creative design from scratch is reserved for Business Buyers. No shared revision cap, revision surcharge or separate sample fee is added; MFG-06's existing sample/design/quote approval cycle remains. These Sales/service capabilities remain Could and do not change the five-step required MVP path or other modules' priorities. Optional unresolved Sales follow-ups stay disabled until a later explicit decision.
+1. [Architecture context](docs/architecture/context.md)
+2. [System configuration](docs/architecture/system-configuration.md)
+3. [Use cases](docs/architecture/use-case.md)
+4. [Function list](docs/function-list.md)
+5. The relevant module specification in [specs/](specs/)
+6. Its linked screen specifications and [sequence diagrams](docs/architecture/sequence.md)
