@@ -20,7 +20,7 @@ and current.
 ## 3. Commands that are safe to run
 
 - `uv run tools/check_env.py --repo` : environment and repository check.
-- `<seed command> Chưa có` : regenerates the seed data; must finish with every integrity assertion passing.
+- `uv run data/seed/generate_seed.py` : regenerates the seed data; must finish with every integrity assertion passing.
 - `git status`, `git diff` : always allowed.
 
 ## 4. Hard rules
