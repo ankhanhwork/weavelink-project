@@ -7,17 +7,17 @@
 | Spec version | v1.0 |
 | Author (team member) | Group B |
 | Date | 2026-09-19 |
-| Status | Draft |
-| Approved by (Client role) | No approver assigned |
-| DBIZ2 source | Historical IDs retained: Function List No. 1-11; `F-USER-001` .. `F-USER-011`; `UC-G03`, `UC-M01` .. `UC-M04`; S02-S06 and S08. External DBIZ2 comparison is not required. |
+| Status | Final Group B demo specification; client operating approval not claimed |
+| Approved by (Client role) | Group B (team approval, 2026-09-28); no client approver |
+| DBIZ2 source | Historical IDs retained: Function List MFG-01; `F-USER-001` .. `F-USER-011`; `UC-G03`, `UC-M01` .. `UC-M04`; S04, S05, S06, S07, S11 and S14. DBIZ3 extension: `F-USER-012`, `F-USER-013`, `UC-M09` (S13 notifications). External DBIZ2 comparison is not required. |
 
 ---
 
 ## 1. Purpose and scope (mandatory)
 
-This module provides Customer registration, verification, email/password authentication, sign-out and password recovery through separate Customer storefront and Dony employee CRM portal entry points. Customer screens use the public storefront shell and navigation; staff screens use the internal Dony CRM shell and never show store/cart navigation. Public registration creates Customer capability only. A Customer may represent a company commissioning uniforms for internal use or a Reseller Shop commissioning garments from the shop's own designs for resale. This organization context does not grant an internal Dony role. Sales, Sales Admin and System Admin access is provisioned only by MFG-03 in the complete system; for MVP the named staff roles are pre-provisioned as described in README, without an invitation or account-administration UI. Google, Facebook and other external identity-provider login are not supported.
+This module provides Customer registration, verification, email/password authentication, sign-out and password recovery through separate Customer storefront and Dony employee CRM portal entry points. Customer screens use the public storefront shell and navigation; staff screens use the internal Dony CRM shell and never show store/cart navigation. Public registration creates Customer capability only. A Customer may represent a company commissioning uniforms for internal use or a Reseller Shop commissioning garments from the shop's own designs for resale. This organization context does not grant an internal Dony role. Sales, Sales Admin and System Admin access is provisioned only by MFG-03 in the complete system; for MVP the named staff roles are pre-provisioned as described in the [MVP scope](../mvp-scope-proposal.md), without an invitation or account-administration UI. Google, Facebook and other external identity-provider login are not supported.
 
-**In scope:** register and verify a Customer; authenticate existing Customers and invited/active Dony employees through their respective portal routes; revoke a session; request and complete portal-bound email recovery.
+**In scope:** register and verify a Customer; authenticate existing Customers and invited/active Dony employees through their respective portal routes; revoke a session; request and complete portal-bound email recovery; show each authenticated recipient their persisted in-app notifications (S13).
 
 **Out of scope:** profile maintenance is MFG-02; staff provisioning is MFG-03; phone/SMS verification is disabled.
 
@@ -39,14 +39,16 @@ This module provides Customer registration, verification, email/password authent
 
 1. **Given** a new normalized email and valid fields, **when** submitted, **then** one pending Customer and verification event are created atomically.
 2. **Given** a duplicate email, **when** registration is retried, **then** return the same generic 202 acknowledgement as a new address; do not reveal whether the address is registered and do not create another account.
-3. **Given** a valid unconsumed verification link, **when** opened within 24 hours, **then** activate exactly once.
+3. **Given** a rate-limited resend verification request for a known or unknown email, **when** accepted, **then** return the same generic acknowledgement and queue mail only for an eligible pending account.
+4. **Given** a valid unconsumed verification link, **when** opened within 24 hours, **then** activate exactly once.
 
 ### US-2 (Must): Log in
 
 1. **Given** a verified active user, **when** credentials are correct, **then** create a revocable session with active capabilities.
-2. **Given** invalid credentials, **when** attempts one through five occur in 15 minutes, **then** return generic 401; later attempts in the account/IP window return 429.
-3. **Given** an external redirect, **when** login succeeds, **then** discard it and use an allowlisted internal route.
-4. Customer accounts use `/login` on the Dony storefront; Dony employees use `/staff/login` on the separate internal CRM. Employee accounts cannot use public registration and have no Google/Facebook or other provider sign-in.
+2. **Given** invalid credentials or an unverified Customer account, **when** attempts one through five occur in 15 minutes, **then** return the same generic 401; later attempts in the account/IP window return 429.
+3. **Given** an unverified Customer account, **when** login is attempted, **then** no session is created. After any failed login, the UI offers a rate-limited resend action and returns a generic acknowledgement without disclosing account or verification state.
+4. **Given** an external redirect, **when** login succeeds, **then** discard it and use an allowlisted internal route.
+5. Customer accounts use `/login` on the Dony storefront; Dony employees use `/staff/login` on the separate internal CRM. Employee accounts cannot use public registration and have no Google/Facebook or other provider sign-in.
 
 ### US-3 (Must): Forgot password
 
@@ -60,8 +62,15 @@ This module provides Customer registration, verification, email/password authent
 
 ### US-5 (Must): Log out
 
-1. **Given** an active Customer session, **when** the Logout action in the storefront account menu runs, **then** revoke it, clear the cookie and route to S03; the internal CRM shell exposes its own Logout action and returns the employee to S44. Logout is a shell/header action, not the MFG-02 profile screen S06.
+1. **Given** an active Customer session, **when** the Logout action in the storefront account menu runs, **then** revoke it, clear the cookie and route to S05; the internal CRM shell exposes its own Logout action and returns the employee to S08. Logout is a shell/header action, not the MFG-02 profile screen S11.
 2. **Given** an already-revoked session, **when** repeated, **then** succeed as an idempotent no-op.
+
+### US-6 (Must): View notifications
+
+1. **Given** an authenticated Customer or Dony employee, **when** S13 opens, **then** return only that recipient's persisted in-app notifications, newest first, with bounded pagination; the recipient is derived from the session, never from client input.
+2. **Given** an unread notification, **when** the recipient marks it read, **then** store `read_at` once; repeating the action is an idempotent no-op.
+3. **Given** a notification with a target route, **when** the recipient opens it, **then** re-check authorization for the target; an inaccessible or obsolete target is hidden or returns 404 without disclosing data.
+4. Notifications are created by the owning modules' committed outbox events and deduplicated per event/recipient. The in-app inbox is authoritative; email delivery is secondary and its failure never removes the in-app notification.
 
 ### Edge cases
 
@@ -101,18 +110,17 @@ sequenceDiagram
     Guest->>AuthUI: enter registration information
     AuthUI->>AuthController: submit registration
     AuthController->>AuthService: register user
-    AuthService->>UserAccountDatabase: create user account
-    alt [user already exists]
-        UserAccountDatabase-->>AuthService: duplicate user
-        AuthService-->>AuthController: registration failed
-        AuthController-->>AuthUI: return error
-        AuthUI-->>Guest: display error message
-    else [registration successful]
-        UserAccountDatabase-->>AuthService: user created
-        AuthService-->>AuthController: registration success
-        AuthController-->>AuthUI: return success
-        AuthUI-->>Guest: display success message
+    AuthService->>UserAccountDatabase: register normalized email idempotently
+    alt [email is new]
+        UserAccountDatabase-->>AuthService: create Customer account
+        AuthService->>AuthService: queue verification message
+    else [email already registered]
+        UserAccountDatabase-->>AuthService: no mutation
     end
+    Note over AuthService,AuthUI: Both paths return the same 202 response and generic acknowledgement, never reveal whether the address exists.
+    AuthService-->>AuthController: registration accepted (same response shape)
+    AuthController-->>AuthUI: HTTP 202 generic acknowledgement
+    AuthUI-->>Guest: display generic next-step message
 ```
 
 # UC-M01: Log in — SD-03: Log In
@@ -124,30 +132,36 @@ sequenceDiagram
     participant AuthController
     participant AuthService
     participant UserAccountDatabase
+    participant SessionStore
 
     Customer->>AuthUI: enter login credentials
     AuthUI->>AuthController: submit login request
     AuthController->>AuthService: authenticate user
-    AuthService->>UserAccountDatabase: find user
-    alt [user not found]
-        UserAccountDatabase-->>AuthService: not found
-        AuthService-->>AuthController: authentication failed
-        AuthController-->>AuthUI: return error
-        AuthUI-->>Customer: display error message
-    else [user found]
-        UserAccountDatabase-->>AuthService: found user
-        alt [invalid credentials]
-            AuthService-->>AuthController: invalid credentials
-            AuthController-->>AuthUI: return error
-            AuthUI-->>Customer: display login failed
-        else [valid credentials]
-            AuthService-->>AuthController: authentication success
-            AuthController-->>AuthUI: return success
-            AuthUI-->>Customer: display login success
+    AuthService->>UserAccountDatabase: find user and verification state
+    alt [account/IP rate limit reached]
+        AuthService-->>AuthController: rate limited
+        AuthController-->>AuthUI: HTTP 429
+        AuthUI-->>Customer: display rate-limit response; no session
+    else [unknown identity, invalid credentials, or unverified Customer]
+        AuthService-->>AuthController: generic authentication failure
+        AuthController-->>AuthUI: HTTP 401 generic response
+        AuthUI-->>Customer: display generic login failure
+        opt [resend verification requested]
+            Customer->>AuthUI: activate Resend verification
+            AuthUI->>AuthController: submit resend request
+            AuthController->>AuthService: apply resend rate limit and queue if eligible
+            AuthService-->>AuthController: generic accepted response
+            AuthController-->>AuthUI: HTTP 202 generic acknowledgement
+            AuthUI-->>Customer: display generic resend confirmation
         end
+    else [verified active account and valid credentials]
+        AuthService->>SessionStore: create revocable secure session
+        SessionStore-->>AuthService: session created
+        AuthService-->>AuthController: authentication success and session cookie
+        AuthController-->>AuthUI: HTTP 200; Set-Cookie HttpOnly, Secure, SameSite=Lax
+        AuthUI-->>Customer: redirect to allowlisted internal route
     end
 ```
-
 
 ## 5. Functional requirements (mandatory)
 
@@ -164,6 +178,8 @@ sequenceDiagram
 | FR-009 | F-USER-009 | Issue and deliver a hashed reset token. | System | Must |
 | FR-010 | F-USER-010 | Verify token purpose, expiry and consumption state. | Guest | Must |
 | FR-011 | F-USER-011 | Atomically replace the password and revoke sessions. | Valid token holder | Must |
+| FR-012 | F-USER-012 | List the session owner's persisted in-app notifications with unread count, pagination and reauthorized target links. | Member | Must |
+| FR-013 | F-USER-013 | Mark an owned notification read idempotently. | Member | Must |
 
 ### 5.1 Input / Output contract
 
@@ -180,6 +196,8 @@ sequenceDiagram
 | FR-009 | server user/channel | UUID / enum | Yes | reset email event | Object | Hashed 30-minute token; retries at 1, 5, 30 minutes |
 | FR-010 | reset token | Opaque token | Yes | validity status | Enum | Purpose/expiry/consumption checked; one concurrent winner |
 | FR-011 | token, new_password, confirmation | Token / strings | Yes | confirmation | Object | Consume token, replace hash, revoke sessions; 409/422 as specified |
+| FR-012 | session, page, page_size, unread_only? | Session / integers / boolean | Session required | notifications, unread_count, page | Paginated object | page ≥1; page_size 1–50; recipient from session only; target routes reauthorized on open |
+| FR-013 | notification_id, session | UUID / session | Yes | read_at | Object | Owner only; foreign ID 404; repeated call returns the original read_at |
 
 ### 5.2 Business rules
 
@@ -203,27 +221,29 @@ sequenceDiagram
 | SystemCapability | user_id, role, active | System Admin is separate |
 | Session | id, user_id, token_hash, expiries, revoked_at | Raw token not stored/logged |
 | OneTimeToken | user_id, purpose, token_hash, expires_at, consumed_at | Single-use and purpose-bound |
+| Notification | id, recipient_user_id, source_event_id, type, title, body, target_route?, email_delivery_state, created_at, read_at? | Unique per source event and recipient; created by owning modules' outbox events |
 
 ## 7. Screens involved
 
 | Screen ID | Screen name | Priority | Screen Spec file |
 | --- | --- | --- | --- |
-| S02 | Registration | Must | `screens/S02-sign_up_screen.md` |
-| S03 | Customer storefront login | Must | `screens/S03-login_screen.md` |
-| S04 | Customer storefront recovery request | Must | `screens/S04-forgot_password_screen.md` |
-| S05 | Customer storefront password reset | Must | `screens/S05-reset_password_screen.md` |
-| S44 | Dony employee CRM login and invitation acceptance | Must | `screens/S44-staff_login_screen.md` |
-| S45 | Dony employee CRM recovery request | Must | `screens/S45-staff_forgot_password_screen.md` |
-| S46 | Dony employee CRM password reset | Must | `screens/S46-staff_reset_password_screen.md` |
-| S06 | Profile page (post-MVP); no separate logout page | Won't (MVP) | `screens/S06-user_profile_screen.md` |
+| S04 | Registration | Must | `screens/S04-customer-sign-up.md` |
+| S05 | Customer storefront login | Must | `screens/S05-customer-login.md` |
+| S06 | Customer storefront recovery request | Must | `screens/S06-customer-forgot-password.md` |
+| S07 | Customer storefront password reset | Must | `screens/S07-customer-reset-password.md` |
+| S08 | Dony employee CRM login and invitation acceptance | Must | `screens/S08-staff-login.md` |
+| S09 | Dony employee CRM recovery request | Must | `screens/S09-staff-forgot-password.md` |
+| S10 | Dony employee CRM password reset | Must | `screens/S10-staff-reset-password.md` |
+| S13 | Notifications | Must | `screens/S13-notifications.md` |
+| S11 | Profile page (MFG-02, MVP Should); no separate logout page | Should | `screens/S11-profile.md` |
 | Storefront / CRM shell | Logout action | Must | Header/account-menu action; no separate screen |
-| S08 | Safe default catalog destination | Must | `screens/S08-product_catalog_screen.md` |
+| S14 | Safe default catalog destination | Must | `screens/S14-product-catalog.md` |
 
 ## 8. Success criteria (mandatory)
 
 | SC ID | Criterion | How it is measured |
 | --- | --- | --- |
-| SC-001 | All eleven functions map one-to-one to FRs and retries/concurrency are deterministic. | Contract, idempotency and race tests. |
+| SC-001 | All thirteen functions map one-to-one to FRs and retries/concurrency are deterministic. | Contract, idempotency and race tests. |
 | SC-002 | Registration, login and recovery do not disclose account existence. | Compare status, body and timing class for new/existing addresses and known/unknown credentials. |
 | SC-003 | Passwords, raw tokens and session secrets never appear in responses/logs/demo data. | Security and log inspection. |
 
@@ -237,7 +257,7 @@ sequenceDiagram
 
 | # | Question | Blocking? | Owner | Status |
 | --- | --- | --- | --- | --- |
-| 1 | Administrative project inputs | No | Group B | Group B; DBIZ 3; no approver; classroom demo with fictional labeled data. |
+| 1 | Administrative project inputs | No | Group B | Group B; DBIZ 3; approved by Group B; no client approver; classroom demo with fictional labeled data. |
 | 2 | Identity and access behavior | No | Group B | Resolved — no remaining open questions; roles, lifetimes, session policy, limits and email-only recovery are specified in sections 3, 5 and 9. |
 
 ## 11. Traceability to DBIZ2
@@ -246,10 +266,11 @@ Historical IDs are retained for continuity; external DBIZ2 comparison is not req
 
 | Spec section | DBIZ2 source | Location |
 | --- | --- | --- |
-| Registration | `UC-G03`; `F-USER-001` .. `003` | S02; Sections 3 and 5 |
-| Login | `UC-M01`; `F-USER-004` .. `005` | S03 (Customer), S44 (employee); Sections 3 and 5 |
-| Logout | `UC-M04`; `F-USER-006` | Storefront account menu / internal CRM shell; Sections 3 and 5; not S06 |
-| Recovery | `UC-M02`, `UC-M03`; `F-USER-007` .. `011` | S04-S05 (Customer), S45-S46 (employee); Sections 3 and 5 |
+| Registration | `UC-G03`; `F-USER-001` .. `003` | S04; Sections 3 and 5 |
+| Login | `UC-M01`; `F-USER-004` .. `005` | S05 (Customer), S08 (employee); Sections 3 and 5 |
+| Notifications | `UC-M09`; `F-USER-012` .. `013` (DBIZ3 extension) | S13; Sections 3 and 5 |
+| Logout | `UC-M04`; `F-USER-006` | Storefront account menu / internal CRM shell; Sections 3 and 5; not S11 |
+| Recovery | `UC-M02`, `UC-M03`; `F-USER-007` .. `011` | S06, S07 (Customer), S09, S10 (employee); Sections 3 and 5 |
 
 ## Completion checklist
 

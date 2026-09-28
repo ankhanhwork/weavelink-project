@@ -22,6 +22,8 @@ flowchart TD
     Collector --> DB
     Ops --> DB
     Business --> Assets["Private designs and PDFs"]
+    Business --> CatalogAI["MFG-04 catalogue-grounded workflow; runtime contract at Plan"]
+    Business --> TryOn["MFG-05 consent-gated AI image edits (provider selected at Plan); session-only buffers"]
     DB --> Worker["Durable outbox and scheduled worker"]
     Worker --> Mail["SMTP / email sink"]
     Business --> VNPay["VNPay adapter"]
@@ -32,10 +34,7 @@ flowchart TD
     Ops --> Journal
 ```
 
-Nodes found: 18
 
-Arrows found: 26
 
-Unreadable text: None.
 
 MFG-11 chart, export and AI paths share metric definitions, role checks, unit/cohort filters and result snapshots. The collector cannot assert payments or business approvals; the worker projects authoritative timeline/outbox facts. Neither analytics nor the model is on the synchronous checkout/payment path. These are logical boundaries, not selected services, database technology or dependencies. MFG-12 remains deferred. MFG-11 5.3 defines authenticated-only entry/intent identity; 5.7 defines the 12-month reporting window and retention. No guest collector or persistent chat store is required. The current dashboard page holds transient AI conversation; its metric-source results have a separate seven-day lifetime. Provider activation follows Plan item I-01 in MFG-11 section 10.

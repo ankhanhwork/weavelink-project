@@ -7,9 +7,9 @@
 | Spec version | v2.1 |
 | Author (team member) | Group B |
 | Date | 2026-09-26 |
-| Status | Draft |
-| Approved by (Client role) | No approver identified |
-| DBIZ2 source | Function List MFG-09, No. 68–76, `F-CONTR-001`–`F-CONTR-009`; UC-C10, UC-C09, UC-C11, UC-C14, UC-C15, UC-C13; screens S30–S34 and S38 |
+| Status | Final Group B demo specification; client operating approval not claimed |
+| Approved by (Client role) | Group B (team approval, 2026-09-28); no client approver |
+| DBIZ2 source | Function List MFG-09, `F-CONTR-001`–`F-CONTR-009`; UC-C10, UC-C09, UC-C11, UC-C14, UC-C15, UC-C13; screens S43, S44, S45, S39, S38 and S13 |
 
 ---
 
@@ -17,7 +17,7 @@
 
 Sales Admins manage versioned templates and generate or regenerate an order contract only after the Customer has approved the received physical sample. Customers review and sign only their own current contract. The contract binds the approved digital-design version, physical-sample evidence, commercial total, deposit percentage and remaining-balance formula. The system generates PDFs and records an auditable application acknowledgement; it does not claim a certified digital signature. Successful signing atomically advances the order from `PendingContract` to `AwaitingDeposit`. MFG-06 owns order creation and payment; MFG-07 owns fulfillment/cancellation.
 
-MVP priority: **Should** for the complete module. The MVP includes one fixed-template contract snapshot and Customer acknowledgement after physical-sample approval, as a required MFG-06 dependency; full template administration, regeneration tooling and stronger signature workflows remain deferred. This acknowledgement is not a certified digital signature. The complete-system contract lifecycle is specified here.
+MVP priority (see [MVP scope](../mvp-scope-proposal.md)): **Must** for fixed-template generation (S39), Customer review and acknowledgement (S38) and their notifications (FR-003, FR-004, FR-005, FR-008, FR-009), a required MFG-06 dependency; **Could** for template selection/administration (S43–S45), unsigned-contract regeneration and stronger signature workflows (FR-001, FR-002, FR-006, FR-007). This acknowledgement is not a certified digital signature. The complete-system contract lifecycle is specified here.
 
 ## 2. Actors (mandatory)
 
@@ -30,15 +30,15 @@ MVP priority: **Should** for the complete module. The MVP includes one fixed-tem
 
 ## 3. User scenarios and acceptance criteria (mandatory)
 
-### US-1: Manage templates and generate contract (Should; MVP fixed-template slice)
+### US-1: Manage templates and generate contract (Must: fixed-template generation; Could: template management)
 
-Full system: Sales Admin selects a compatible active template for a Dony `PendingContract` order whose current physical sample is Approved, previews allowlisted placeholders, and generates a server-rendered PDF from immutable customer/order/address/design/sample/payment-policy snapshots. MVP: Sales Admin opens the approved-sample order on S33 and explicitly selects Generate; the system uses the single preconfigured fixed template without exposing a template picker or template CRUD. Generation is not automatic and requires the Sales Admin action.
+Full system: Sales Admin selects a compatible active template for a Dony `PendingContract` order whose current physical sample is Approved, previews allowlisted placeholders, and generates a server-rendered PDF from immutable customer/order/address/design/sample/payment-policy snapshots. MVP: Sales Admin opens the approved-sample order on S39 and explicitly selects Generate; the system uses the single preconfigured fixed template without exposing a template picker or template CRUD. Generation is not automatic and requires the Sales Admin action.
 
 1. **Given** no compatible template exists or the physical sample is not Approved, **when** generation is requested, **then** an actionable state appears and generation is blocked.
 2. **Given** a template is published or edited, **when** a new version is created, **then** prior contract PDFs and hashes remain unchanged.
 3. **Given** required snapshot data is unavailable or the order/template version is stale, **when** generation runs, **then** it fails without creating a Ready contract.
 
-### US-2: Review and sign contract (Should; MVP uses reduced acknowledgement evidence)
+### US-2: Review and sign contract (Must; MVP uses reduced acknowledgement evidence)
 
 Full system: Customer signs only the current Ready version for their own PendingContract order using explicit consent, matching typed name, current-password reauthentication, and a single-use challenge tied to contract ID/version/hash. MVP: the already-authenticated Customer gives consent and matching typed name; the session, contract version and content hash are recorded, with no password re-entry or one-time challenge.
 
@@ -46,7 +46,7 @@ Full system: Customer signs only the current Ready version for their own Pending
 2. **Given** in MVP consent is missing, the authenticated session is invalid, name mismatches, or contract version is stale—or in the full system reauthentication fails or the challenge expires/is reused—**when** signing is attempted, **then** no signature or order transition commits.
 3. **Given** a contract is signed, **when** it is later cancelled through an eligible order cancellation, **then** it is auditably Voided and its signed artifact/evidence is retained.
 
-### US-3: Update and notify contract (Should)
+### US-3: Update and notify contract (Could)
 
 Before signing, Admin may regenerate from the immutable order snapshot. The prior unsigned version becomes Superseded, and the customer must review/sign the new Ready version.
 
@@ -86,15 +86,15 @@ The canonical contract-generation/signing message flow is [SD-08 in the architec
 
 | FR ID | DBIZ2 Subfunction ID | Requirement (system MUST ...) | Actor | Priority |
 | --- | --- | --- | --- | --- |
-| FR-001 | F-CONTR-001 | List compatible active templates only for Dony `PendingContract` orders with a current Approved physical sample. | Sales Admin | Should |
-| FR-002 | F-CONTR-002 | Preview safe rendered placeholders from an authorized template version. | Sales Admin | Should |
-| FR-003 | F-CONTR-003 | Fill immutable draft contract from authoritative stored order/customer/address/item/amount/policy snapshots, including approved design/sample references, separate design_fee_vnd, source_design_request_id, deposit_percent, deposit_due_vnd and the balance formula. | Sales Admin | Should |
-| FR-004 | F-CONTR-004 | Render the separate snapshotted design-fee line and persist PDF/hash as Ready transactionally with idempotency and private asset access. | System | Should |
-| FR-005 | F-CONTR-005 | Notify customer of Ready contract after commit using authorized review link. | System | Should |
-| FR-006 | F-CONTR-006 | List contracts and create/update/publish/archive versioned templates with allowlisted placeholders including design_fee_vnd and source_design_request_id. | Sales Admin | Should |
-| FR-007 | F-CONTR-007 | Regenerate unsigned `PendingContract` documents from the same approved sample and commercial snapshots, preserving fee/deposit terms without manual override, supersede the prior version after storage, and notify; a revised design/sample requires a new approval cycle rather than silent regeneration. | Sales Admin / System | Should |
-| FR-008 | F-CONTR-008 | Record consent and matching name against the authenticated Customer session, contract version and hash. MVP uses this evidence; full system additionally enforces recent reauthentication and one-time challenge. | Customer | Should |
-| FR-009 | F-CONTR-009 | Notify customer and Dony Sales Admins after successful signing; only then advance order `PendingContract→AwaitingDeposit`. | System | Should |
+| FR-001 | F-CONTR-001 | List compatible active templates only for Dony `PendingContract` orders with a current Approved physical sample. | Sales Admin | Could |
+| FR-002 | F-CONTR-002 | Preview safe rendered placeholders from an authorized template version. | Sales Admin | Could |
+| FR-003 | F-CONTR-003 | Fill immutable draft contract from authoritative stored order/customer/address/item/amount/policy snapshots, including approved design/sample references, separate design_fee_vnd, source_design_request_id, deposit_percent, deposit_due_vnd and the balance formula. | Sales Admin | Must |
+| FR-004 | F-CONTR-004 | Render the separate snapshotted design-fee line and persist PDF/hash as Ready transactionally with idempotency and private asset access. | System | Must |
+| FR-005 | F-CONTR-005 | Notify customer of Ready contract after commit using authorized review link. | System | Must |
+| FR-006 | F-CONTR-006 | List contracts and create/update/publish/archive versioned templates with allowlisted placeholders including design_fee_vnd and source_design_request_id. | Sales Admin | Could |
+| FR-007 | F-CONTR-007 | Regenerate unsigned `PendingContract` documents from the same approved sample and commercial snapshots, preserving fee/deposit terms without manual override, supersede the prior version after storage, and notify; a revised design/sample requires a new approval cycle rather than silent regeneration. | Sales Admin / System | Could |
+| FR-008 | F-CONTR-008 | Record consent and matching name against the authenticated Customer session, contract version and hash. MVP uses this evidence; full system additionally enforces recent reauthentication and one-time challenge. | Customer | Must |
+| FR-009 | F-CONTR-009 | Notify customer and Dony Sales Admins after successful signing; only then advance order `PendingContract→AwaitingDeposit`. | System | Must |
 
 ### 5.1 Input / Output contract
 
@@ -120,7 +120,7 @@ The canonical contract-generation/signing message flow is [SD-08 in the architec
 | BR-004 | Successful signature evidence is application acknowledgement, not a certified digital signature. | State the signature capability accurately. |
 | BR-005 | Only a current Ready contract for an owned `PendingContract` order with the same current Approved sample/design can be signed; successful signature alone advances the order to `AwaitingDeposit`. | Prevent signing stale terms or taking a deposit before sample approval. |
 
-Contract amounts must match the quote/payment screens using the same VND snapshot. After reviewed MFG-10 activation, also render the accepted standard/flexible incentive, calendar/version/readiness trigger and individual-approval terms. Flexible terms mean 7 Monday–Friday waiting days followed by a separate 8–14-working-day production range; the maximum is readiness working day 21, with day 1 counted inclusively. An early match may finish sooner. If readiness is not yet established, render the relative rule rather than fabricate an absolute due date; record the derived date afterward without changing the signed duration/counting rule. Absolute due dates are derived when design/sample approval, signing and verified deposit establish production readiness; no extra discount arises from internal standard batching. Preserve existing signed policy snapshots. Show design_fee_vnd as a separate line outside merchandise subtotal, including 0 for MVP, free or repeat orders; use the MFG-06 allocation snapshot and never add another fee. The contract must also show `deposit_due_vnd = floor(contract_total_vnd × deposit_percent / 100)`, `balance_due_vnd = contract_total_vnd − accepted_deposit_vnd − accepted_order_credit_vnd`, and the snapshotted payment rule that the balance is due 7 calendar days after verified delivery (MFG-06 BR-014). `balance_due_at` is set only after delivery is verified and must not be fabricated during pre-delivery contract generation. Snapshot the percentage and payment-policy version. Missing required fee, sample or deposit data blocks generation with 422. S34 displays the same terms before signing. PDF render/storage must succeed before a contract becomes Ready. If cancellation is eligible, the contract becomes Voided with artifact and signature evidence retained.
+Contract amounts must match the quote/payment screens using the same VND snapshot. After reviewed MFG-10 activation, also render the accepted standard/flexible incentive, calendar/version/readiness trigger and individual-approval terms. Flexible terms mean 7 Monday–Friday waiting days followed by a separate 8–14-working-day production range; the maximum is readiness working day 21, with day 1 counted inclusively. An early match may finish sooner. If readiness is not yet established, render the relative rule rather than fabricate an absolute due date; record the derived date afterward without changing the signed duration/counting rule. Absolute due dates are derived when design/sample approval, signing and verified deposit establish production readiness; no extra discount arises from internal standard batching. Preserve existing signed policy snapshots. Show design_fee_vnd as a separate line outside merchandise subtotal, including 0 for MVP, free or repeat orders; use the MFG-06 allocation snapshot and never add another fee. The contract must also show `deposit_due_vnd = floor(contract_total_vnd × deposit_percent / 100)`, `balance_due_vnd = contract_total_vnd − accepted_deposit_vnd − accepted_order_credit_vnd`, and the snapshotted payment rule that the balance is due 7 calendar days from recorded Customer receipt or automatic receipt confirmation (MFG-06 BR-014). `balance_due_at` is set only after Customer receipt or automatic receipt confirmation is recorded and must not be fabricated during pre-delivery contract generation. Snapshot the percentage and payment-policy version. Missing required fee, sample or deposit data blocks generation with 422. S38 displays the same terms before signing. PDF render/storage must succeed before a contract becomes Ready. If cancellation is eligible, the contract becomes Voided with artifact and signature evidence retained.
 
 ### Analytics evidence integration (MFG-11)
 
@@ -131,19 +131,19 @@ For MFG-11/F-DA-004, expose committed `contract_ready` and `contract_signed` evi
 | Entity | Attributes (from Input/Output fields) | Relationships |
 | --- | --- | --- |
 | ContractTemplate | UUID, name, version, structured body including design-fee and buyer-organization placeholders, active, timestamps | Dony-owned template; published versions are immutable. |
-| Contract | UUID, order_id, buyer_type, buyer_organization_snapshot, approved_design_version, approved_sample_id, contract_total_vnd, deposit_percent, deposit_due_vnd, balance_due_vnd, balance_due_rule, payment_policy_version, version, template_version, content_hash, PDF asset UUID, status, ready/signed/voided timestamps, evidence | Belongs to an order and copies its required immutable S22 Business Buyer/Reseller Shop snapshot; snapshots the seven-day-after-delivery rule, not an undetermined delivery timestamp; versioned; unsigned prior version may be superseded. |
+| Contract | UUID, order_id, buyer_type, buyer_organization_snapshot, approved_design_version, approved_sample_id, contract_total_vnd, deposit_percent, deposit_due_vnd, balance_due_vnd, balance_due_rule, payment_policy_version, version, template_version, content_hash, PDF asset UUID, status, ready/signed/voided timestamps, evidence | Belongs to an order and copies its required immutable S30 Business Buyer/Reseller Shop snapshot; snapshots the seven-day-after-receipt rule, not an undetermined receipt timestamp; versioned; unsigned prior version may be superseded. |
 | SignatureEvidence | signer_id from session, typed_name, consent_text_version, contract_hash, server_timestamp, observed IP/user_agent, optional post-MVP challenge digest | Bound to one contract version/hash; MVP evidence is active authenticated session, consent and matching name; never trusts client-reported identity/IP. |
 
 ## 7. Screens involved
 
 | Screen ID | Screen name | Priority | Screen Spec file |
 | --- | --- | --- | --- |
-| S30 | Contract list and templates tabs | Should | Module screen |
-| S31 | Create contract template | Should | Module screen |
-| S32 | Edit contract template | Should | Module screen |
-| S33 | Sales Admin contract detail | Should | Module screen |
-| S34 | Customer contract review/signature | Should | Module screen |
-| S38 | Notifications | Should | Shared notification screen |
+| S43 | Contract list and templates tabs | Could | Module screen |
+| S44 | Create contract template | Could | Module screen |
+| S45 | Edit contract template | Could | Module screen |
+| S39 | Sales Admin contract detail | Must | Module screen |
+| S38 | Customer contract review/signature | Must | Module screen |
+| S13 | Notifications | Must | Shared notification screen |
 
 ## 8. Success criteria (mandatory)
 
@@ -157,24 +157,24 @@ For MFG-11/F-DA-004, expose committed `contract_ready` and `contract_signed` evi
 
 - Sales Admin and customer authorization are resolved server-side.
 - PDF assets are private; URLs expire after authorization.
-- Full MFG-09 priority is Should; its fixed-template and Customer-acceptance minimum is required by the README MVP implementation slice. No certified digital-signature claim is made.
+- Fixed-template generation and Customer acknowledgement are MVP Must; template administration, regeneration and stronger signature workflows are Could. No certified digital-signature claim is made.
 
 ## 10. Open questions
 
 | # | Question | Blocking? | Owner | Status |
 | --- | --- | --- | --- | --- |
-| 1 | Resolved decisions: Group B; course DBIZ 3; no approver identified; course/demo use only; MVP priority Should. | No | Group B | Resolved |
+| 1 | Resolved decisions: Group B; course DBIZ 3; approved by Group B; no client approver; course/demo use only; MVP priority Must (fixed-template slice) / Could (template administration). | No | Group B | Resolved |
 | 2 | No remaining open questions. | No | Group B | Resolved |
 
 ## 11. Traceability to DBIZ2
 
 | Spec section | DBIZ2 source | Location |
 | --- | --- | --- |
-| 1–2 Scope and actors | MFG-09 Function List No. 68–76 | `F-CONTR-001`–`F-CONTR-009` |
+| 1–2 Scope and actors | MFG-09 Function List MFG-09 | `F-CONTR-001`–`F-CONTR-009` |
 | 3 Scenarios | UC-C10, UC-C09, UC-C11, UC-C14, UC-C15, UC-C13 | Use-case labels; resolved workflows in this specification |
 | 4 Signing flow | Physical sample Approved; PendingContract to AwaitingDeposit | MFG-06/MFG-09 module contract |
 | 5–6 FRs and entities | `F-CONTR-001`–`F-CONTR-009` | Function List MFG-09 |
-| 7 Screens | S30–S34, S38 | Screen List and module contract |
+| 7 Screens | S43, S44, S45, S39, S38, S13 | Screen List and module contract |
 
 ## Completion checklist
 

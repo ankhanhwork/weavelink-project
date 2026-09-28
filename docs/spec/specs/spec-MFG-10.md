@@ -4,12 +4,12 @@
 | --- | --- |
 | Module ID | `MFG-10` |
 | Module name | Order Optimization (Merge) |
-| Spec version | v4.2-draft |
+| Spec version | v4.2 |
 | Author (team member) | Group B |
 | Date | 2026-09-27 |
-| Status | Draft proposal for Group B discussion; not Dony-approved operating policy |
-| Approved by (Client role) | No approver identified |
-| DBIZ2 source | Function List MFG-10, No. 77–83, `F-MER-001`–`F-MER-007`; UC-C06, UC-C17, UC-C18, UC-C16; screens S23–S25, S29, S38, S42 |
+| Status | Final Group B demo policy; Could/post-MVP; not Dony-approved operating policy |
+| Approved by (Client role) | Group B (team approval, 2026-09-28); no client approver |
+| DBIZ2 source | Function List MFG-10, `F-MER-001`–`F-MER-007`; UC-C06, UC-C17, UC-C18, UC-C16; screens S31, S32, S33, S37, S13, S46 |
 
 ---
 
@@ -19,7 +19,7 @@ Dony produces made-to-order garments for Business Buyers and Reseller Shops, rat
 
 The commercial principle is **discount in exchange for customer time flexibility**. Internal batching within a standard order's original commitment creates no additional discount. Quantity pricing remains MFG-06's normal quote policy. An independently efficient order can anchor a scheduled run and never waits for another customer to approve a sample, sign or pay.
 
-MVP priority remains **Could**, outside standard-order MVP. Until reviewed activation, the existing standard MVP terms remain governed by MFG-06 BR-011; the trial five-working-day standard promise below belongs to the proposed future policy. This proposal replaces the v3.1 merge model for future MFG-10 planning; it does not activate the module, change existing signed terms, or claim Dony approval. MFG-06 owns immutable quotes, orders and payment/refund snapshots; MFG-07 owns order fulfillment transitions; MFG-09 renders the same contract terms. MFG-10 owns production recommendations, schedules, membership and economic estimates.
+MVP priority remains **Could**, outside standard-order MVP. Until reviewed activation, the existing standard MVP terms remain governed by MFG-06 BR-011; the five-working-day standard promise below belongs to the final post-MVP demo policy. This policy replaces the v3.1 merge model for future MFG-10 planning; it does not activate the module, change existing signed terms, or claim Dony approval. MFG-06 owns immutable quotes, orders and payment/refund snapshots; MFG-07 owns order fulfillment transitions; MFG-09 renders the same contract terms. MFG-10 owns production recommendations, schedules, membership and economic estimates.
 
 Flexible incentive is 5% of merchandise subtotal capped at 250000 VND. Flexible terms allow seven Monday–Friday working days to find an approved sewing run, followed by a separate 8–14-working-day production window; waiting is not included in that production window. The full-wait completion horizon is therefore 15–21 working days, counting the first eligible working date as day 1. Production readiness requires current design/sample approval, signed contract and verified deposit. If readiness occurs on a weekend, day 1 is the next Monday–Friday date. A ready early match may start sooner with human approval; retain the incentive and original deadline. Shipping is separate. Admin enters saved product capacity in garments per working day; the system computes quantity-based duration/capacity estimates, never starts production automatically.
 
@@ -27,7 +27,7 @@ Flexible incentive is 5% of merchandise subtotal capped at 250000 VND. Flexible 
 
 | Actor | Role | Source |
 | --- | --- | --- |
-| Customer | Reviews standard/flexible terms, explicitly accepts flexible policy when offered, and follows only their own order | UC-C06; proposed commercial policy |
+| Customer | Reviews standard/flexible terms, explicitly accepts flexible policy when offered, and follows only their own order | UC-C06; final demo commercial policy |
 | Sales Admin | Reviews feasibility and economics; approves scheduling, member additions, membership lock and batch start | UC-C17/UC-C18 |
 | System / scheduler | Recommends compatible sewing runs, calculates estimates and notifies Sales Admin about negative benefit and waiting expiry; cannot approve/assign/lock/start production or convert flexible orders to individual production | User decisions; MFG-10 boundary |
 | MFG-06 / MFG-07 / MFG-09 | Own commercial snapshots, order transitions and contract rendering | Module boundaries |
@@ -77,17 +77,17 @@ Flexible incentive is 5% of merchandise subtotal capped at 250000 VND. Flexible 
 
 ```mermaid
 flowchart TD
-  Quote[Check materials and capacity; quote standard or eligible flexible terms] --> Ready[Design and sample approved; signed contract; verified deposit]
+  Quote[Check materials and capacity, quote standard or eligible flexible terms] --> Ready[Design and sample approved, signed contract, verified deposit]
   Ready --> Existing{Compatible ScheduledOpen run fits all promises?}
   Existing -->|Yes| Review[Sales Admin reviews addition and schedule]
-  Existing -->|No; standard| Individual[Individual production on committed schedule]
-  Existing -->|No; flexible| Pool[Recommend compatible flexible group]
+  Existing -->|No, standard| Individual[Individual production on committed schedule]
+  Existing -->|No, flexible| Pool[Recommend compatible flexible group]
   Pool -->|Feasible sewing group and displayed benefit or loss| Review
-  Pool -->|Waiting deadline; no feasible approved solution| Fallback[System notifies; Sales Admin approves individual plan; human confirms start]
-  Review --> Approve[Admin approves exclusive sewing membership and feasible schedule; orders remain Confirmed]
+  Pool -->|Waiting deadline, no feasible approved solution| Fallback[System notifies, Sales Admin approves individual plan, human confirms start]
+  Review --> Approve[Admin approves exclusive sewing membership and feasible schedule, orders remain Confirmed]
   Approve --> Lock[Sales Admin locks membership]
-  Lock --> Start[Sales Admin starts production; all orders InProduction]
-  Fallback --> Terms[Keep incentive and promised completion; no surcharge]
+  Lock --> Start[Sales Admin starts production, all orders InProduction]
+  Fallback --> Terms[Keep incentive and promised completion, no surcharge]
 ```
 
 ### 4.2 Sequence for the main flow
@@ -103,7 +103,7 @@ sequenceDiagram
     Customer->>Checkout: Choose standard or offered flexible terms and policy
     Checkout->>Checkout: Check materials/capacity, snapshot price and readiness-based terms
     Note over Checkout,Order: Design/sample approval, contract signing and deposit establish production_ready_at
-    Order->>Merge: Ready Confirmed order; derive day-7 wait and separate 8-14-day production dates
+    Order->>Merge: Ready Confirmed order, derive day-7 wait and separate 8-14-day production dates
     Merge-->>Admin: Existing open run first, otherwise flexible group or individual plan
     Admin->>Merge: Approve schedule/addition with expected versions
     Merge->>Merge: Persist exclusively assigned sewing membership and approved schedule
@@ -111,8 +111,8 @@ sequenceDiagram
     Admin->>Merge: Lock membership, then explicitly start on schedule
     Merge->>Order: Atomically advance all locked members to InProduction
     alt Flexible waiting deadline without approved feasible placement
-        Scheduler->>Merge: Detect expiry; send deduplicated approval-required notice
-        Admin->>Merge: Review; approve individual plan and explicitly start
+        Scheduler->>Merge: Detect expiry, send deduplicated approval-required notice
+        Admin->>Merge: Review, approve individual plan and explicitly start
         Merge->>Order: Advance only after explicit human approval/start
     end
     Note over Customer,Order: Preserve each customer's price, deadline and private order tracking
@@ -123,7 +123,7 @@ sequenceDiagram
 | FR ID | DBIZ2 ID | System MUST | Actor | Priority |
 | --- | --- | --- | --- | --- |
 | FR-001 | F-MER-001 | Compare standard and eligible flexible terms before quote confirmation; existing-run assignment does not create a discount or expose other customers. | Customer | Could |
-| FR-002 | F-MER-002 | Show versioned flexible terms and record explicit acceptance on S23, not on a terms-page view. | Customer | Could |
+| FR-002 | F-MER-002 | Show versioned flexible terms and record explicit acceptance on S31, not on a terms-page view. | Customer | Could |
 | FR-003 | F-MER-003 | Save standard/flexible choice on an owned quote and issue a replacement immutable 30-minute quote with the applicable incentive and time basis. | Customer | Could |
 | FR-004 | F-MER-004 | Recommend existing ScheduledOpen runs first, then compatible flexible groups; show readiness, shared preparation, workload, capacity, deadlines and exclusions. | System / Sales Admin | Could |
 | FR-005 | F-MER-005 | Estimate genuinely avoided preparation, coordination cost, committed incentives and economic benefit; report all programme outcomes including individual fallback. | Sales Admin / System | Could |
@@ -134,7 +134,7 @@ sequenceDiagram
 
 | FR | Inputs | Outputs / validation |
 | --- | --- | --- |
-| FR-001/002 | Owned design/quote, policy version | Eligibility, standard/flexible comparison and readable terms; draft assumptions labeled; no batch created at checkout |
+| FR-001/002 | Owned design/quote, policy version | Eligibility, standard/flexible comparison and readable final demo terms; operational assumptions labeled; no batch created at checkout |
 | FR-003 | quote_id, merge_opt_in, accepted policy_version when flexible, expected quote version | Replacement quote; `merge_opt_in` means acceptance of flexible terms, not permission for internal standard batching. `merge_discount_vnd` is the promised flexible incentive. Stale 409; ineligible 422. |
 | FR-004 | Authorized Sales Admin, filters, saved daily-output profile/version, ready candidate quantities and approved allocations | Ordered existing-run/new-group recommendations with quantity sums, ceil-based workdays, remaining daily slots, planned dates, sewing-versus-decoration evidence, every member due date and exclusions |
 | FR-005 | Target run if any, proposed member IDs, versioned cost/workload assumptions | Avoided setup count and labor hours, gross avoided cost, one run-level coordination cost, committed member incentives, modeled net benefit; programme totals with fallback and assumption/measurement provenance |
@@ -148,7 +148,7 @@ sequenceDiagram
 | BR-001 | Standard internal batching retains ordinary price and deadline. Flexible discount=min(floor(merchandise_subtotal_vnd*5/100),250000), applied once after normal quantity pricing, excluding shipping, tax and design fee. Calculate server-side in integer VND, snapshot policy/amount and display the cap with the percentage. Retain the accepted amount on immediate match or individual production; no reclaim, second discount or fallback fee. | Stronger selective time-flexibility incentive without blanket discounting. |
 | BR-002 | Use Monday–Friday local dates in Asia/Ho_Chi_Minh. production_ready_at records all approval/signing/deposit gates; readiness_day_1 is its local date if a working date, otherwise the next working date, counted inclusively as day 1. Flexible waiting ends after working day 7; the separate production window begins on working day 8 and lasts 8–14 working days. Full-wait completion is on working day 15–21. Quote/order/contract snapshot durations, incentive and calendar/counting basis; derive absolute due dates when readiness is known. Earlier approved production can finish earlier; a late human approval never resets waiting or pushes the accepted due date. Standard post-activation terms retain the existing five-working-day commitment; MVP and previously signed snapshots remain MFG-06-owned. | Separate waiting from production and preserve fixed commercial promises. |
 | BR-003 | Check materials and schedule feasibility before committing terms. A flexible order remains flexible while waiting; do not preassign or reserve a speculative individual slot. At waiting expiry notify Sales Admin and request approval; Admin must approve submission to production, shared or individual. Plans cover separate decoration and every due date. If approval is late, show the original deadline risk/overdue condition and escalate without silently extending it. System does not approve, convert or start anything. | Human-controlled production with honest deadline risk. |
-| BR-004 | Sales Admin enables merge only for selected products and sets each inclusive small_order_max_quantity in MFG-04/S14. Flexible eligibility requires merge_enabled, aggregate quantity from normal MOQ through the threshold, a saved positive daily-output profile producing a quantity estimate no longer than 14 production workdays, and no fitting ScheduledOpen run at quote/requote. Matching requires the same garment production type and material; print/embroidery method, logo and artwork may differ. Share only sewing preparation/operations, leaving decoration/tooling/inspection separate per order. Include their time in completion feasibility. Standard orders may join fitting open runs without flexible consent or a discount. Preserve each design and customer privacy. | Product-specific eligibility and sewing-only sharing. |
+| BR-004 | Sales Admin enables merge only for selected products and sets each inclusive small_order_max_quantity in MFG-04/S19. Flexible eligibility requires merge_enabled, aggregate quantity from normal MOQ through the threshold, a saved positive daily-output profile producing a quantity estimate no longer than 14 production workdays, and no fitting ScheduledOpen run at quote/requote. Matching requires the same garment production type and material; print/embroidery method, logo and artwork may differ. Share only sewing preparation/operations, leaving decoration/tooling/inspection separate per order. Include their time in completion feasibility. Standard orders may join fitting open runs without flexible consent or a discount. Preserve each design and customer privacy. | Product-specific eligibility and sewing-only sharing. |
 | BR-005 | A base run may begin with one independent order on a firm schedule and receive ready compatible orders while ScheduledOpen without delaying its members. New flexible sewing groups need at least two; negative benefit receives human review rather than automatic rejection. Sales Admin saves daily_output_capacity (positive integer garments/working day) per product production-type/material planning profile. System sums garment quantities, calculates ceil(total_quantity/daily_output_capacity) workdays and residual daily slots, accounting for approved assignments against the same profile. Product per-order quantity/MOQ bounds remain distinct. Proposed flexibility production duration is at least 8 and at most 14 working days; an estimate beyond 14 is infeasible, never silently clamped. Admin also reviews separate decoration and materials before approval. | Use saved daily throughput rather than inventing run limits or automatic production. |
 | BR-006 | Batch lifecycle: ScheduledOpen → Locked → InProduction → Completed. Only Sales Admin approves schedules/additions, locks and submits plans; only explicit human confirmation starts production. Recommendations reserve nothing; approved assignments are exclusive. Lock freezes the sewing list; start revalidates and atomically advances all members to InProduction. No additions after lock. Individual production requires separate Admin approval and human start; flexible consent is not production approval. Scheduler has no production-transition authority. | Distinguish commercial choice, approval, submission and actual start. |
 | BR-007 | Confirmed orders remain cancellable before production under MFG-07. Cancellation atomically releases scheduled/locked membership and invalidates the affected plan/lock for Admin revalidation; started membership is immutable. Human approvals/cancellation/starts contend on expected versions; notices cannot commit production mutations. | Preserve cancellation and prevent double production. |
@@ -212,7 +212,7 @@ Keep commercial choice (standard/flexible), actual routing (base-run addition/ne
 | FlexiblePreference / production plan | quote_id, merge_opt_in, accepted policy_version, accepted_at, snapshotted incentive; actual production route?, individual_approved_by/at?, human_started_by/at? | Flexible choice remains unchanged while awaiting review; actual shared/individual route is set only by human approval, never a notice. Preserve original flexible commercial terms after individual routing. |
 | ProductionReadiness | production_ready_at, readiness_day_1, calendar version, waiting_workdays=7, production_window_min_workdays=8, production_window_max_workdays=14, wait_end_exclusive_at, production_window_first_date, production_due_at | Day 7 is the last waiting date; full-wait production starts counting on day 8; accepted date promises are not reset by late approval |
 | MergeRecommendation | target run/new group, member IDs/versions, type/material profile, saved capacity/version, total_quantity, required_workdays, per-working-date allocations/residuals, planned start/completion, decoration feasibility, due dates, exclusions, costs/incentives, refreshed_at | Nonbinding, calculated with approved profile allocations; no speculative individual reservation or automatic assignment |
-| ProductionCapacityProfile | id, production_type_key, material_id, daily_output_capacity, expected/version, updated_by/at | Shared saved garments-per-working-day scope; approved date allocations consume its finite daily slots; editing is in MFG-04/S14 |
+| ProductionCapacityProfile | id, production_type_key, material_id, daily_output_capacity, expected/version, updated_by/at | Shared saved garments-per-working-day scope; approved date allocations consume its finite daily slots; editing is in MFG-04/S19 |
 | ProductionBatch | UUID, same garment production type/material, base/new-sewing-group kind, ScheduledOpen/Locked/InProduction/Completed, scheduled_start_at, planned_completion_at, saved capacity inputs, quantity totals, approved_by/approved_at, locked_at?, started_at?, version | One efficient base order allowed; exclusive approved assignment and separately audited human start; decoration jobs remain per member |
 | BatchMembership | batch_id, order_id, assignment/release history, lock/start version | One active production assignment per order; immutable started membership; cancellation revalidates preproduction plan |
 
@@ -220,12 +220,12 @@ Keep commercial choice (standard/flexible), actual routing (base-run addition/ne
 
 | Screen | Behavior | Reference |
 | --- | --- | --- |
-| S12 / S14 | Sales Admin sets enabled products, inclusive small-order threshold and shared daily throughput | [S12](../screens/S12-product_edit_screen.md) / [S14](../screens/S14-product_design_rules_screen.md) |
-| S23 | Standard/flexible comparison and explicit consent when offered | [S23](../screens/S23-merge_option_screen.md) |
-| S24 | Versioned flexibility terms, no consent on view | [S24](../screens/S24-merge_terms_screen.md) |
-| S25 / S35 | Immutable quote/payment breakdown, no batch-triggered incentive | MFG-06 |
-| S27 / S29 / S38 | Private customer dates, human operational progress and safe committed notices | [S27](../screens/S27-customer_order_detail_screen.md) / [S29](../screens/S29-order_detail_admin_screen.md) / [S38](../screens/S38-notification_panel_screen.md) |
-| S42 | Existing run first, group economics, schedule/add/lock/start and fallback | [S42](../screens/S42-merge_console_screen.md) |
+| S18 / S19 | Sales Admin sets enabled products, inclusive small-order threshold and shared daily throughput | [S18](../screens/S18-product-edit.md) / [S19](../screens/S19-product-design-rules.md) |
+| S31 | Standard/flexible comparison and explicit consent when offered | [S31](../screens/S31-production-option.md) |
+| S32 | Versioned flexibility terms, no consent on view | [S32](../screens/S32-production-terms.md) |
+| S33 / S40 | Immutable quote/payment breakdown, no batch-triggered incentive | MFG-06 |
+| S35 / S37 / S13 | Private customer dates, human operational progress and safe committed notices | [S35](../screens/S35-customer-order-detail.md) / [S37](../screens/S37-staff-order-detail.md) / [S13](../screens/S13-notifications.md) |
+| S46 | Existing run first, group economics, schedule/add/lock/start and fallback | [S46](../screens/S46-production-planning.md) |
 
 ## 8. Success criteria (mandatory)
 
@@ -248,9 +248,9 @@ Keep commercial choice (standard/flexible), actual routing (base-run addition/ne
 
 | Section | Source |
 | --- | --- |
-| 1–3 | MFG-10 No. 77–83; UC-C06, UC-C17, UC-C18, UC-C16; supplied production-priority proposal |
+| 1–3 | MFG-10 function entries; UC-C06, UC-C17, UC-C18, UC-C16; supplied production-priority proposal |
 | 4–6 | F-MER-001–F-MER-007 revised contracts for standard routing, flexibility and scheduled-run lifecycle |
-| 7 | S23–S25, S29, S38, S42 |
+| 7 | S31, S32, S33, S37, S13, S46 |
 
 ## Completion checklist
 

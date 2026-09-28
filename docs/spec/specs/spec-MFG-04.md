@@ -7,15 +7,15 @@
 | Spec version | v1.4 |
 | Author (team member) | Group B |
 | Date | 2026-09-27 |
-| Status | Draft |
-| Approved by (Client role) | No approver assigned |
-| DBIZ2 source | Historical IDs retained: Function List No. 25-35; `F-PROD-001` .. `F-PROD-011`; `UC-G01`, `UC-G02`, `UC-C24` .. `UC-C27`; S01, S08-S14. External DBIZ2 comparison is not required. |
+| Status | Final Group B demo specification; client operating approval not claimed |
+| Approved by (Client role) | Group B (team approval, 2026-09-28); no client approver |
+| DBIZ2 source | Historical IDs retained: Function List MFG-04; `F-PROD-001` .. `F-PROD-011`; `UC-G01`, `UC-G02`, `UC-C24` .. `UC-C27`; S01, S14, S15, S16, S17, S18, S20, S19. External DBIZ2 comparison is not required. |
 
 ---
 
 ## 1. Purpose and scope (mandatory)
 
-Provide public discovery of Dony's Published configurable garment bases and Dony-scoped catalog/design-rule administration. Dony is a made-to-order garment factory: catalogue entries describe garment types, supported materials, colours, print or embroidery methods, price rules and production constraints. They are not finished garments held in stock or available for immediate delivery. Catalog browsing/search/detail is Must for MVP.
+Provide public discovery of Dony's Published configurable garment bases and Dony-scoped catalog/design-rule administration. Dony is a made-to-order garment factory: catalogue entries describe garment types, supported materials, colours, print or embroidery methods, price rules and production constraints. They are not finished garments held in stock or available for immediate delivery. MVP priority (see [MVP scope](../mvp-scope-proposal.md)): catalog browsing/detail is Must; keyword search, Product Finder, AI Compare, AI advisory and product administration (S16–S18) are Should; the design-rules editor (S19) is Could.
 
 **In scope:** browse/search/detail; keyword search with a suggestion panel over Published products (Product Finder); AI Compare and product advisory over Published products; create/edit/archive; publish/hide; configure supported options, print areas and finite per-order capacity.
 
@@ -35,29 +35,29 @@ Provide public discovery of Dony's Published configurable garment bases and Dony
 
 Valid page/filter returns only Dony's Published configurable garment bases with integer-VND quote inputs and accurate pagination; empty data returns an empty list. The UI does not claim that a finished item is in stock or ready to ship.
 
-### US-2 (Must): Search products
+### US-2 (Should): Search products
 
 Search accepts a trimmed keyword up to 100 characters plus allowlisted category/size/color/material/price filters; invalid range/sort returns 422/400 without broadening the query. How a keyword is matched against product data, and how suggestions are presented while typing, are specified in US-8 and sections 5.3–5.4.
 
-### US-3 (Post-MVP administration): Add product
+### US-3 (Should): Add product
 
 Sales Admin creates a Draft with validated fields/assets and idempotency. Duplicate SKU anywhere in Dony's single catalogue conflicts; incomplete Draft is allowed.
 
-### US-4 (Post-MVP administration): Update product info
+### US-4 (Should): Update product info
 
 Dony product-base updates use allowlisted fields and expected version. Any update increases the product version. Rule-affecting changes lazily invalidate unconsumed quotes during checkout without editing quote records directly; submitted order snapshots remain unchanged.
 
-### US-5 (Post-MVP administration): Delete product
+### US-5 (Should): Delete product
 
 Archive is a soft, terminal deletion. Repeating archive succeeds; public visibility ends immediately while historical references remain. A Draft product that has never been published can be hard deleted permanently.
 
-### US-6 (Post-MVP administration): Publish / unpublish product
+### US-6 (Should): Publish / unpublish product
 
 Publish requires all mandatory data and safe image; hide uses an explicit target state. Archived records never transition.
 
-### US-7 (Post-MVP administration): Manage product catalog
+### US-7 (Should): Manage product catalog
 
-S10-S14 expose permission-derived actions and optimistic concurrency. Product/design rule changes increment version.
+S16, S17, S18, S20, S19 expose permission-derived actions and optimistic concurrency. Product/design rule changes increment version.
 
 ### US-8 (Should): Find products with everyday keywords
 
@@ -75,7 +75,7 @@ A buyer who does not know Dony's catalogue wording can still reach the right pro
 
 ### US-9 (Should): Compare product bases with AI
 
-On S08, Guest/Member enters compare mode and selects 2-4 Published products from the same `branch`; cross-branch checkboxes are disabled and existing search/filter state remains applied. On S09, the current product is pinned and 1-3 additional Published products from its branch may be added. AI Copilot shows quantity-tier prices, material attributes, pros/cons, print compatibility and a grounded verdict. Guests can read the comparison; sending questions requires login with a safe `return_to` restoring the comparison context. Follow-ups on breathability/sweat management, wash durability, wrinkle resistance, abrasion resistance or printing use the selected products' stored fields. Context is limited to the latest five Q&A exchanges.
+On S14, Guest/Member enters compare mode and selects 2-4 Published products from the same `branch`; cross-branch checkboxes are disabled and existing search/filter state remains applied. On S15, the current product is pinned and 1-3 additional Published products from its branch may be added. AI Copilot shows quantity-tier prices, material attributes, pros/cons, print compatibility and a grounded verdict. Guests can read the comparison; sending questions requires login with a safe `return_to` restoring the comparison context. Follow-ups on breathability/sweat management, wash durability, wrinkle resistance, abrasion resistance or printing use the selected products' stored fields. Context is limited to the latest five Q&A exchanges.
 
 ### US-10 (Should): Ask for product advisory
 
@@ -99,14 +99,14 @@ An authenticated user opens AI Copilot without entering compare mode or selectin
 
 ```mermaid
 flowchart LR
-  Guest --> Catalog[S08 Catalog]
+  Guest --> Catalog[S14 Catalog]
   Catalog --> Search[Filter/search]
-  Search --> Detail[S09 Detail]
+  Search --> Detail[S15 Detail]
   Detail --> Design[Start design]
-  Admin[Sales Admin] --> Manage[S10 Manage]
-  Manage --> Draft[S11 Create Draft]
-  Manage --> Edit[S12 Edit]
-  Edit --> Rules[S14 Rules/capacity]
+  Admin[Sales Admin] --> Manage[S16 Manage]
+  Manage --> Draft[S17 Create Draft]
+  Manage --> Edit[S18 Edit]
+  Edit --> Rules[S19 Rules/capacity]
   Rules --> Publish[Publish or hide]
 ```
 
@@ -171,7 +171,7 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     actor Buyer
-    participant SearchUI as S08 Search field
+    participant SearchUI as S14 Search field
     participant ProductController
     participant SearchService
     participant SearchIndex as Product search index
@@ -196,7 +196,7 @@ sequenceDiagram
     else Matches found
         SearchUI-->>Buyer: 4 visible rows, scroll for the rest
         Buyer->>SearchUI: open a suggestion
-        SearchUI->>ProductController: request product detail (S09)
+        SearchUI->>ProductController: request product detail (S15)
     end
 ```
 
@@ -206,31 +206,31 @@ sequenceDiagram
 
 | FR ID | DBIZ2 Subfunction ID | Requirement (system MUST ...) | Actor | Priority |
 | --- | --- | --- | --- | --- |
-| FR-001 | F-PROD-001 | Return a paginated grid of Dony's Published configurable garment bases using allowlisted category and sort values. | Guest/Member | Must |
+| FR-001 | F-PROD-001 | Return a paginated grid of Dony's Published configurable garment bases using allowlisted category and sort values, with public Home/About/Contact navigation. S02 /about and S03 /contact are read-only MVP pages; Contact has no form and company background facts do not override demo rules. | Guest/Member | Must |
 | FR-002 | F-PROD-002 | Return a product detail and options for a canonical product UUID; nonpublic products return 404. | Guest/Member | Must |
-| FR-003 | F-PROD-003 | Search using bounded keywords and allowlisted filters without broadening invalid queries. | Guest/Member | Must |
-| FR-004 | F-PROD-004 | Show management actions only for Dony Sales Admins. | Sales Admin | Won't |
-| FR-005 | F-PROD-005 | Render product creation form and upload constraints. | Sales Admin | Won't |
-| FR-006 | F-PROD-006 | Save a validated Draft product with idempotency and Dony-scoped SKU uniqueness. | Sales Admin | Won't |
-| FR-007 | F-PROD-007 | Render an authorized product edit model with current version. | Sales Admin | Won't |
-| FR-008 | F-PROD-008 | Update allowlisted product fields atomically with expected-version checks. | Sales Admin | Won't |
-| FR-009 | F-PROD-009 | Require explicit confirmation before archiving a product. | Sales Admin | Won't |
-| FR-010 | F-PROD-010 | Soft-archive a product while retaining historical references, or hard-delete if it is a Draft that has never been published. | Sales Admin | Won't |
-| FR-011 | F-PROD-011 | Change product visibility to an explicitly requested valid state. | Sales Admin | Won't |
+| FR-003 | F-PROD-003 | Search using bounded keywords and allowlisted filters without broadening invalid queries. | Guest/Member | Should |
+| FR-004 | F-PROD-004 | Show management actions only for Dony Sales Admins. | Sales Admin | Should |
+| FR-005 | F-PROD-005 | Render product creation form and upload constraints. | Sales Admin | Should |
+| FR-006 | F-PROD-006 | Save a validated Draft product with idempotency and Dony-scoped SKU uniqueness. | Sales Admin | Should |
+| FR-007 | F-PROD-007 | Render an authorized product edit model with current version. | Sales Admin | Should |
+| FR-008 | F-PROD-008 | Update allowlisted product fields atomically with expected-version checks. | Sales Admin | Should |
+| FR-009 | F-PROD-009 | Require explicit confirmation before archiving a product. | Sales Admin | Should |
+| FR-010 | F-PROD-010 | Soft-archive a product while retaining historical references, or hard-delete if it is a Draft that has never been published. | Sales Admin | Should |
+| FR-011 | F-PROD-011 | Change product visibility to an explicitly requested valid state. | Sales Admin | Should |
 | FR-012 | F-PROD-012 | Match a natural keyword query against Published products using diacritic-insensitive, partial, joined and single-edit tolerant matching over an allowlisted set of product fields. | Guest/Member | Should |
 | FR-013 | F-PROD-012 | Return an empty-query suggestion payload of at most four featured Published products with image, name, colour, material, SKU and price. | Guest/Member | Should |
 | FR-014 | F-PROD-012 | Return at most ten ranked suggestions for a non-empty query, with the total match count and the same product fields as FR-013. | Guest/Member | Should |
 | FR-015 | F-PROD-012 | Return the product attributes recognised in the query (colour, category, material, feature) as match reasons, derived only from catalogue data and the versioned synonym set. | Guest/Member | Should |
 | FR-016 | F-PROD-012 | Restrict a query to one category when a scope is supplied, rejecting any scope value outside the allowlist. | Guest/Member | Should |
 | FR-017 | F-PROD-012 | Keep the search index consistent with product visibility and version: index on publish, refresh on version increase, remove on hide/archive. | System | Should |
-| FR-018 | F-PROD-013 | Allow a Guest/Member to pick 2-4 Published products in the same `branch` from S08 or S09 and open an AI Copilot comparison table with pricing by quantity tier, material attributes, pros/cons, and a consolidated verdict. | Guest/Member | Should |
+| FR-018 | F-PROD-013 | Allow a Guest/Member to pick 2-4 Published products in the same `branch` from S14 or S15 and open an AI Copilot comparison table with pricing by quantity tier, material attributes, pros/cons, and a consolidated verdict. | Guest/Member | Should |
 | FR-019 | F-PROD-013 | Prevent selection of products from a different `branch` at the UI level by disabling the compare checkbox before the user can submit the comparison. | Guest/Member | Should |
 | FR-020 | F-PROD-013 / F-PROD-014 | Allow Guest users to view AI-generated comparison output without free-form chat, but require login before sending free-text questions with a safe `return_to` that returns to the comparison context. | Guest/Member | Should |
 | FR-021 | F-PROD-014 | Support free-form advisory mode without requiring product pre-selection or compare mode by extracting intent from the Published catalog and limiting candidate suggestions to 4 by default and 8 maximum before generating a response. | Guest/Member | Should |
 | FR-022 | F-PROD-013 / F-PROD-014 | When a follow-up question is asked during a comparison and matches one of five technical criteria (breathability / sweat management, wash durability, wrinkle resistance, abrasion resistance, or suitable print method), answer directly from the corresponding field on the products being compared, not from general knowledge. | Guest/Member | Should |
 | FR-023 | F-PROD-013 / F-PROD-014 | When the question concerns print suitability or multi-colour/fine-detail execution, compare `PrintMethod` data against the target product `material_label`, and if the selected method is unsuitable, warn the user and suggest a replacement method. | Guest/Member | Should |
 | FR-024 | F-PROD-013 / F-PROD-014 | Reuse the existing `capacity` / MOQ fields from `Product` to answer feasibility questions about quantities and timing without introducing a new factory-capacity-by-month concept. | Guest/Member | Should |
-| FR-025 | F-PROD-013 / F-PROD-014 | Ground every AI conclusion (price, material, durability, printing, etc.) in `MaterialProfile`, `PrintMethod`, and `Product` data; if required data is missing, return the fixed fallback: "Chưa đủ dữ liệu, Dony sẽ liên hệ trực tiếp." | System | Must |
+| FR-025 | F-PROD-013 / F-PROD-014 | Ground every AI conclusion (price, material, durability, printing, etc.) in `MaterialProfile`, `PrintMethod`, and `Product` data; if required data is missing, return the fixed fallback: "Chưa đủ dữ liệu, Dony sẽ liên hệ trực tiếp." | System | Should |
 
 ### 5.2 Input / Output contract
 
@@ -239,10 +239,10 @@ sequenceDiagram
 | FR-001 | category, page, page_size, sort | Allowlisted values / integers | Optional | Published product grid | Paginated object | page >=1; size 1-100 |
 | FR-002 | product UUID | UUID | Yes | product detail/options | Object | Nonpublic product 404 |
 | FR-003 | keyword, filters, price range, page | String / allowlisted values | Optional | search results | Paginated object | Keyword <=100; invalid values rejected |
-| FR-004 | authenticated Dony Sales Admin session | Session | Yes | S10 management list/actions | View model | Non-Dony-admin access prohibited |
-| FR-005 | authorized session | Session | Yes | S11 creation model | View model | Includes upload constraints |
+| FR-004 | authenticated Dony Sales Admin session | Session | Yes | S16 management list/actions | View model | Non-Dony-admin access prohibited |
+| FR-005 | authorized session | Session | Yes | S17 creation model | View model | Includes upload constraints |
 | FR-006 | name, SKU, base unit price, volume tiers, per-garment option surcharges, MOQ, attributes, capacity, image UUIDs, key | Fields / integer / arrays / key | Yes | Draft UUID/version and normalized price model | Object | VND values are nonnegative integers; 1..10 tiers; first tier starts at quantity 1; subsequent lower bounds strictly increase; capacity 1..10000; MOQ is explicit and <= capacity; invalid fields 422; duplicate SKU 409 |
-| FR-007 | Dony product UUID / Sales Admin session | UUID / session | Yes | S12 edit model/version | View model | Foreign product inaccessible |
+| FR-007 | Dony product UUID / Sales Admin session | UUID / session | Yes | S18 edit model/version | View model | Foreign product inaccessible |
 | FR-008 | allowlisted changes, expected version | Values / integer | Yes | updated product/version | Object | Atomic; stale 409; relevant quote invalidation |
 | FR-009 | Dony product UUID/version | UUID / integer | Yes | confirmation/impact model | View model | Explicit confirmation |
 | FR-010 | product UUID, confirmation, version | UUID / boolean / integer | Yes | archived product or 204 No Content | Object or None | Soft archive; hard delete if Draft; repeated success |
@@ -272,7 +272,7 @@ sequenceDiagram
 | BR-004 | Images are PNG/JPEG/WebP, actual MIME checked/scanned, <=10 MiB each and <=5/request. | Protect users and storage. |
 | BR-005 | Lifecycle is Draft → Published ↔ Hidden → Archived; archive is terminal. Drafts can be hard deleted. | Make visibility transitions explicit and allow cleanup of mistakes. |
 | BR-006 | Rule/product changes increase product version, lazily invalidating unsubmitted quotes at checkout; submitted orders retain immutable snapshots. | Preserve current quotes and historical order values securely without cross-module side effects. |
-| BR-007 | S14 owns sizes, colors, materials, print methods/areas, surcharges and capacity; 2D preview required, 3D excluded. | Define supported customization scope. |
+| BR-007 | S19 owns sizes, colors, materials, print methods/areas, surcharges and capacity; 2D preview required, 3D excluded. | Define supported customization scope. |
 | BR-008 | An order's aggregate garment quantity is the sum across all sizes. Select exactly one volume tier using that aggregate; its unit price applies to every garment in the order (not marginal/progressive pricing). Each selected `option_surcharge_vnd` is per garment and is multiplied by that garment quantity. Merchandise subtotal sums all size/option combinations; shipping, tax and design fee are separate lines. MOQ validation is against aggregate quantity, not each size. | Make mixed-size quotes deterministic and prevent tier/surcharge ambiguity. |
 | BR-009 | Only current `Published` products are eligible for search; a visibility change removes or restores eligibility immediately. Stale physical index entries are suppressed before serving, even if index maintenance is asynchronous. | Keep non-public catalogue data out of discovery (aligned with BR-005). |
 | BR-010 | Relevance never overrides a hard constraint: category scope, allowlisted filters and price bounds constrain eligible matches server-side before counts and result limits are calculated. MOQ and per-order capacity remain order validation rules; discovery does not assume an order quantity. | Ranking is a presentation order, not an authorisation or validation rule. |
@@ -316,7 +316,7 @@ sequenceDiagram
 3. **Synonym expansion is one level and versioned.** A token may expand to catalogue terms (`somi`/`sm` → `sơ mi`; `bh` → `bảo hộ`; `pq` → `phản quang`; `mu` → `nón`; `white` → `trắng`). Expansions never widen the AND rule: an expanded token still has to match. Alternatives are OR within that token; every word in a multiword expansion must match the same product. Different original query tokens remain AND.
 4. **Ranking.** Product score = sum of the per-token scores + a server-owned popularity component. An exact full SKU match is ranked first. Ties are broken by popularity, then by name.
 5. **Caps.** The suggestion payload returns at most ten products; the full result page uses the module's normal pagination. The client cannot raise either cap.
-6. **Scope and filters.** A category scope and the allowlisted S08 filters are applied as hard constraints before counts, pagination and suggestion limits; an invalid filter value is rejected with 422 (malformed input or unsupported sort: 400). Counts, featured products and suggestions use the same active constraints as the grid.
+6. **Scope and filters.** A category scope and the allowlisted S14 filters are applied as hard constraints before counts, pagination and suggestion limits; an invalid filter value is rejected with 422 (malformed input or unsupported sort: 400). Counts, featured products and suggestions use the same active constraints as the grid.
 
 ### 5.4 Suggestion panel states and content (F-PROD-012)
 
@@ -329,14 +329,16 @@ sequenceDiagram
 
 **Row content (identical in both product states):** product image, product name with the matched part highlighted, secondary name line if already stored, colour swatches with colour names (a colour that matched the query is listed first and emphasised), material, SKU and price, plus minimum order quantity.
 
-**Interaction requirements.** Arrow keys move the active row and scroll it into view; Enter opens the active suggestion (S09) or runs the full search when no row is active; Escape closes the panel; a clear control empties the field. The active row is distinguished by background colour, not by border alone. Suggestions are requested only after the query settles (input debounce), and the panel renders within 150 ms of the response.
+**Same-screen boundary.** The suggestion panel is attached to the existing S14 catalogue search input. A filled query does not create a Product Finder page, new route or replacement heading/layout. Keep the catalogue grid and filters behind the expanded panel.
+
+**Interaction requirements.** Arrow keys move the active row and scroll it into view; Enter opens the active suggestion (S15) or runs the full search when no row is active; Escape closes the panel; a clear control empties the field. The active row is distinguished by background colour, not by border alone. Suggestions are requested only after the query settles (input debounce), and the panel renders within 150 ms of the response.
 
 **Viewport rule.** Keep four visible product rows out of at most ten suggestions, with an explicit total count, visible scrollbar, list-edge fade and keyboard scrolling. This does not change the normal paginated grid.
 
 
 **Consistency with the existing catalogue.** F-PROD-012 is a Should extension; F-PROD-003 remains the Must paginated search. When enabled, both use the same matching rules and active category/size/colour/material/price constraints; full results default to relevance, while an explicit existing allowlisted sort changes presentation only. A suggestion total counts all eligible matches before the ten-row cap. An empty query applies the same constraints to featured products. Search and suggestions require no login and introduce no new analytics collection.
 
-**Current-data and UI boundary.** Publication/version changes must affect public search eligibility in the same commit; an asynchronous physical index must verify current visibility/version and suppress stale entries until refreshed. A delayed response for a previous query/filter must not replace the current panel. Selecting a product rechecks Published status through [S09](../screens/S09-product_detail_screen.md). Prices use current MFG-04 merchandise pricing as catalogue information, not a quote; MOQ and per-order capacity are validated later. The optional design-service link follows [S15](../screens/S15-design_service_request_screen.md) and its authentication/release rules; hiding that deferred route must not prevent ordinary search. Recent searches stay in the current browser session, are cleared with that session, and are not sent to MFG-11.
+**Current-data and UI boundary.** Publication/version changes must affect public search eligibility in the same commit; an asynchronous physical index must verify current visibility/version and suppress stale entries until refreshed. A delayed response for a previous query/filter must not replace the current panel. Selecting a product rechecks Published status through [S15](../screens/S15-product-detail.md). Prices use current MFG-04 merchandise pricing as catalogue information, not a quote; MOQ and per-order capacity are validated later. The optional design-service link follows [S24](../screens/S24-design-service-request.md) and its authentication/release rules; hiding that deferred route must not prevent ordinary search. Recent searches stay in the current browser session, are cleared with that session, and are not sent to MFG-11.
 
 ### 5.5 AI Compare and advisory (F-PROD-013 / F-PROD-014)
 
@@ -354,11 +356,11 @@ After MFG-10 activation, Sales Admin maintains `merge_enabled` per product and a
 
 Sales Admin also enters `daily_output_capacity` as a positive integer garments per Monday–Friday working day for a saved production-type/material capacity profile. Same-profile products share the profile rather than multiplying factory capacity by SKU. This throughput is different from existing per-order capacity and small-order quantity threshold. An absent/zero/invalid profile cannot produce a flexible quote or feasible scheduling estimate; show the missing configuration and reject invalid writes with 422. Capacity edits increment the profile/version and require revalidation of unstarted proposed/approved allocations, without rewriting accepted customer price or maximum due date. Started assignments retain their audit snapshot. MFG-10 calculates quantities, required workdays and residual scheduled slots; Admin reviews separate decoration and approves actual production.
 
-Maintain a production-type identity for matching garments of the same type and the selected material identity; MFG-10 matches the shared sewing stage using these identities, not print/embroidery method or artwork. Decoration remains per-order work. The product edit contract accepts merge_enabled, inclusive small_order_max_quantity, production-type/material profile linkage and its positive daily_output_capacity after feature activation; require both expected product and profile versions for a joint update. Disabled products may omit the flexible settings; enabling requires valid threshold and saved capacity profile. Keep type/material identities canonical rather than comparing free-form labels. Expose the merge fields through [S14 Product Design Rules](../screens/S14-product_design_rules_screen.md), reached from S12; MFG-10 owns recommendation, benefit and human approval rules. This extension remains outside standard-order MVP and adds no data-file changes.
+Maintain a production-type identity for matching garments of the same type and the selected material identity; MFG-10 matches the shared sewing stage using these identities, not print/embroidery method or artwork. Decoration remains per-order work. The product edit contract accepts merge_enabled, inclusive small_order_max_quantity, production-type/material profile linkage and its positive daily_output_capacity after feature activation; require both expected product and profile versions for a joint update. Disabled products may omit the flexible settings; enabling requires valid threshold and saved capacity profile. Keep type/material identities canonical rather than comparing free-form labels. Expose the merge fields through [S19 Product Design Rules](../screens/S19-product-design-rules.md), reached from S18; MFG-10 owns recommendation, benefit and human approval rules. This extension remains outside standard-order MVP and adds no data-file changes.
 
 ### Analytics evidence integration (MFG-11)
 
-For the Should analytics extension, S09 contributes a validated `product_viewed` interaction only when an eligible product detail is actually displayed to an authenticated Customer, excluding guest activity, prefetch/catalog impressions and staff previews. Product-entry identity and explicit links to new design intents follow MFG-11 5.3; an entry that never starts a design remains in the product-entry denominator. Preserve product ID and source time/version according to [MFG-11 section 5.4](spec-MFG-11.md#54-event-evidence-and-instrumentation). Analytics keeps historical hidden/archived product references independently of public Published-only catalog access. The confirmed first release collects no guest analytics and performs no guest-to-login linking, fingerprinting or guessed customer links. Public catalog access remains available; login starts eligible tracking only from authenticated displays onward, never from replayed guest views. Catalog browsing remains usable when analytics is unavailable.
+For the Should analytics extension, S15 contributes a validated `product_viewed` interaction only when an eligible product detail is actually displayed to an authenticated Customer, excluding guest activity, prefetch/catalog impressions and staff previews. Product-entry identity and explicit links to new design intents follow MFG-11 5.3; an entry that never starts a design remains in the product-entry denominator. Preserve product ID and source time/version according to [MFG-11 section 5.4](spec-MFG-11.md#54-event-evidence-and-instrumentation). Analytics keeps historical hidden/archived product references independently of public Published-only catalog access. The confirmed first release collects no guest analytics and performs no guest-to-login linking, fingerprinting or guessed customer links. Public catalog access remains available; login starts eligible tracking only from authenticated displays onward, never from replayed guest views. Catalog browsing remains usable when analytics is unavailable.
 
 ## 6. Key entities (mandatory)
 
@@ -378,38 +380,38 @@ For the Should analytics extension, S09 contributes a validated `product_viewed`
 
 | Screen ID | Screen name | Priority | Screen Spec file |
 | --- | --- | --- | --- |
-| S01 | Home and catalog entry | Must | `screens/S01-home_page.md` |
-| S08 | Product catalog, Product Finder, AI Compare and advisory | Must (Finder/AI: Should) | `screens/S08-product_catalog_screen.md` |
-| S09 | Product detail, design entry and pinned AI Compare | Must (AI: Should) | `screens/S09-product_detail_screen.md` |
-| S10 | Product management | Won't | `screens/S10-product_list_company_admin_screen.md` |
-| S11 | Product creation | Won't | `screens/S11-product_create_screen.md` |
-| S12 | Product edit/archive | Won't | `screens/S12-product_edit_screen.md` |
-| S14 | Design rules and capacity | Won't | `screens/S14-product_design_rules_screen.md` |
+| S01 | Home and catalog entry | Must | `screens/S01-home-page.md` |
+| S14 | Product catalog, Product Finder, AI Compare and advisory | Must (search/Finder/AI: Should) | `screens/S14-product-catalog.md` |
+| S15 | Product detail, design entry and pinned AI Compare | Must (AI: Should) | `screens/S15-product-detail.md` |
+| S16 | Product management | Should | `screens/S16-admin-products.md` |
+| S17 | Product creation | Should | `screens/S17-product-create.md` |
+| S18 | Product edit/archive | Should | `screens/S18-product-edit.md` |
+| S19 | Design rules and capacity | Could | `screens/S19-product-design-rules.md` |
 
 ## 8. Success criteria (mandatory)
 
 | SC ID | Criterion | How it is measured |
 | --- | --- | --- |
-| SC-001 | MVP users can browse, search and view only eligible products. | Verify Published/Active filtering and empty results. |
+| SC-001 | MVP users can browse and view only eligible products; search (Should) applies the same eligibility. | Verify Published/Active filtering and empty results. |
 | SC-002 | Publish/archive/version/capacity behavior is deterministic under retry/concurrency. | Exercise lifecycle, version and capacity boundaries. |
 | SC-003 | Unsafe assets and unauthorized access are blocked; all fourteen functions map to FRs. | Test asset validation and authorization; compare F-PROD IDs with FRs. |
 | SC-004 | Everyday keyword input reaches the right product base. | Run the agreed keyword test set (unaccented, shortened, joined, one-character typo, colour plus category, SKU) and record the expected product in the first five suggestions for each case. |
 | SC-005 | Search never exposes non-public products and never widens a rejected query. | Include Draft/Hidden/Archived products in the test catalogue and assert they are absent from every suggestion and result, including a full-SKU query; assert invalid scope/filter values return 422. |
 | SC-006 | Suggestions are fast enough to type against, and unproductive searches are visible. | Measure response/render latency and zero-result share on an agreed controlled keyword test set; report against section 9 targets. Intentional no-match/security cases are correctness checks, not successful-discovery queries. This does not authorize runtime query analytics. |
-| SC-007 | AI Compare/advisory honors scope, access and evidence boundaries. | Check 2-4 same-branch Published products, S09 pinning, guest chat gating/return context, candidate caps, five-exchange context, colour-invariant pricing, technical/print grounding and missing-data fallback. |
+| SC-007 | AI Compare/advisory honors scope, access and evidence boundaries. | Check 2-4 same-branch Published products, S15 pinning, guest chat gating/return context, candidate caps, five-exchange context, colour-invariant pricing, technical/print grounding and missing-data fallback. |
 
 ## 9. Assumptions
 
-- AI Compare and product advisory integrate with n8n through a webhook in the application code; the user manages the n8n workflow that processes questions and generates answers.
-- DBIZ 3 classroom demo by Group B; no approver assigned; demo company/contact data are fictional samples.
-- Catalog browsing/search/detail is MVP Must; pre-seed at least one complete Published Dony product base with valid sizes/variants, materials/colours/print options, pricing, media assets and compatible design rules. Product CRUD and design-rule administration remain specified for later operation.
+- AI Compare and product advisory call an external AI workflow service from the backend; the service, AI provider and runtime contract are chosen at Plan. Group B manages that workflow, which processes questions and generates grounded answers.
+- DBIZ 3 classroom demo by Group B; approved by Group B; no client approver; demo company/contact data are fictional samples.
+- Catalog browsing/detail is MVP Must; pre-seed at least one complete Published Dony product base with valid sizes/variants, materials/colours/print options, pricing, media assets and compatible design rules. Seed data remains the demo source even after product administration (Should) is released; design-rule administration (S19) is Could.
 - Classroom sample seed used to make the MVP runnable: SKU `DEMO-TEE-001`, MOQ 10, capacity 10000; supported sizes S/M/L/XL, colours White/Navy/Black, and materials 100% cotton or 65/35 cotton-polyester; total-order quantity tiers 1-49 at 150000 VND/garment, 50-199 at 130000 VND/garment, and 200-10000 at 110000 VND/garment. The first tier begins at 1 to satisfy the tier model; MOQ 10 still blocks smaller orders. Front and back each have a 300 × 400 mm printable area for every seeded size; supported print option is direct print, surcharged 15000 VND/garment on front and 25000 VND/garment on back. This is fictional course-demo data, not Dony's real product catalogue or price list. For 10 garments with front print: merchandise subtotal = 10 × (150000 + 15000) = 1650000 VND.
 - Capacity is a validation ceiling and does not represent stock.
 - Product Finder targets for the classroom release: panel rendering below 150 ms after receiving the response and below 500 ms end to end, zero-result rate below 5% of queries, and the keyword test set passing before each synonym-set release.
 - The supplied search proposal reports a browser prototype using fictional demo data; no prototype or test results accompany this merge. Treat SC-004 to SC-006 as verification targets, not completed validation. Catalogue scale and physical index storage are Plan decisions.
 - Curated `keywords` per product are catalogue content maintained by Sales Admin, not free text written by the system.
 
-- MVP AI Compare requires at least roughly 20-25 and up to 50 Published demo products, split across two branches (`Đồng phục` and `Đồ bảo hộ lao động`) with varied garment types × material options to make the AI comparison meaningful. The MVP keeps the uniform branch intentionally narrow with four garment types: Thun, Polo, Sơ mi, and Khoác; additional categories such as Ba Lỗ, Mũ Nón, Tạp Dề, and Váy-Đầm are not included in this phase. Confirmed for the AI Compare demo in this merge; retain DEMO-TEE-001 for the original catalogue flow. Protective gloves and masks are excluded from this MaterialProfile-based fabric comparison phase. This documentation update does not modify data/ or claim the expanded seed already exists.
+- The Should AI Compare demo extension requires at least roughly 20-25 and up to 50 Published demo products, split across two branches (`Đồng phục` and `Đồ bảo hộ lao động`) with varied garment types × material options to make the AI comparison meaningful. The AI Compare demo keeps the uniform branch intentionally narrow with four garment types: Thun, Polo, Sơ mi, and Khoác; additional categories such as Ba Lỗ, Mũ Nón, Tạp Dề, and Váy-Đầm are not included in this phase. Confirmed for the AI Compare demo in this merge; retain DEMO-TEE-001 for the original catalogue flow. Protective gloves and masks are excluded from this MaterialProfile-based fabric comparison phase. This documentation update does not modify data/ or claim the expanded seed already exists.
 
 ## 10. Open questions
 
@@ -427,12 +429,12 @@ Historical IDs are retained; external DBIZ2 comparison is not required.
 
 | Spec section | DBIZ2 source | Location |
 | --- | --- | --- |
-| Scope and actors | Function List MFG-04 | Rows 25–35; IDs appear in FR table |
-| Browse and detail | UC-G01; F-PROD-001..002 | S08-S09; sections 3 and 5 |
-| Search | UC-G02; F-PROD-003 | S08; sections 3 and 5 |
-| Keyword search and suggestions | New in DBIZ 3; `F-PROD-012` (no DBIZ2 predecessor) | S08; US-8, sections 4.3, 5.1–5.4 |
-| AI Compare / advisory | New in DBIZ3; F-PROD-013/014, UC-G04/G05 (no asserted DBIZ2 predecessor) | S08-S09; US-9/10, FR-018..025, BR-014..017, section 5.5 |
-| Administration | UC-C24..UC-C27; F-PROD-004..011 | S10-S14; sections 3 and 5 |
+| Scope and actors | Function List MFG-04 | Function entries; IDs appear in FR table |
+| Browse and detail | UC-G01; F-PROD-001..002 | S14, S15; sections 3 and 5 |
+| Search | UC-G02; F-PROD-003 | S14; sections 3 and 5 |
+| Keyword search and suggestions | New in DBIZ 3; `F-PROD-012` (no DBIZ2 predecessor) | S14; US-8, sections 4.3, 5.1–5.4 |
+| AI Compare / advisory | New in DBIZ3; F-PROD-013/014, UC-G04/G05 (no asserted DBIZ2 predecessor) | S14, S15; US-9/10, FR-018..025, BR-014..017, section 5.5 |
+| Administration | UC-C24..UC-C27; F-PROD-004..011 | S16, S17, S18, S20, S19; sections 3 and 5 |
 
 ## Completion checklist
 
