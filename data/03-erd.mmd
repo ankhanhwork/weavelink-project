@@ -1,0 +1,181 @@
+erDiagram
+    %% citation: spec-MFG-01.md §6 StaffAccount; approved D3
+    USER ||--o| STAFF_ACCOUNT : "may hold employee role"
+    %% citation: spec-MFG-01.md §6 Session
+    USER ||--o{ SESSION : "opens"
+    %% citation: spec-MFG-01.md §6 OneTimeToken
+    USER ||--o{ ONE_TIME_TOKEN : "receives"
+    %% citation: spec-MFG-01.md §6 Notification
+    USER ||--o{ NOTIFICATION : "receives"
+    %% citation: spec-MFG-03.md §6 StaffInvitation
+    STAFF_ACCOUNT ||--o{ STAFF_INVITATION : "is invited through"
+    %% citation: spec-MFG-07.md §6 Notification-outbox event; approved D4
+    OUTBOX_EVENT ||..o{ NOTIFICATION : "projects to"
+
+    %% citation: spec-MFG-04.md §6 ProductVersion; §5.2 BR-006
+    PRODUCT ||--|{ PRODUCT_VERSION : "has immutable versions"
+    %% citation: S17-product-create.md §3 supported_sizes; approved D2
+    PRODUCT_VERSION ||--o{ PRODUCT_SIZE : "supports"
+    %% citation: spec-MFG-04.md §6 Product.available_colors; approved D2
+    PRODUCT_VERSION ||--o{ PRODUCT_COLOR : "supports"
+    %% citation: spec-MFG-04.md §6 Product.material_label and multi-material note; approved D2
+    PRODUCT_VERSION ||--o{ PRODUCT_MATERIAL : "supports"
+    %% citation: spec-MFG-04.md §6 MaterialProfile
+    MATERIAL_PROFILE ||..o{ PRODUCT_MATERIAL : "grounds"
+    %% citation: spec-MFG-04.md §5.1 FR-006; §5.2 BR-008; approved D2
+    PRODUCT_VERSION ||--o{ VOLUME_PRICING_TIER : "prices by quantity"
+    %% citation: spec-MFG-04.md §6 Product.options; approved D2
+    PRODUCT_VERSION ||--o{ PRODUCT_OPTION : "offers"
+    %% citation: spec-MFG-04.md §6 PrintMethod; §5 FR-023
+    PRINT_METHOD ||..o{ PRODUCT_OPTION : "implements print option"
+    %% citation: S19-product-design-rules.md §3 print_area; approved D2
+    PRODUCT_VERSION ||--o{ PRINT_AREA : "bounds artwork"
+    %% citation: spec-MFG-04.md §6 Product.images; approved D2/D8
+    PRODUCT_VERSION ||--o{ PRODUCT_IMAGE : "shows"
+    %% citation: S17-product-create.md §3 image_asset_ids; approved D8
+    ASSET ||..o{ PRODUCT_IMAGE : "supplies"
+
+    %% citation: spec-MFG-05.md §6 Design
+    USER ||--o{ DESIGN : "owns"
+    %% citation: spec-MFG-05.md §6 Design
+    PRODUCT ||--o{ DESIGN : "is customized by"
+    %% citation: spec-MFG-05.md §5.4
+    DESIGN ||--|{ DESIGN_VERSION : "contains immutable versions"
+    %% citation: spec-MFG-05.md §6 DesignAsset variant; S20 §3; approved D2/D8
+    DESIGN_VERSION ||--o{ DESIGN_PLACEMENT : "places artwork"
+    %% citation: spec-MFG-05.md §6 DesignAsset variant; approved D8
+    ASSET ||..o{ DESIGN_PLACEMENT : "provides artwork"
+    %% citation: spec-MFG-05.md §6 DesignRequest
+    USER ||--o{ DESIGN_REQUEST : "submits"
+    %% citation: spec-MFG-05.md §6 DesignRequest
+    PRODUCT ||--o{ DESIGN_REQUEST : "is requested for"
+    %% citation: S29-staff-design-workspace.md §Creation mode; approved D6
+    DESIGN_REQUEST o|..o| DESIGN : "may produce"
+    %% citation: spec-MFG-05.md §5.1 FR-006; approved D8
+    DESIGN_REQUEST ||--o{ DESIGN_REQUEST_ASSET : "has attachments"
+    %% citation: spec-MFG-05.md §5.1 FR-006; approved D8
+    ASSET ||..o{ DESIGN_REQUEST_ASSET : "attaches to request"
+    %% citation: spec-MFG-05.md §5.1 FR-017; approved D4
+    DESIGN_VERSION ||--o{ DESIGN_FEEDBACK : "receives"
+    %% citation: spec-MFG-05.md §5.1 FR-017
+    USER ||--o{ DESIGN_FEEDBACK : "authors"
+    %% citation: spec-MFG-05.md §5.1 FR-017; approved D8
+    DESIGN_FEEDBACK ||--o{ DESIGN_FEEDBACK_ASSET : "has attachments"
+    %% citation: spec-MFG-05.md §5.1 FR-017; approved D8
+    ASSET ||..o{ DESIGN_FEEDBACK_ASSET : "attaches to feedback"
+    %% citation: spec-MFG-05.md §5.1 FR-021; approved D4
+    DESIGN_FEEDBACK ||--o{ STAFF_REPLY : "receives reply"
+    %% citation: spec-MFG-05.md §5.1 FR-021
+    STAFF_ACCOUNT ||--o{ STAFF_REPLY : "authors"
+    %% citation: spec-MFG-05.md §5.1 FR-021; approved D8
+    STAFF_REPLY ||--o{ STAFF_REPLY_ASSET : "has attachments"
+    %% citation: spec-MFG-05.md §5.1 FR-021; approved D8
+    ASSET ||..o{ STAFF_REPLY_ASSET : "attaches to reply"
+    %% citation: spec-MFG-05.md §6 CustomerApproval
+    DESIGN_VERSION ||--o| CUSTOMER_APPROVAL : "may receive owner approval"
+    %% citation: spec-MFG-05.md §6 CustomerApproval
+    USER ||--o{ CUSTOMER_APPROVAL : "grants"
+    %% citation: spec-MFG-05.md §6 CustomerProvidedConfirmation
+    DESIGN_VERSION ||--o| CUSTOMER_PROVIDED_CONFIRMATION : "may receive source confirmation"
+    %% citation: spec-MFG-05.md §6 ProductMockupTemplate
+    PRODUCT_VERSION ||--o{ PRODUCT_MOCKUP_TEMPLATE : "renders through"
+
+    %% citation: spec-MFG-06.md §6 Quote
+    USER ||--o{ QUOTE : "requests"
+    %% citation: spec-MFG-06.md §6 Quote
+    PRODUCT_VERSION ||--o{ QUOTE : "is snapshotted by"
+    %% citation: spec-MFG-06.md §6 Quote
+    DESIGN_VERSION ||--o{ QUOTE : "is priced by"
+    %% citation: S30-create-order.md §3 quantity_by_size; approved D2
+    QUOTE ||--|{ QUOTE_SIZE_QUANTITY : "contains size quantities"
+    %% citation: spec-MFG-06.md §6 Order
+    USER ||--o{ ORDER : "places"
+    %% citation: approved interrogation Change over time; spec-MFG-06.md §6 Order
+    PRODUCT_VERSION ||..o{ ORDER : "is frozen into"
+    %% citation: approved interrogation Change over time; spec-MFG-06.md §6 Order
+    DESIGN_VERSION ||..o{ ORDER : "is frozen into"
+    %% citation: S35-customer-order-detail.md §3 item_snapshot; approved D2
+    ORDER ||--|{ ORDER_SIZE_QUANTITY : "freezes size quantities"
+    %% citation: spec-MFG-06.md §5.2 BR-015; approved D5
+    ORDER ||--|{ ORDER_QUOTE_CYCLE : "retains revision cycles"
+    %% citation: spec-MFG-06.md §5.2 BR-015; approved D5
+    QUOTE ||..o| ORDER_QUOTE_CYCLE : "binds one cycle"
+    %% citation: spec-MFG-06.md §5.2 BR-015
+    DESIGN_VERSION ||..o{ ORDER_QUOTE_CYCLE : "binds exact design"
+    %% citation: spec-MFG-06.md §6 ProductionSample; §5.2 BR-015
+    ORDER_QUOTE_CYCLE ||--o| PRODUCTION_SAMPLE : "may produce sample"
+    %% citation: spec-MFG-06.md §6 PaymentTransaction
+    ORDER ||--o{ PAYMENT_TRANSACTION : "has payment attempts"
+    %% citation: spec-MFG-06.md §5.2 BR-013; approved Cancellation answer
+    PAYMENT_TRANSACTION ||--o{ REFUND_RECORD : "may be refunded by"
+    %% citation: spec-MFG-06.md §6 OrderTimelineEvent; approved Cancellation answer
+    ORDER ||--|{ ORDER_TIMELINE_EVENT : "records transitions"
+
+    %% citation: spec-MFG-08.md §6 Consultation; approved Empty-state answer
+    USER ||..o| CONSULTATION : "may become a lead"
+    %% citation: spec-MFG-08.md §6 CustomerAssignment
+    USER ||--o{ CUSTOMER_ASSIGNMENT : "has assignment history"
+    %% citation: spec-MFG-08.md §6 CustomerAssignment
+    STAFF_ACCOUNT ||--o{ CUSTOMER_ASSIGNMENT : "owns assigned customer"
+    %% citation: spec-MFG-08.md §6 Consultation
+    CONSULTATION ||--o{ STAGE_HISTORY : "records stage changes"
+    %% citation: spec-MFG-08.md §6 LeadDesignLink
+    CONSULTATION ||--o{ LEAD_DESIGN_LINK : "scopes designs"
+    %% citation: spec-MFG-08.md §6 LeadDesignLink
+    DESIGN ||--o{ LEAD_DESIGN_LINK : "is scoped by leads"
+    %% citation: spec-MFG-08.md §6 InteractionLog
+    CONSULTATION ||--o{ INTERACTION_LOG : "records contact"
+    %% citation: spec-MFG-08.md §6 InternalNote
+    CONSULTATION ||--o{ INTERNAL_NOTE : "has staff notes"
+    %% citation: spec-MFG-08.md §6 AdminReview
+    CONSULTATION ||--o{ ADMIN_REVIEW : "requests decisions"
+
+    %% citation: spec-MFG-09.md §6 ContractTemplate
+    CONTRACT_TEMPLATE ||--o{ CONTRACT : "generates"
+    %% citation: spec-MFG-09.md §6 Contract
+    ORDER ||--o{ CONTRACT : "has versions"
+    %% citation: spec-MFG-09.md §6 Contract; PDF required before Ready
+    CONTRACT ||..o| ASSET : "stores private PDF"
+    %% citation: spec-MFG-09.md §6 SignatureEvidence
+    CONTRACT ||--o| SIGNATURE_EVIDENCE : "may be acknowledged by"
+    %% citation: spec-MFG-09.md §6 SignatureEvidence
+    USER ||--o{ SIGNATURE_EVIDENCE : "acknowledges"
+
+    %% citation: spec-MFG-10.md §5.1 FR-003; approved D4
+    QUOTE ||--o| FLEXIBLE_PREFERENCE : "records choice"
+    %% citation: spec-MFG-10.md §6 ProductionReadiness
+    ORDER ||--o| PRODUCTION_READINESS : "acquires readiness"
+    %% citation: spec-MFG-10.md §5.2 BR-003/006; approved D4
+    ORDER ||--o| INDIVIDUAL_PRODUCTION_PLAN : "may receive fallback plan"
+    %% citation: spec-MFG-10.md §6 ProductionCapacityProfile; approved Duplicates answer
+    MATERIAL_PROFILE ||..o{ PRODUCTION_CAPACITY_PROFILE : "identifies material scope"
+    %% citation: spec-MFG-10.md §6 ProductionBatch
+    PRODUCTION_CAPACITY_PROFILE ||--o{ PRODUCTION_BATCH : "allocates capacity to"
+    %% citation: spec-MFG-10.md §6 BatchMembership
+    PRODUCTION_BATCH ||--o{ BATCH_MEMBERSHIP : "contains"
+    %% citation: spec-MFG-10.md §6 BatchMembership
+    ORDER ||--o{ BATCH_MEMBERSHIP : "is assigned through"
+
+    %% citation: spec-MFG-11.md §6 ProductEntry; approved D4
+    USER ||--o{ PRODUCT_ENTRY : "creates authenticated entry"
+    %% citation: spec-MFG-11.md §6 ProductEntry
+    PRODUCT ||--o{ PRODUCT_ENTRY : "is viewed in"
+    %% citation: spec-MFG-11.md §5.3; approved D4
+    PRODUCT_ENTRY ||--o{ JOURNEY_INTENT : "starts explicit intents"
+    %% citation: spec-MFG-11.md §5.3
+    JOURNEY_INTENT o|..o{ ORDER : "attributes orders"
+    %% citation: spec-MFG-11.md §6 AnalyticsEvent
+    JOURNEY_INTENT o|..o{ ANALYTICS_EVENT : "correlates evidence"
+    %% citation: spec-MFG-11.md §6 AnalyticsResult
+    ANALYTICS_RESULT ||--o{ EXPORT_REQUEST : "pins exports"
+    %% citation: spec-MFG-12.md §6 AuditEvent
+    USER o|..o{ AUDIT_EVENT : "may act in"
+    %% citation: spec-MFG-12.md §6 Backup
+    STAFF_ACCOUNT o|..o{ BACKUP : "may trigger"
+    %% citation: spec-MFG-12.md §6 Restore journal
+    BACKUP ||--o{ RESTORE_JOURNAL : "may be restored through"
+
+    %% citation: spec-MFG-04.md §6 SearchSynonymSet
+    USER ||..o{ SEARCH_SYNONYM_SET : "publishes"
+    %% citation: spec-MFG-12.md §6 SystemConfig
+    USER ||..o{ SYSTEM_CONFIG : "activates"

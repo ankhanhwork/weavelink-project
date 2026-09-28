@@ -1,0 +1,8 @@
+interaction_id,consultation_id,type,channel,occurred_at,summary,author_user_id,design_version_id
+4a566f32-1e11-57b5-92a4-1d09c325b13f,0ca464b7-d8d8-5843-aea8-4eb5f9b65ca1,General,Messenger,2026-09-04T03:00:00Z,Tóm tắt trao đổi giả lập 4.,8a406b9e-570d-56f2-b283-a17f635ac846,
+51443f48-7d73-5756-86eb-1aca384fd018,d595042c-402a-5627-817e-88c8ce41fdd4,General,Email,2026-09-02T03:00:00Z,Tóm tắt trao đổi giả lập 2.,8a406b9e-570d-56f2-b283-a17f635ac846,
+6cd26a65-00ff-5e03-b63d-3d4cb4dad02f,05f596ea-a8cd-5f6b-b3a1-b066124c1f44,DesignDiscussion,Meeting,2026-09-05T03:00:00Z,Tóm tắt trao đổi giả lập 5.,8a406b9e-570d-56f2-b283-a17f635ac846,cfc5b5c5-0ac9-578e-99a3-a72156ea65d8
+98203bdb-935e-51da-a7c0-691664b7e987,3fc0a1cc-679f-5532-ab68-0f6e6d12cf34,DesignDiscussion,Email,2026-09-07T03:00:00Z,Tóm tắt trao đổi giả lập 7.,8a406b9e-570d-56f2-b283-a17f635ac846,9734f656-5624-5528-8945-205bce087516
+aa2c4832-fa82-5f96-ba7f-261300dec887,cb039ce3-11b7-5a01-a63d-7dca56b728f2,General,Other,2026-09-06T03:00:00Z,Tóm tắt trao đổi giả lập 6.,8a406b9e-570d-56f2-b283-a17f635ac846,
+f0ff225e-f115-59ef-8f50-6d0cc65e63d9,9aec3da6-45e2-5932-9f81-2f49854d4f76,DesignDiscussion,Zalo,2026-09-03T03:00:00Z,Tóm tắt trao đổi giả lập 3.,8a406b9e-570d-56f2-b283-a17f635ac846,6f032fe3-c433-5c99-a779-acd81fe5597d
+fb2973c0-cfaa-5f12-8e4b-19259d7197e7,fbc06600-a2a4-5f06-9509-321e37a8529a,DesignDiscussion,Phone,2026-09-01T03:00:00Z,Tóm tắt trao đổi giả lập 1.,8a406b9e-570d-56f2-b283-a17f635ac846,aa86f1c5-21db-56b6-903b-85a00f16e431

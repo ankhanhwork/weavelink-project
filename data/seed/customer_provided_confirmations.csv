@@ -1,0 +1,5 @@
+confirmation_id,design_version_id,confirmer_user_id,recorded_by_staff_id,original_channel,source_evidence,confirmed_at,idempotency_key
+11f848f0-fe64-5540-94e8-d8c9a4769c70,dfd2600e-21e1-557c-a8dc-c1ca1b48d5cc,7776aa6f-8f8f-58ce-86e6-f117df4e8646,b8c0deb3-118f-5bca-9b2c-b919fc03dc6a,Email,Xác nhận nguồn tệp giả lập 2.,2026-09-12T05:30:00Z,ba031c86-01f1-571e-8ffa-922f6302ba61
+7a0942b1-e485-54a2-a235-f817cb926a56,9734f656-5624-5528-8945-205bce087516,c381a9bb-d175-5a06-be64-7d91163c76c8,b8c0deb3-118f-5bca-9b2c-b919fc03dc6a,Email,Xác nhận nguồn tệp giả lập 7.,2026-09-17T05:30:00Z,3aa6a797-5559-5a67-b3c8-afe35ef9765b
+89caad1f-9d12-5b10-a88f-a832e5430f77,cfc5b5c5-0ac9-578e-99a3-a72156ea65d8,4e59134b-632b-5144-bfc8-2bf67d1c1bca,b8c0deb3-118f-5bca-9b2c-b919fc03dc6a,Email,Xác nhận nguồn tệp giả lập 5.,2026-09-15T05:30:00Z,72b62432-d965-5bda-84e9-5e03006ce4dc
+fe401db0-5078-5730-9f9f-7ff400d4ee8e,aa86f1c5-21db-56b6-903b-85a00f16e431,c381a9bb-d175-5a06-be64-7d91163c76c8,b8c0deb3-118f-5bca-9b2c-b919fc03dc6a,Email,Xác nhận nguồn tệp giả lập 1.,2026-09-11T05:30:00Z,eea378f1-e4c3-5d29-aaf4-18d53a2cfa70

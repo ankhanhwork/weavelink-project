@@ -1,0 +1,4 @@
+system_config_id,version,public_company_contacts_json,smtp_secret_reference,vnpay_secret_reference,design_service_fee_vnd,shipping_vnd,daily_backup_time,daily_retention_count,weekly_retention_count,production_notification_email,activated_at,actor_id
+42545ff6-cdea-56b8-a291-081cae23b116,1,"{""phone"":""0900000000""}",secret://smtp-demo,secret://vnpay-demo,200000,30000,02:00,7,4,ops@example.invalid,2026-09-01T01:00:00Z,f2a48478-cf95-5a4c-8914-242e2187b4d7
+b1bc8ce3-600c-5458-a41c-7c2cf629987e,3,"{""phone"":""0900000000""}",secret://smtp-demo,secret://vnpay-demo,200000,30000,02:00,7,4,ops@example.invalid,2026-09-03T01:00:00Z,f2a48478-cf95-5a4c-8914-242e2187b4d7
+ba3d46f8-9b05-59d8-b2fd-fce762eb442a,2,"{""phone"":""0900000000""}",secret://smtp-demo,secret://vnpay-demo,200000,30000,02:00,7,4,ops@example.invalid,2026-09-02T01:00:00Z,f2a48478-cf95-5a4c-8914-242e2187b4d7

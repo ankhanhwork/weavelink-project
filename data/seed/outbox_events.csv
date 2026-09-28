@@ -1,0 +1,8 @@
+outbox_event_id,source_module,source_entity_type,source_entity_id,event_type,payload_json,delivery_state,created_at,delivered_at
+189b0a4a-cfbe-50f8-89ef-bcf23e96df76,MFG-06,Order,9cae9cc5-406e-53ae-9412-618f0c90f51b,DepositSucceeded,"{""sequence"":6,""synthetic"":true}",Delivered,2026-09-16T02:00:00Z,2026-09-16T02:01:00Z
+21debfcb-b4a8-58da-94bf-8bcfe8cbb3cd,MFG-07,Order,1e407f7c-8ff0-56cc-a4bd-30af380a010d,OrderCancelled,"{""sequence"":7,""synthetic"":true}",Failed,2026-09-17T02:00:00Z,
+40dba68f-37ed-585e-bc55-d615c947a062,MFG-01,User,a665a2e5-2dbb-56ec-8336-85275742d2d3,VerificationQueued,"{""sequence"":1,""synthetic"":true}",Delivered,2026-09-11T02:00:00Z,2026-09-11T02:01:00Z
+70fd9551-0699-5eda-9b47-3b2adc72954d,MFG-03,Order,424e5bc2-5059-5915-8d4d-fc9370b90cf9,OrderCreated,"{""sequence"":3,""synthetic"":true}",Delivered,2026-09-13T02:00:00Z,2026-09-13T02:01:00Z
+b1fdc476-b197-5994-954f-29db672c4c4d,MFG-02,User,8a406b9e-570d-56f2-b283-a17f635ac846,PasswordResetQueued,"{""sequence"":2,""synthetic"":true}",Delivered,2026-09-12T02:00:00Z,2026-09-12T02:01:00Z
+d7ffa99c-dac2-57c6-8bd3-cb6e9ec362ec,MFG-04,Order,378f1ba3-c940-5e48-bbb0-71206171bbcc,SampleShipped,"{""sequence"":4,""synthetic"":true}",Delivered,2026-09-14T02:00:00Z,2026-09-14T02:01:00Z
+fa874b42-952c-54ee-86a8-8737cf67bdf8,MFG-05,Order,b7505d2c-f1f8-5a3f-a187-6868cd79386c,ContractReady,"{""sequence"":5,""synthetic"":true}",Delivered,2026-09-15T02:00:00Z,2026-09-15T02:01:00Z

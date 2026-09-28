@@ -1,0 +1,8 @@
+note_id,consultation_id,text,author_user_id,pinned,created_at
+00c3d406-beb5-5e0f-bece-112f2beb1cb9,0ca464b7-d8d8-5843-aea8-4eb5f9b65ca1,"Ghi chú nội bộ giả lập 4, không chứa dữ liệu thật.",8a406b9e-570d-56f2-b283-a17f635ac846,false,2026-09-04T04:00:00Z
+63810a69-995b-558a-a2cc-0e56b4c5cd8c,9aec3da6-45e2-5932-9f81-2f49854d4f76,"Ghi chú nội bộ giả lập 3, không chứa dữ liệu thật.",8a406b9e-570d-56f2-b283-a17f635ac846,true,2026-09-03T04:00:00Z
+74e79216-25bf-58b9-81ad-524239f0e299,d595042c-402a-5627-817e-88c8ce41fdd4,"Ghi chú nội bộ giả lập 2, không chứa dữ liệu thật.",8a406b9e-570d-56f2-b283-a17f635ac846,true,2026-09-02T04:00:00Z
+78ecec41-7a0b-57d0-92a5-b71eb935184d,3fc0a1cc-679f-5532-ab68-0f6e6d12cf34,"Ghi chú nội bộ giả lập 7, không chứa dữ liệu thật.",8a406b9e-570d-56f2-b283-a17f635ac846,false,2026-09-07T04:00:00Z
+7cb35979-8fc1-5bc9-bccd-c062c8eb7859,fbc06600-a2a4-5f06-9509-321e37a8529a,"Ghi chú nội bộ giả lập 1, không chứa dữ liệu thật.",8a406b9e-570d-56f2-b283-a17f635ac846,true,2026-09-01T04:00:00Z
+8586ee8e-962d-510b-8ff1-7ddbe8056423,05f596ea-a8cd-5f6b-b3a1-b066124c1f44,"Ghi chú nội bộ giả lập 5, không chứa dữ liệu thật.",8a406b9e-570d-56f2-b283-a17f635ac846,false,2026-09-05T04:00:00Z
+a1331755-7ac0-57d6-bdf4-9eb7279ea655,cb039ce3-11b7-5a01-a63d-7dca56b728f2,"Ghi chú nội bộ giả lập 6, không chứa dữ liệu thật.",8a406b9e-570d-56f2-b283-a17f635ac846,false,2026-09-06T04:00:00Z

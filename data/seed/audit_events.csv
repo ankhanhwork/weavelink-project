@@ -1,0 +1,8 @@
+audit_event_id,actor_id,buyer_organization_context,target_type,target_id,action,outcome,severity,request_id,occurred_at,redacted_details_json
+50c2a54e-28ef-51e4-8354-00541b935bc8,a665a2e5-2dbb-56ec-8336-85275742d2d3,,SystemConfig,42545ff6-cdea-56b8-a291-081cae23b116,Update,Succeeded,INFO,REQ-0001,2026-09-01T01:00:00Z,"{""secret_values_excluded"":true,""synthetic"":true}"
+5223dd04-32a5-56c0-8553-e667e789ba2b,f2a48478-cf95-5a4c-8914-242e2187b4d7,,Order,b598cd1d-5386-50e7-9371-c627e0bf724e,Transition,Succeeded,WARN,REQ-0006,2026-09-06T01:00:00Z,"{""secret_values_excluded"":true,""synthetic"":true}"
+7a424cf4-b828-5661-b2ea-4aba28236196,f2a48478-cf95-5a4c-8914-242e2187b4d7,,SystemConfig,42545ff6-cdea-56b8-a291-081cae23b116,Update,Succeeded,WARN,REQ-0003,2026-09-03T01:00:00Z,"{""secret_values_excluded"":true,""synthetic"":true}"
+a5eacb53-e906-5645-8a56-ca2d50befae1,8a406b9e-570d-56f2-b283-a17f635ac846,,Order,378f1ba3-c940-5e48-bbb0-71206171bbcc,Transition,Succeeded,INFO,REQ-0002,2026-09-02T01:00:00Z,"{""secret_values_excluded"":true,""synthetic"":true}"
+c83e1fea-427f-5a0c-8c1b-869c00b50afd,a665a2e5-2dbb-56ec-8336-85275742d2d3,,SystemConfig,42545ff6-cdea-56b8-a291-081cae23b116,Update,Failed,ERROR,REQ-0007,2026-09-07T01:00:00Z,"{""secret_values_excluded"":true,""synthetic"":true}"
+ce445a59-ba58-5a61-aa1f-2112b61c91f4,a665a2e5-2dbb-56ec-8336-85275742d2d3,,Order,9cae9cc5-406e-53ae-9412-618f0c90f51b,Transition,Failed,ERROR,REQ-0004,2026-09-04T01:00:00Z,"{""secret_values_excluded"":true,""synthetic"":true}"
+f4263f80-ab21-549d-90f6-8c3a2a9dee0d,8a406b9e-570d-56f2-b283-a17f635ac846,,SystemConfig,42545ff6-cdea-56b8-a291-081cae23b116,Update,Succeeded,INFO,REQ-0005,2026-09-05T01:00:00Z,"{""secret_values_excluded"":true,""synthetic"":true}"
