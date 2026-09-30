@@ -8,7 +8,7 @@
 | Author (team member) | Group B |
 | Date | 2026-09-19 |
 | Status | Final Group B demo specification; client operating approval not claimed |
-| Approved by (Client role) | Group B (team approval, 2026-09-28); no client approver |
+| Approved by (Client role) | Client approved, 2026-09-30 |
 | DBIZ2 source | Historical IDs retained: Function List MFG-01; `F-USER-001` .. `F-USER-011`; `UC-G03`, `UC-M01` .. `UC-M04`; S04, S05, S06, S07, S11 and S14. DBIZ3 extension: `F-USER-012`, `F-USER-013`, `UC-M09` (S13 notifications). External DBIZ2 comparison is not required. |
 
 ---

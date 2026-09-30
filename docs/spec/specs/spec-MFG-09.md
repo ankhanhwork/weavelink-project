@@ -8,7 +8,7 @@
 | Author (team member) | Group B |
 | Date | 2026-09-26 |
 | Status | Final Group B demo specification; client operating approval not claimed |
-| Approved by (Client role) | Group B (team approval, 2026-09-28); no client approver |
+| Approved by (Client role) | Client approved, 2026-09-30 |
 | DBIZ2 source | Function List MFG-09, `F-CONTR-001`–`F-CONTR-009`; UC-C10, UC-C09, UC-C11, UC-C14, UC-C15, UC-C13; screens S43, S44, S45, S39, S38 and S13 |
 
 ---

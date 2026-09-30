@@ -8,7 +8,7 @@
 | Author (team member) | Group B |
 | Date | 2026-09-27 |
 | Status | Final Group B demo specification; client operating approval not claimed |
-| Approved by (Client role) | Group B (team approval, 2026-09-28); no client approver |
+| Approved by (Client role) | Client approved, 2026-09-30 |
 | DBIZ2 source | Historical IDs retained: Function List MFG-04; `F-PROD-001` .. `F-PROD-011`; `UC-G01`, `UC-G02`, `UC-C24` .. `UC-C27`; S01, S14, S15, S16, S17, S18, S20, S19. External DBIZ2 comparison is not required. |
 
 ---

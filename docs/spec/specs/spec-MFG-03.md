@@ -8,7 +8,7 @@
 | Author (team member) | Group B |
 | Date | 2026-09-23 |
 | Status | Final Group B demo specification; client operating approval not claimed |
-| Approved by (Client role) | Group B (team approval, 2026-09-28); no client approver |
+| Approved by (Client role) | Client approved, 2026-09-30 |
 | DBIZ2 source | Historical IDs retained: Function List MFG-03; `F-ACC-001` .. `F-ACC-008`; `UC-S06` .. `UC-S08`; current staff sign-in is S08 and staff administration is S48. |
 
 ---

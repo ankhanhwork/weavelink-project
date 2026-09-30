@@ -8,7 +8,7 @@
 | Author (team member) | Group B |
 | Date | 2026-09-27 |
 | Status | Final Group B demo policy; Could/post-MVP; not Dony-approved operating policy |
-| Approved by (Client role) | Group B (team approval, 2026-09-28); no client approver |
+| Approved by (Client role) | Client approved, 2026-09-30 |
 | DBIZ2 source | Function List MFG-10, `F-MER-001`–`F-MER-007`; UC-C06, UC-C17, UC-C18, UC-C16; screens S31, S32, S33, S37, S13, S46 |
 
 ---

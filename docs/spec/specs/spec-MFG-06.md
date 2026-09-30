@@ -8,7 +8,7 @@
 | Author (team member) | Group B |
 | Date | 2026-09-26 |
 | Status | Final Group B demo specification; client operating approval not claimed |
-| Approved by (Client role) | Group B (team approval, 2026-09-28); no client approver |
+| Approved by (Client role) | Client approved, 2026-09-30 |
 | DBIZ2 source | Historical IDs retained: Function List MFG-06; `F-PAY-001` .. `F-PAY-006`; `UC-C05`, `UC-C12`; active screens S30, S31, S32, S33, S34, S35, S36, S37 and S39, S38, S40, S41, S42, S13. |
 
 ---

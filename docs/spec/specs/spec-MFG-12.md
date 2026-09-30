@@ -8,7 +8,7 @@
 | Author (team member) | Group B |
 | Date | 2026-09-26 |
 | Status | Final Group B demo specification; client operating approval not claimed |
-| Approved by (Client role) | Group B (team approval, 2026-09-28); no client approver |
+| Approved by (Client role) | Client approved, 2026-09-30 |
 | DBIZ2 source | Function List MFG-12, `F-SYS-001`–`F-SYS-008`; UC-S09, UC-S10, UC-S11; screens S49, S50 |
 
 ---

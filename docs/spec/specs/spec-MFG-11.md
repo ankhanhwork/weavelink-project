@@ -8,7 +8,7 @@
 | Author (team member) | Group B |
 | Date | 2026-09-26 |
 | Status | Product decisions resolved for this revision; runtime selection remains at Plan |
-| Approved by (Client role) | Group B (team approval, 2026-09-28); no client approver |
+| Approved by (Client role) | Client approved, 2026-09-30 |
 | Source | Existing F-DA-001–003; requested F-DA-004 funnel and prompt-based analysis extension F-DA-006; UC-C20/21/22; S47 |
 
 ## 1. Purpose and scope (mandatory)

@@ -8,7 +8,7 @@
 | Author (team member) | Group B |
 | Date | 2026-09-27 |
 | Status | Final Group B demo specification; client operating approval not claimed |
-| Approved by (Client role) | Group B (team approval, 2026-09-28); no client approver |
+| Approved by (Client role) | Client approved, 2026-09-30 |
 | DBIZ2 source | Function List MFG-08, `F-SALES-001`–`F-SALES-008`; UC-S01, UC-S02, UC-C19; active screens S27, S28 and S13. S29 is an MFG-05 Design Workspace linked from the pipeline. |
 
 ---

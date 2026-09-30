@@ -8,7 +8,7 @@
 | Author (team member) | Group B |
 | Date | 2026-09-26 |
 | Status | Final Group B demo specification; client operating approval not claimed |
-| Approved by (Client role) | Group B (team approval, 2026-09-28); no client approver |
+| Approved by (Client role) | Client approved, 2026-09-30 |
 | DBIZ2 source | Function List MFG-07, `F-ORD-001`–`F-ORD-007`; use cases UC-C08 Track Order, UC-C07 Cancel Order, UC-S04 Update Status; screens S34, S35, S36, S37, S43, S13 |
 
 ---
