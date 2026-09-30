@@ -1,0 +1,1 @@
+-- SQLite validation schema for MFG-02.

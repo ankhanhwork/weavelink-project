@@ -1,8 +1,0 @@
-token_id,user_id,purpose,portal,token_hash,expires_at,consumed_at,created_at
-0293f65b-ca19-5925-a366-d3062541af68,f2a48478-cf95-5a4c-8914-242e2187b4d7,PasswordReset,Customer,token-hash-2,2026-09-29T04:00:00Z,2026-09-28T04:05:00Z,2026-09-28T03:30:00Z
-1378dbef-8510-5841-8a31-c14eb6d73e38,8a406b9e-570d-56f2-b283-a17f635ac846,EmailVerification,Customer,token-hash-1,2026-09-29T04:00:00Z,,2026-09-28T03:30:00Z
-43d12e5d-0c8f-572e-8170-d4bc3fbaa407,7cfeb498-15ec-584b-b9ce-ec4ca07c5bfa,EmailChange,Customer,token-hash-3,2026-09-29T04:00:00Z,,2026-09-28T03:30:00Z
-bf13460b-fc5c-5001-bc19-4237ec80048b,337dcc98-8efc-5de8-bf38-609ae417e2c1,PasswordReset,Customer,token-hash-6,2026-09-29T04:00:00Z,,2026-09-28T03:30:00Z
-bfa37294-f9bb-524c-b76c-e42839ab65b3,c381a9bb-d175-5a06-be64-7d91163c76c8,PasswordReset,Customer,token-hash-4,2026-09-29T04:00:00Z,,2026-09-28T03:30:00Z
-c60c5d23-f743-51ed-a872-8c8990029c78,7776aa6f-8f8f-58ce-86e6-f117df4e8646,StaffInvitation,Staff,token-hash-5,2026-09-29T04:00:00Z,2026-09-28T04:05:00Z,2026-09-28T03:30:00Z
-d25cfdbd-bc51-530d-a9e3-7f4b34905950,def1b0d5-e1fb-5578-9afd-e5f1df3960fa,EmailVerification,Customer,token-hash-7,2026-09-29T04:00:00Z,,2026-09-28T03:30:00Z

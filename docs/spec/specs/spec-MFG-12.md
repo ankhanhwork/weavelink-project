@@ -8,7 +8,7 @@
 | Author (team member) | Group B |
 | Date | 2026-09-26 |
 | Status | Final Group B demo specification; client operating approval not claimed |
-| Approved by (Client role) | Group B (team approval, 2026-09-28); no client approver |
+| Approved by (Client role) | Client approved, 2026-09-30 |
 | DBIZ2 source | Function List MFG-12, `F-SYS-001`–`F-SYS-008`; UC-S09, UC-S10, UC-S11; screens S49, S50 |
 
 ---
@@ -197,7 +197,7 @@ MFG-11 analytics events/results are not the general audit log. Its confirmed rol
 
 - System Admin identity and recent reauthentication are available from the shared identity service.
 - Scheduler, private asset storage and durable job queue are available in complete-system deployment.
-- MVP priority is Won't; role-specific Sales Admin, Sales, System Admin and verified Customer identities are pre-provisioned as listed in the [MVP scope](../mvp-scope-proposal.md). The System Admin identity is bootstrap/recovery-only; Sales Admin operates the MVP order path.
+- MVP priority is Won't; role-specific Sales Admin, Sales, System Admin and verified Customer identities are pre-provisioned as listed in the [MVP scope](../../prd.md). The System Admin identity is bootstrap/recovery-only; Sales Admin operates the MVP order path.
 
 ## 10. Open questions
 
@@ -207,6 +207,8 @@ MFG-11 analytics events/results are not the general audit log. Its confirmed rol
 | 2 | No remaining open questions. | No | Group B | Resolved |
 
 ## 11. Traceability to DBIZ2
+
+The repository DBIZ2 baseline is [`docs/spec/docs/function-list.md`](../docs/function-list.md), section XII MFG-12. Each historical function ID below identifies a concrete source-table row and its linked use case/screen reference.
 
 | Spec section | DBIZ2 source | Location |
 | --- | --- | --- |

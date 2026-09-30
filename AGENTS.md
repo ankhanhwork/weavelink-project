@@ -8,8 +8,8 @@ and current.
 
 - Product: `WeaveLink`, team `Group B`, course DBIZ3, VJCBI College, Foreign Trade University.
 - Current step of the course process: Environment setup (Session 6). Next step: `Do not know yet`.
-- Source of truth for approved product requirements: `docs/spec/` (Spec Document from Session 4).
-- Feature working documents generated during planning (spec, plan, research, tasks, etc.) belong in `specs/`. They must follow `docs/spec/`; they do not replace or silently amend it.
+- Source of truth for approved product requirements: `docs/prd.md` (MVP scope) and `docs/spec/` (Spec Document from Session 4).
+- Feature working documents generated during planning (spec, plan, research, tasks, etc.) belong in `specs/`. They must follow `docs/prd.md` and `docs/spec/`; they do not replace or silently amend them.
 - Source of truth for data: `data/` (data model and seed package from Session 5).
 
 ## 2. Tech stack
@@ -37,7 +37,8 @@ and current.
 
 | Path | Owner | Content |
 |---|---|---|
-| `docs/spec/` | humans | Spec Document (read-only for agents) |
+| `docs/prd.md` | humans | Approved MVP scope and PRD (read-only for agents) |
+| `docs/spec/` | humans | Module and screen specifications (read-only for agents) |
 | `data/` | humans | Data model, seed generator, seed files (read-only for agents) |
 | `docs/env/` | humans | Environment Readiness Report |
 | `.specify/` | Spec Kit | Templates, scripts, constitution |
@@ -46,9 +47,9 @@ and current.
 
 ## 5.1 Requirements and feature documents
 
-- Read the relevant files in `docs/spec/` before specifying or implementing a product feature.
-- Keep approved baseline requirements in `docs/spec/` unchanged unless the human explicitly requests a change to those files.
-- Store feature-specific working documents in `specs/`, following the Spec Kit structure. Treat them as derived planning documents and flag conflicts with `docs/spec/` for human resolution.
+- Read `docs/prd.md` and the relevant files in `docs/spec/` before specifying or implementing a product feature.
+- Keep approved baseline requirements in `docs/prd.md` and `docs/spec/` unchanged unless the human explicitly requests a change to those files.
+- Store feature-specific working documents in `specs/`, following the Spec Kit structure. Treat them as derived planning documents and flag conflicts with `docs/prd.md` or `docs/spec/` for human resolution.
 - Do not create a second copy of the baseline product specification under `specs/`.
 
 ## 6. Conventions

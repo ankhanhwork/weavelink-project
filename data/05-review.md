@@ -1,8 +1,8 @@
 ---
 artifact: Data Model Review
-step: S6
-generated: 2026-09-28
-sources: docs/spec/README.md; docs/spec/mvp-scope-proposal.md; docs/spec/specs/spec-MFG-01.md through spec-MFG-12.md; docs/spec/screens/S01 through S50; data/01-entity-dictionary.md; data/02-crud-matrix.md; data/03-erd.mmd; data/04-data-model.md; data/seed/*.csv
+step: S7
+generated: 2026-09-30
+sources: docs/prd.md; docs/spec/README.md; docs/spec/specs/spec-MFG-01.md through spec-MFG-12.md; docs/spec/screens/S01 through S50; data/01-entity-dictionary.md; data/02-crud-matrix.md; data/03-erd.mmd; data/04-data-model.md; data/06-edge-case-register.md; data/07-end-to-end-traceability.md; data/seed/*.csv
 ---
 
 # WeaveLink Data Model Review
@@ -12,17 +12,17 @@ sources: docs/spec/README.md; docs/spec/mvp-scope-proposal.md; docs/spec/specs/s
 | Criterion | Result | Evidence from the input | Minimum change proposed |
 |---|---|---|---|
 | Completeness | Pass | Every persisted field group in module §5 I/O and §6 entity tables is represented directly, as a cited normalized child, or as a cited immutable snapshot in `04-data-model.md`. Transient/derived objects are explicitly excluded under `01-entity-dictionary.md` D1. | None. Revisit only if the Plan step chooses persistence for catalogue chat/search projections. |
-| Correctness | Pass | Cardinalities follow explicit ownership, lifecycle and version language in MFG-01..12; every ERD relationship has a citation comment. `04-data-model.md` assigns a type only in its Spec-declared data types section and leaves all other field types unassigned for the Plan step. Order cancellation and change-over-time behavior use the confirmed human answers. | None. |
+| Correctness | Pass | Cardinalities follow explicit ownership, lifecycle and version language in MFG-01..12; every ERD relationship has a citation comment. The Session 7 validation schema preserves `phone` as `TEXT`, applies supported required/unique constraints, and keeps all other physical type choices conservative for the Plan step. Order cancellation and change-over-time behavior use the confirmed human answers. | None. |
 | Minimality | Pass | Identity values live on User rather than being duplicated on StaffAccount; no BuyerOrganization master, cancellation table, SystemCapability table, StaffWorkSummary table, search-index table, MergeRecommendation table, TryOn table or AI chat/result table is introduced. | None. |
 | Readability | Pass | The logical model is grouped into identity, catalogue, design, order/payment/contract, CRM/production and analytics/operations domains; canonical aliases are recorded in `01`. | None. |
 | Extensibility | Pass | Product rules and order quantities are normalized and versioned; immutable Quote/Order snapshots and OrderQuoteCycle preserve historical behavior when current catalogue data changes. | None. |
 | Integration | Pass | VNPay uses PaymentTransaction/provider identities and RestoreJournal; SMTP/in-app delivery uses OutboxEvent/Notification; private files use Asset; AI try-on and analytics conversation are transient according to the external-system boundaries. | None. Provider/runtime selection remains a Plan task and is not invented here. |
-| Traceability | Pass | Every table row, spec-declared type, conflict decision and ERD relationship cites `docs/spec/` or a confirmed human decision grounded in the interrogation module. Natural-key coverage explicitly assesses all 66 logical tables without promoting operational uniqueness rules into unsupported business identities. | None. |
+| Traceability | Pass | Every table row, spec-declared type, conflict decision and ERD relationship cites `docs/spec/` or a confirmed human decision grounded in the interrogation module. `07-end-to-end-traceability.md` covers every specified FR ID from PRD scope through field contract, entity/attribute, deterministic seed evidence and screen. Natural-key coverage explicitly assesses all 66 logical tables without promoting operational uniqueness rules into unsupported business identities. | None. |
 
 ## Seed scenario coverage
 
 Coverage means that the CSV package contains the persistent data prerequisites and representative states for the scenario. It does not claim that application code, external providers or deferred screens exist.
-`Must` is the approved MVP path; `Should`, `Could`, and `Won't` retain the meanings defined in `docs/spec/mvp-scope-proposal.md §1`. Release status is recorded here instead of inventing a priority column in product tables.
+`Must` is the approved MVP path; `Should`, `Could`, and `Won't` retain the meanings defined in `docs/prd.md §1`. Release status is recorded here instead of inventing a priority column in product tables.
 
 | Scenario ID | Rows that make it runnable | Covered? |
 |---|---|---|
@@ -37,15 +37,15 @@ Coverage means that the CSV package contains the persistent data prerequisites a
 | MFG-02 US-3 Edit profile | `users.version` and `updated_at` rows | Yes (Should) |
 | MFG-02 US-4 Change password | `users`, current/revoked `sessions` | Yes (Should) |
 | MFG-03 US-1 Add staff | `users`, `staff_accounts`, `staff_invitations` | Yes (Could) |
-| MFG-03 US-2 Update staff | Active/Suspended/Invited rows in `staff_accounts` | Yes (Could) |
-| MFG-03 US-3 Deactivate/delete staff | Suspended row plus retained assignment/history records | Yes (Could) |
+| MFG-03 US-2 Update staff | Active/Suspended/Invited/Deleted rows in `staff_accounts` | Yes (Could) |
+| MFG-03 US-3 Deactivate/delete staff | Suspended and Deleted rows plus retained assignment/history records | Yes (Could) |
 | MFG-03 US-4 Manage staff | role/lifecycle variants in `staff_accounts` | Yes (Could) |
 | MFG-04 US-1 View catalogue | Published `products`, versions, images, options, sizes, colors, materials and tiers | Yes (Must) |
 | MFG-04 US-2 Search products | Published products and `search_synonym_sets` | Yes (Should) |
 | MFG-04 US-3 Add product | Draft row in `products` with normalized child data | Yes (Should) |
 | MFG-04 US-4 Update product | immutable `product_versions` structure and version fields | Yes (Should) |
 | MFG-04 US-5 Delete product | Draft and Archived lifecycle evidence in catalogue schema; no unsupported historical hard-delete row | Yes (Should) |
-| MFG-04 US-6 Publish/unpublish | Published, Hidden and Draft rows in `products` | Yes (Should) |
+| MFG-04 US-6 Publish/unpublish | Published, Hidden, Draft and Archived rows in `products` | Yes (Should) |
 | MFG-04 US-7 Manage catalogue | complete normalized catalogue dataset | Yes (Should) |
 | MFG-04 US-8 Everyday keyword search | exact synonym examples and searchable product labels | Yes (Should) |
 | MFG-04 US-9 AI Compare | six products across two branches, five material profiles and supported print data | Yes for data prerequisites (Should); provider runtime not simulated |
@@ -53,7 +53,7 @@ Coverage means that the CSV package contains the persistent data prerequisites a
 | MFG-05 US-1 Design product | Saved `designs`, immutable versions and placements | Yes (Must) |
 | MFG-05 US-2 Product customization | product rules, assets, placements and versions | Yes (Must) |
 | MFG-05 US-3 View saved design | Saved/Delivered/ProofDelivered/Draft rows | Yes (Must) |
-| MFG-05 US-4 Request design service | DesignRequest lifecycle states from Submitted through terminal states | Yes (Could) |
+| MFG-05 US-4 Request design service | DesignRequest lifecycle states from Submitted through Rejected, including Approved and Assigned | Yes (Could) |
 | MFG-05 US-5 Send design to customer | shared versions, feedback, replies and approvals | Yes (Could) |
 | MFG-05 US-6 Remove background | original/processed Asset metadata and placement preservation fields | Yes for data prerequisites (Should); transient processing is intentionally not seeded |
 | MFG-05 US-7 Preview supported angles | Front/Back `product_mockup_templates` | Yes (Should) |
@@ -82,7 +82,7 @@ Coverage means that the CSV package contains the persistent data prerequisites a
 | MFG-11 US-4 Prompt analysis | protected AnalyticsResult facts exist | Yes for data prerequisites (Could); page-memory conversation is intentionally not persisted |
 | MFG-12 US-1 Monitor logs | INFO/WARN/ERROR redacted audit rows | Yes (Won't) |
 | MFG-12 US-2 Backup/restore | successful/failed/running backups and restore journals | Yes (Won't), with row-count exception below |
-| MFG-12 US-3 Configure system | three immutable configuration versions | Yes (Won't), with row-count exception below |
+| MFG-12 US-3 Configure system | immutable configuration versions plus ConfigChanged outbox/notification evidence | Yes (Won't), with row-count exception below |
 
 ## Seed quantity exceptions
 
@@ -100,9 +100,10 @@ These exceptions avoid inventing unsupported business data merely to reach five 
 ## Integrity-check results
 
 - Generator: `data/seed/generate_seed.py`
-- Regeneration command: `C:\Users\ADMIN\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe data/seed/generate_seed.py`
-- Output: 66 CSV files, 589 rows, UTF-8, LF, header row, deterministic UUIDs and sorted primary keys.
-- Passed: all checked foreign keys; unique normalized email; unique SKU; unique immutable order number; unique active production type/material profile; one design-fee-bearing first Order; every Order total formula; Cancelled/Completed coverage; verified Customer empty state.
+- Regeneration command: `uv run data/seed/generate_seed.py`
+- Output: 66 CSV files, 597 rows, UTF-8, LF, header row, deterministic UUIDs and sorted primary keys. The generator validates all assertions before writing a CSV.
+- Passed: all checked foreign keys; unique normalized email, SKU and immutable order number; unique active production type/material profile; exact token TTLs; required lifecycle variants; approved TryOn prerequisites without a personal-photo row; MFG-12 ConfigChanged notice chain; one design-fee-bearing first Order; every Order total formula; Cancelled/Completed coverage; verified Customer empty state.
+- Cross-artifact checks: 66 catalogue/ERD/schema/seed tables agree; 86 Mermaid relationships agree; every persisted table has exactly one owner; supported schema constraints and text phone representation are present; every specified FR ID is indexed; all three reviewer-ready trace fixtures join correctly.
 
 ## Files produced
 
@@ -112,8 +113,14 @@ These exceptions avoid inventing unsupported business data merely to reach five 
 | `data/02-crud-matrix.md` | S2 | Complete |
 | `data/03-erd.mmd` | S3 | Complete; Mermaid only |
 | `data/04-data-model.md` | S4 | Complete; conceptual ERD embedded unchanged |
-| `data/seed/generate_seed.py` | S5 | Complete; retained locally and ignored by Git |
-| `data/seed/*.csv` (66 files) | S5 | Complete; generated and eligible for tracking |
+| `data/data-model-MFG-01.md` through `data/data-model-MFG-12.md` | S7 | Module ownership indexes generated from the canonical whole-system model |
+| `data/schema/schema-MFG-01.sql` through `data/schema/schema-MFG-12.sql` | S7 | SQLite validation schema; all foreign keys are deferrable and validated at seed-load commit |
+| `data/schema/load_seed.py` | S7 | Creates the schema and imports numerically ordered CSV files in filename order |
+| `data/seed/generate_seed.py` | S5 | Complete; version-controlled deterministic generator |
+| `data/seed/*.csv` (66 files) | S5/S7 | Complete; generated, version-controlled, and numerically ordered for deterministic SQLite loading |
 | `data/05-review.md` | S6 | Complete |
+| `data/06-edge-case-register.md` | S7 | Complete; data-rule and edge-case coverage evidence |
+| `data/07-end-to-end-traceability.md` | S7 | Complete; exact PRD-to-FR-to-seed-to-screen review index |
+| `data/tools/check_data_package.py` | S7 | Complete; cross-artifact consistency checker |
+| `data/tools/check_end_to_end_traceability.py` | S7 | Complete; FR and exact-fixture trace checker |
 | `.gitignore` | S5 | Generator-only ignore rule added |
-

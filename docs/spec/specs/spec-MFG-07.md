@@ -8,7 +8,7 @@
 | Author (team member) | Group B |
 | Date | 2026-09-26 |
 | Status | Final Group B demo specification; client operating approval not claimed |
-| Approved by (Client role) | Group B (team approval, 2026-09-28); no client approver |
+| Approved by (Client role) | Client approved, 2026-09-30 |
 | DBIZ2 source | Function List MFG-07, `F-ORD-001`–`F-ORD-007`; use cases UC-C08 Track Order, UC-C07 Cancel Order, UC-S04 Update Status; screens S34, S35, S36, S37, S43, S13 |
 
 ---
@@ -17,7 +17,7 @@
 
 Customers can view their made-to-order orders and follow every commitment from digital-design approval through sample, deposit, production, receipt and final settlement. Sales Admin performs Dony operational transitions; in the complete system, assigned Sales may perform the fulfillment transitions already permitted by this module. In the MVP, assigned Sales has read-only access to assigned-customer order progress. An owning Customer or Sales Admin can cancel only when the lifecycle permits. This module consumes design/sample, contract, payment, refund and batch events; it does not price orders, settle payments, or generate contracts.
 
-MVP priority: **Must** (see [MVP scope](../mvp-scope-proposal.md)). The MVP includes order tracking (S34/S35), pre-deposit cancellation, Customer sample receipt/approval and delivery receipt, and manual Sales Admin transitions through InProduction and Shipped. Sales has read-only S36/S37 progress for current assigned-customer orders, with empty success when no orders are assigned; assignments are seeded (MFG-08 is Could) and Sales cannot start/dispatch samples, change fulfillment status or cancel. MFG-06 BR-019 applies in the MVP: cancellation only before a successful deposit, no in-system refund, no 3-day auto-confirmation timer (Sales Admin may confirm receipt on the Customer's behalf after verified delivery evidence) and no Overdue automation. Post-deposit cancellation with refund, the auto-confirmation timer and Overdue handling are MVP Could. Order creation/payment belongs to MFG-06; contract generation/signature to MFG-09; production batches to MFG-10. Always include the module prefix when referring to a function ID.
+MVP priority: **Must** (see [MVP scope](../../prd.md)). The MVP includes order tracking (S34/S35), pre-deposit cancellation, Customer sample receipt/approval and delivery receipt, and manual Sales Admin transitions through InProduction and Shipped. Sales has read-only S36/S37 progress for current assigned-customer orders, with empty success when no orders are assigned; assignments are seeded (MFG-08 is Could) and Sales cannot start/dispatch samples, change fulfillment status or cancel. MFG-06 BR-019 applies in the MVP: cancellation only before a successful deposit, no in-system refund, no 3-day auto-confirmation timer (Sales Admin may confirm receipt on the Customer's behalf after verified delivery evidence) and no Overdue automation. Post-deposit cancellation with refund, the auto-confirmation timer and Overdue handling are MVP Could. Order creation/payment belongs to MFG-06; contract generation/signature to MFG-09; production batches to MFG-10. Always include the module prefix when referring to a function ID.
 
 ## 2. Actors (mandatory)
 
@@ -208,6 +208,8 @@ MFG-11 consumes the append-only order timeline and committed cancellation/fulfil
 | 2 | No remaining open questions. | No | Group B | Resolved |
 
 ## 11. Traceability to DBIZ2
+
+The repository DBIZ2 baseline is [`docs/spec/docs/function-list.md`](../docs/function-list.md), section VII MFG-07. Each historical function ID below identifies a concrete source-table row and its linked use case/screen reference.
 
 | Spec section | DBIZ2 source | Location |
 | --- | --- | --- |

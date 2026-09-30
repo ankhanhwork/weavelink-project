@@ -8,7 +8,7 @@
 | Author (team member) | Group B |
 | Date | 2026-09-26 |
 | Status | Final Group B demo specification; client operating approval not claimed |
-| Approved by (Client role) | Group B (team approval, 2026-09-28); no client approver |
+| Approved by (Client role) | Client approved, 2026-09-30 |
 | DBIZ2 source | Function List MFG-09, `F-CONTR-001`–`F-CONTR-009`; UC-C10, UC-C09, UC-C11, UC-C14, UC-C15, UC-C13; screens S43, S44, S45, S39, S38 and S13 |
 
 ---
@@ -17,7 +17,7 @@
 
 Sales Admins manage versioned templates and generate or regenerate an order contract only after the Customer has approved the received physical sample. Customers review and sign only their own current contract. The contract binds the approved digital-design version, physical-sample evidence, commercial total, deposit percentage and remaining-balance formula. The system generates PDFs and records an auditable application acknowledgement; it does not claim a certified digital signature. Successful signing atomically advances the order from `PendingContract` to `AwaitingDeposit`. MFG-06 owns order creation and payment; MFG-07 owns fulfillment/cancellation.
 
-MVP priority (see [MVP scope](../mvp-scope-proposal.md)): **Must** for fixed-template generation (S39), Customer review and acknowledgement (S38) and their notifications (FR-003, FR-004, FR-005, FR-008, FR-009), a required MFG-06 dependency; **Could** for template selection/administration (S43–S45), unsigned-contract regeneration and stronger signature workflows (FR-001, FR-002, FR-006, FR-007). This acknowledgement is not a certified digital signature. The complete-system contract lifecycle is specified here.
+MVP priority (see [MVP scope](../../prd.md)): **Must** for fixed-template generation (S39), Customer review and acknowledgement (S38) and their notifications (FR-003, FR-004, FR-005, FR-008, FR-009), a required MFG-06 dependency; **Could** for template selection/administration (S43–S45), unsigned-contract regeneration and stronger signature workflows (FR-001, FR-002, FR-006, FR-007). This acknowledgement is not a certified digital signature. The complete-system contract lifecycle is specified here.
 
 ## 2. Actors (mandatory)
 
@@ -167,6 +167,8 @@ For MFG-11/F-DA-004, expose committed `contract_ready` and `contract_signed` evi
 | 2 | No remaining open questions. | No | Group B | Resolved |
 
 ## 11. Traceability to DBIZ2
+
+The repository DBIZ2 baseline is [`docs/spec/docs/function-list.md`](../docs/function-list.md), section IX MFG-09. Each historical function ID below identifies a concrete source-table row and its linked use case/screen reference.
 
 | Spec section | DBIZ2 source | Location |
 | --- | --- | --- |

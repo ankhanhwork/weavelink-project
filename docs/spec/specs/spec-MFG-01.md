@@ -8,14 +8,14 @@
 | Author (team member) | Group B |
 | Date | 2026-09-19 |
 | Status | Final Group B demo specification; client operating approval not claimed |
-| Approved by (Client role) | Group B (team approval, 2026-09-28); no client approver |
-| DBIZ2 source | Historical IDs retained: Function List MFG-01; `F-USER-001` .. `F-USER-011`; `UC-G03`, `UC-M01` .. `UC-M04`; S04, S05, S06, S07, S11 and S14. DBIZ3 extension: `F-USER-012`, `F-USER-013`, `UC-M09` (S13 notifications). External DBIZ2 comparison is not required. |
+| Approved by (Client role) | Client approved, 2026-09-30 |
+| DBIZ2 source | Repository baseline [`function-list.md` §I MFG-01](../docs/function-list.md): `F-USER-001` .. `F-USER-011`; `UC-G03`, `UC-M01` .. `UC-M04`; S04, S05, S06, S07, S11 and S14. DBIZ3 extension: `F-USER-012`, `F-USER-013`, `UC-M09` (S13 notifications). |
 
 ---
 
 ## 1. Purpose and scope (mandatory)
 
-This module provides Customer registration, verification, email/password authentication, sign-out and password recovery through separate Customer storefront and Dony employee CRM portal entry points. Customer screens use the public storefront shell and navigation; staff screens use the internal Dony CRM shell and never show store/cart navigation. Public registration creates Customer capability only. A Customer may represent a company commissioning uniforms for internal use or a Reseller Shop commissioning garments from the shop's own designs for resale. This organization context does not grant an internal Dony role. Sales, Sales Admin and System Admin access is provisioned only by MFG-03 in the complete system; for MVP the named staff roles are pre-provisioned as described in the [MVP scope](../mvp-scope-proposal.md), without an invitation or account-administration UI. Google, Facebook and other external identity-provider login are not supported.
+This module provides Customer registration, verification, email/password authentication, sign-out and password recovery through separate Customer storefront and Dony employee CRM portal entry points. Customer screens use the public storefront shell and navigation; staff screens use the internal Dony CRM shell and never show store/cart navigation. Public registration creates Customer capability only. A Customer may represent a company commissioning uniforms for internal use or a Reseller Shop commissioning garments from the shop's own designs for resale. This organization context does not grant an internal Dony role. Sales, Sales Admin and System Admin access is provisioned only by MFG-03 in the complete system; for MVP the named staff roles are pre-provisioned as described in the [MVP scope](../../prd.md), without an invitation or account-administration UI. Google, Facebook and other external identity-provider login are not supported.
 
 **In scope:** register and verify a Customer; authenticate existing Customers and invited/active Dony employees through their respective portal routes; revoke a session; request and complete portal-bound email recovery; show each authenticated recipient their persisted in-app notifications (S13).
 
@@ -262,7 +262,7 @@ sequenceDiagram
 
 ## 11. Traceability to DBIZ2
 
-Historical IDs are retained for continuity; external DBIZ2 comparison is not required.
+The repository DBIZ2 baseline is [`docs/spec/docs/function-list.md`](../docs/function-list.md), section I MFG-01. Each historical function ID below identifies a concrete source-table row; notifications are explicitly marked as DBIZ3 extensions.
 
 | Spec section | DBIZ2 source | Location |
 | --- | --- | --- |

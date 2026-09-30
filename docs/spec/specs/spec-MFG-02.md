@@ -8,14 +8,14 @@
 | Author (team member) | Group B |
 | Date | 2026-09-19 |
 | Status | Final Group B demo specification; client operating approval not claimed |
-| Approved by (Client role) | Group B (team approval, 2026-09-28); no client approver |
-| DBIZ2 source | Historical IDs retained: Function List MFG-02; `F-PROF-001` .. `F-PROF-005`; `UC-M05`, `UC-M07`, `UC-M08`; S11, S12. External DBIZ2 comparison is not required. |
+| Approved by (Client role) | Client approved, 2026-09-30 |
+| DBIZ2 source | Repository baseline [`function-list.md` §II MFG-02](../docs/function-list.md): `F-PROF-001` .. `F-PROF-005`; `UC-M05`, `UC-M07`, `UC-M08`; S11, S12. |
 
 ---
 
 ## 1. Purpose and scope (mandatory)
 
-MVP priority: **Should** (see [MVP scope](../mvp-scope-proposal.md)). S11/S12 are built after the MVP Must path; until they are released, hide the profile/settings route and navigation link. Account recovery remains available through MFG-01.
+MVP priority: **Should** (see [MVP scope](../../prd.md)). S11/S12 are built after the MVP Must path; until they are released, hide the profile/settings route and navigation link. Account recovery remains available through MFG-01.
 
 Authenticated active members view and maintain their own identity details and change a known password. A Customer profile may identify the representative and optional Buyer Organization for a company buying uniforms or a Reseller Shop commissioning production from its own designs. The server derives identity from the session. This module cannot assign internal Dony roles or transfer ownership.
 
@@ -167,7 +167,7 @@ sequenceDiagram
 
 ## 11. Traceability to DBIZ2
 
-Historical IDs are retained; external DBIZ2 comparison is not required.
+The repository DBIZ2 baseline is [`docs/spec/docs/function-list.md`](../docs/function-list.md), section II MFG-02. Each historical function ID below identifies a concrete source-table row and its linked use case/screen reference.
 
 | Spec section | DBIZ2 source | Location |
 | --- | --- | --- |

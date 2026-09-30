@@ -26,7 +26,7 @@ This repository contains the software design documentation for the DBIZ 3 Group 
 | Screen catalogue | Workflow-grouped screens S01 through S50 with one MVP label per screen | [`docs/screen-list.md`](docs/screen-list.md) |
 | Screen specifications | Detailed specifications and mockups for the current screens | [`screens/`](screens/) |
 | Module specifications | Scope, actors, scenarios, flows, requirements, entities, business rules, success criteria, decisions, and traceability | [`specs/`](specs/) |
-| MVP scope | Approved Must/Should/Could/Won't release scope, MVP rules and seed data | [`mvp-scope-proposal.md`](mvp-scope-proposal.md) |
+| MVP scope | Approved Must/Should/Could/Won't release scope, MVP rules and seed data | [`docs/prd.md`](../prd.md) |
 
 ## Main actors
 
@@ -59,7 +59,7 @@ This repository contains the software design documentation for the DBIZ 3 Group 
 
 ## MVP Scope
 
-The approved release scope is defined in [`mvp-scope-proposal.md`](mvp-scope-proposal.md), which is the single source for MVP priority. Each screen carries one MVP label (Must / Should / Could / Won't) in [`docs/screen-list.md`](docs/screen-list.md) and in its own Priority field; module FR priorities use the same labels. The complete-system documentation is retained for Should and Could items.
+The approved release scope is defined in [`docs/prd.md`](../prd.md), which is the single source for MVP priority. Each screen carries one MVP label (Must / Should / Could / Won't) in [`docs/screen-list.md`](docs/screen-list.md) and in its own Priority field; module FR priorities use the same labels. The complete-system documentation is retained for Should and Could items.
 
 | Priority | Scope summary |
 |---|---|

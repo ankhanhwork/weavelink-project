@@ -8,14 +8,14 @@
 | Author (team member) | Group B |
 | Date | 2026-09-27 |
 | Status | Final Group B demo specification; client operating approval not claimed |
-| Approved by (Client role) | Group B (team approval, 2026-09-28); no client approver |
-| DBIZ2 source | Historical IDs retained: Function List MFG-05; `F-DES-001` .. `F-DES-011`; `UC-C02` .. `UC-C04`, `UC-S03`; S15, S20, S24, S25, S27, S28, S29, S30, S13; DBIZ3 collaboration extension S26. External DBIZ2 comparison is not required. |
+| Approved by (Client role) | Client approved, 2026-09-30 |
+| DBIZ2 source | Repository baseline [`function-list.md` §V MFG-05](../docs/function-list.md): `F-DES-001` .. `F-DES-011`; `UC-C02` .. `UC-C04`, `UC-S03`; S15, S20, S24, S25, S27, S28, S29, S30, S13; DBIZ3 collaboration extension S26. |
 
 ---
 
 ## 1. Purpose and scope (mandatory)
 
-Customers configure, preview and save versioned made-to-order garment designs and may request Dony design assistance with assessment-based pricing. For a Business Buyer, the design commonly represents uniforms or garments for internal use. For a Reseller Shop, it represents the shop's own artwork, branding or specifications that Dony will manufacture for the shop to sell to its customers. Dony does not supply ready-made resale inventory. MVP priority (see [MVP scope](../mvp-scope-proposal.md)): self-design/upload/preview/save is Must; background removal, multi-angle mockups and AI virtual try-on are Should; assessed design service and staff design collaboration are Could.
+Customers configure, preview and save versioned made-to-order garment designs and may request Dony design assistance with assessment-based pricing. For a Business Buyer, the design commonly represents uniforms or garments for internal use. For a Reseller Shop, it represents the shop's own artwork, branding or specifications that Dony will manufacture for the shop to sell to its customers. Dony does not supply ready-made resale inventory. MVP priority (see [MVP scope](../../prd.md)): self-design/upload/preview/save is Must; background removal, multi-angle mockups and AI virtual try-on are Should; assessed design service and staff design collaboration are Could.
 
 **In scope:** background removal with reversible review; deterministic multi-angle 2D mockups; session-only AI virtual try-on; validate product options/assets; save immutable design versions; list owned designs; create/cancel requests; assess complexity and accept deferred fees; assign via MFG-08; share consultant versions, record customer feedback/approval and staff replies, import unchanged customer sources, and notify authorized participants.
 
@@ -203,7 +203,7 @@ sequenceDiagram
 
 ## 5. Functional requirements (mandatory)
 
-### 5.1 Functional requirement I/O contract
+### 5.1 Functional requirements
 
 | FR ID | DBIZ2 Subfunction ID | Requirement (system MUST ...) | Actor | Priority |
 | --- | --- | --- | --- | --- |
@@ -229,7 +229,9 @@ sequenceDiagram
 | FR-020 | F-DES-020 | Record customer-source confirmation for an unchanged import in S29 or S26, separate from approval of Dony changes. | Assigned Sales / Sales Admin / Customer owner | Could |
 | FR-021 | F-DES-021 | Append an authorized customer-visible staff reply to a shared version's feedback without changing approval, fee or request state. | Assigned Sales / Sales Admin | Could |
 
-### 5.2 Input / Output contract
+### 5.1.1 Field-level input / output contract
+
+Each comma-separated item below is a named field. `Optional` means the field may be omitted; any condition that changes requiredness is stated in the validation column. This table is the authoritative contract used by the acceptance scenarios and screen specifications.
 
 | FR ID | Input field | Type | Required | Output field | Type | Notes / validation |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -351,7 +353,7 @@ Eligible Approved requests follow the classified lead's current Sales owner atom
 
 ## 11. Traceability to DBIZ2
 
-Historical IDs are retained; external DBIZ2 comparison is not required.
+The repository DBIZ2 baseline is [`docs/spec/docs/function-list.md`](../docs/function-list.md), section V MFG-05. Each historical function ID below identifies a concrete source-table row; the linked use case and screen references identify the corresponding repository figures/specifications. DBIZ3 additions explicitly state that they have no DBIZ2 predecessor.
 
 | Spec section | DBIZ2 source | Location |
 | --- | --- | --- |
@@ -372,7 +374,7 @@ Historical IDs are retained; external DBIZ2 comparison is not required.
 
 ## 12. Design add-on implementation handoff
 
-The user validated the AI try-on demo as feasible on 2026-09-27. This is feasibility acceptance, not a client signature or a guarantee of exact identity/logo preservation. Polo is the first demo product; it does not amend MFG-04 catalogue/seed data. Self-design saving/order rules remain unchanged. S21, S22 and S23 are Should items under the [MVP scope](../mvp-scope-proposal.md); the S20 preview remains Must. No local try-on fallback is required.
+The user validated the AI try-on demo as feasible on 2026-09-27. This is feasibility acceptance, not a client signature or a guarantee of exact identity/logo preservation. Polo is the first demo product; it does not amend MFG-04 catalogue/seed data. Self-design saving/order rules remain unchanged. S21, S22 and S23 are Should items under the [MVP scope](../../prd.md); the S20 preview remains Must. No local try-on fallback is required.
 
 Production source of truth is this module and S20/S21/S22/S23. A throwaway prototype validated the approach: calibrated angle grids and wearer chest geometry, single-assignment alpha-safe print rasterization with fabric light, revision/session invalidation, server-side validation, connected background removal, and a multipart image edit that sends the person photo first and the polo second with high input fidelity, medium quality and no retries. The AI provider and model are chosen at Plan and configured in the backend. Try-on is not a sizing engine.
 

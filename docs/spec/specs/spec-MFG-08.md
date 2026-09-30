@@ -8,7 +8,7 @@
 | Author (team member) | Group B |
 | Date | 2026-09-27 |
 | Status | Final Group B demo specification; client operating approval not claimed |
-| Approved by (Client role) | Group B (team approval, 2026-09-28); no client approver |
+| Approved by (Client role) | Client approved, 2026-09-30 |
 | DBIZ2 source | Function List MFG-08, `F-SALES-001`–`F-SALES-008`; UC-S01, UC-S02, UC-C19; active screens S27, S28 and S13. S29 is an MFG-05 Design Workspace linked from the pipeline. |
 
 ---
@@ -25,7 +25,7 @@ There is **no Negotiation stage**. The Design Consultation stage uses one canoni
 
 MFG-08 owns `pipeline_stage`, assignment, lead/customer-model fields, design source/readiness/checklist, lead–design commercial scope (`InScope` / `Dropped`), Activity, logged external interactions, Internal Notes, Admin Reviews, stage history and loss reasons. It does **not** own DesignRequest/Design/DesignVersion lifecycle data, orders, contracts or payments. MFG-05 remains source of truth for design data and projects important design events/state into S27/S28; MFG-06/MFG-07/MFG-09 remain source of truth for order/payment/contract milestones. S29 is the MFG-05 staff Design Workspace and is not an MFG-08 write surface for CRM data.
 
-MVP priority: **Could** (see [MVP scope](../mvp-scope-proposal.md)). Complete-system target includes all eight DBIZ2 functions. Until MFG-08 is released, the MVP seeds one `CustomerAssignment` linking the demo Customer to the demo Sales employee; that seeded assignment alone scopes Sales read-only access on S36/S37, and no assignment UI or S27/S28 screen is built. Always include the `MFG-08/` prefix when referring to a function ID.
+MVP priority: **Could** (see [MVP scope](../../prd.md)). Complete-system target includes all eight DBIZ2 functions. Until MFG-08 is released, the MVP seeds one `CustomerAssignment` linking the demo Customer to the demo Sales employee; that seeded assignment alone scopes Sales read-only access on S36/S37, and no assignment UI or S27/S28 screen is built. Always include the `MFG-08/` prefix when referring to a function ID.
 
 ## 2. Actors (mandatory)
 
@@ -251,6 +251,8 @@ The user resolved the consolidated Sales-domain questions as follows.
 | 6 | Verified Customer email plus explicit audited Sales Admin confirmation; never automatic name/phone matching. | No | Resolved |
 
 ## 11. Traceability to DBIZ2
+
+The repository DBIZ2 baseline is [`docs/spec/docs/function-list.md`](../docs/function-list.md), section VIII MFG-08. Each historical function ID below identifies a concrete source-table row and its linked use case/screen reference.
 
 | Spec section | DBIZ2 source | Location |
 | --- | --- | --- |

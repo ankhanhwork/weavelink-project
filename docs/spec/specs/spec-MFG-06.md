@@ -8,7 +8,7 @@
 | Author (team member) | Group B |
 | Date | 2026-09-26 |
 | Status | Final Group B demo specification; client operating approval not claimed |
-| Approved by (Client role) | Group B (team approval, 2026-09-28); no client approver |
+| Approved by (Client role) | Client approved, 2026-09-30 |
 | DBIZ2 source | Historical IDs retained: Function List MFG-06; `F-PAY-001` .. `F-PAY-006`; `UC-C05`, `UC-C12`; active screens S30, S31, S32, S33, S34, S35, S36, S37 and S39, S38, S40, S41, S42, S13. |
 
 ---
@@ -29,7 +29,7 @@ The Customer may represent a Business Buyer ordering uniforms or garments for in
 
 **MVP boundary:** merge is not part of the MFG-06 MVP path. For every MVP quote/order, `merge_opt_in=false`, `merge_discount_vnd=0`, and no merge policy acceptance/version is requested or applied. FR-002 remains Must for the standard quote; its MFG-10 v4 final demo policy merge branch is dormant until MFG-10 is implemented after the MVP. Do not render merge choices or discounts in MVP checkout.
 
-**MVP release rules:** BR-019 simplifies cancellation, refund, receipt auto-confirmation and overdue handling for the MVP. Where BR-007, BR-013, BR-014 or the transition table describe the full behavior, BR-019 takes precedence for the MVP; the full behavior is MVP Could (see [MVP scope](../mvp-scope-proposal.md)).
+**MVP release rules:** BR-019 simplifies cancellation, refund, receipt auto-confirmation and overdue handling for the MVP. Where BR-007, BR-013, BR-014 or the transition table describe the full behavior, BR-019 takes precedence for the MVP; the full behavior is MVP Could (see [MVP scope](../../prd.md)).
 
 ## 2. Actors (mandatory)
 
@@ -298,6 +298,8 @@ Project committed digital/sample approval, cycle revision, accepted deposit/bala
 | 2 | Is a separate sample/design-service payment required? | No | Group B | Resolved: no standalone payment; costs are represented in the order total. |
 
 ## 11. Traceability to DBIZ2
+
+The repository DBIZ2 baseline is [`docs/spec/docs/function-list.md`](../docs/function-list.md), section VI MFG-06. Each historical function ID below identifies a concrete source-table row and its linked use case/screen reference.
 
 | Spec section | DBIZ2 source | Location |
 | --- | --- | --- |

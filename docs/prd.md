@@ -1,11 +1,15 @@
-# MVP Scope — WeaveLink
+# MVP Scope v2: WeaveLink
 
 | Field | Value |
 |---|---|
-| Status | Approved by Group B, 2026-09-28 |
+| Status | Approved by Client, 2026-09-30 |
 | Role | Single source for MVP release priority. Module specs, `docs/screen-list.md` and screen Priority fields use the same labels. |
 
 ## 1. Priority labels
+
+### 1.1 Problem and target users
+
+WeaveLink supports Dony's made-to-order garment workflow, replacing fragmented design and order coordination through email or chat with a traceable path from product discovery and design to contract, payment, production and delivery. Its primary users are Customers commissioning garments for a Business Buyer or Reseller Shop, together with Dony Sales, Sales Admin and System Admin staff who operate the approved workflow.
 
 - **Must**: required for the end-to-end order path: sign up → choose a product → design → order → approve digital design → approve physical sample → sign contract → pay deposit → production and delivery → pay balance → complete.
 - **Should**: built immediately after Must; includes the AI features.
@@ -13,6 +17,28 @@
 - **Won't**: excluded from this release.
 
 Routes of unreleased items return 404 and have no navigation link. Seed data replaces any unreleased administration screen that the Must path depends on.
+
+### 1.2 Initial MVP scope baseline
+
+The following initial MVP scope was reviewed and adopted by Group B as the baseline for refinement. It records the original release priorities before the detailed specification work.
+
+| Priority | Feature / item | Notes |
+|---|---|---|
+| Must | Role-based Authentication & Access (Customer, Sales Consultant, Company Admin) | Foundation — every other feature depends on secure, role-aware access (MFG-01). |
+| Must | Product Catalog (browse, search, view product detail) | Entry point for customers to find a base product to customize (MFG-04). |
+| Must | Product Design Workspace (self-design, upload artwork, preview, save design) | Core value proposition — replaces scattered email/chat design specifications, Dony's primary operational pain point (MFG-05). |
+| Must | Order & Payment (checkout, VNPay integration, order creation) | Core revenue flow — must work before design and order has value (MFG-06). |
+| Should | Order Tracking & Status Updates (customer order list/detail, admin status update) | Addresses reactive customer service; early orders can otherwise be tracked manually (MFG-07). |
+| Should | Digital Contract Generation & E-signature | Builds trust for business clients; emailed or paper contracts are an acceptable launch stopgap (MFG-09). |
+| Could | Order Optimization / Merge (batch small orders into one production run) | Addresses high operational overhead after sufficient order volume exists (MFG-10). |
+| Could | Paid Design Service Request (consultant-assisted design) | Alternative to self-design for complex custom-design customers (MFG-05). |
+| Could | Sales Consultant assignment & task dashboard | Needed when consultation volume justifies a dedicated queue (MFG-08). |
+| Won't | Data Analytics dashboard & data export | Deferred until there is sufficient order history to analyse (MFG-11). |
+| Won't | Company Accounts & System Operations (multi-admin roles, system logs, backup/restore) | A single admin login is sufficient at launch; full account and system administration is deferred (MFG-03, MFG-12). |
+
+### 1.3 Scope refinement rationale
+
+After the initial scope baseline, Group B refined the MVP during detailed specification and data-model work. The refinement decomposes broad features into testable module, function and screen commitments; makes the end-to-end made-to-order path executable; and adds supporting capabilities required to complete that path safely, including account recovery, notifications, digital and physical approval steps, a fixed-template contract, deposit and balance payment, and staff order operations. New AI and operational features remain in Should, Could or Won't unless they are necessary to complete the Must path. The detailed scope below is the approved working scope for this repository and remains traceable to its owning modules, functions and screens.
 
 ## 2. Must
 

@@ -8,7 +8,7 @@
 | Author (team member) | Group B |
 | Date | 2026-09-23 |
 | Status | Final Group B demo specification; client operating approval not claimed |
-| Approved by (Client role) | Group B (team approval, 2026-09-28); no client approver |
+| Approved by (Client role) | Client approved, 2026-09-30 |
 | DBIZ2 source | Historical IDs retained: Function List MFG-03; `F-ACC-001` .. `F-ACC-008`; `UC-S06` .. `UC-S08`; current staff sign-in is S08 and staff administration is S48. |
 
 ---
@@ -21,7 +21,7 @@ Dony is one made-to-order garment factory. A company buying uniforms and a Resel
 
 **In scope:** list and inspect Dony staff; invite a new employee; assign an allowed internal role; activate, suspend or reactivate an employee; update allowlisted profile and role fields; require work reassignment before deactivation; soft-delete an eligible staff account; revoke affected sessions and retain audit history.
 
-**Out of scope:** customer self-registration (MFG-01), customer organization and billing information (MFG-02/MFG-06), product/order mutations, creation of external companies, company provisioning, tenant memberships and customer-managed employee accounts. MVP priority: **Could** (see [MVP scope](../mvp-scope-proposal.md)); the staff-account administration UI and invitation acceptance are built only after the Must and Should scope. MVP identities are pre-provisioned: one active Sales Admin (operational owner), one active Sales employee (role/assignment testing), one active System Admin (bootstrap/recovery only), and one verified Customer test account. No employee self-registration or invitation-management UI is required for this seed setup.
+**Out of scope:** customer self-registration (MFG-01), customer organization and billing information (MFG-02/MFG-06), product/order mutations, creation of external companies, company provisioning, tenant memberships and customer-managed employee accounts. MVP priority: **Could** (see [MVP scope](../../prd.md)); the staff-account administration UI and invitation acceptance are built only after the Must and Should scope. MVP identities are pre-provisioned: one active Sales Admin (operational owner), one active Sales employee (role/assignment testing), one active System Admin (bootstrap/recovery only), and one verified Customer test account. No employee self-registration or invitation-management UI is required for this seed setup.
 
 ## 2. Actors (mandatory)
 
@@ -173,7 +173,7 @@ sequenceDiagram
 - A Business Buyer orders made-to-order uniforms or garments for internal use.
 - A Reseller Shop supplies its own design, branding or requirements for Dony to manufacture, then sells the resulting garments to the shop's customers; it does not resell Dony ready-made inventory.
 - Legal, organization and contact values used in the classroom demo are fictional samples.
-- MVP uses the pre-provisioned role-specific accounts listed in the [MVP scope](../mvp-scope-proposal.md); Sales Admin owns the minimum operational order path, while System Admin is bootstrap/recovery-only. Full MFG-03 remains documented for a later release.
+- MVP uses the pre-provisioned role-specific accounts listed in the [MVP scope](../../prd.md); Sales Admin owns the minimum operational order path, while System Admin is bootstrap/recovery-only. Full MFG-03 remains documented for a later release.
 
 ## 10. Open questions
 
@@ -182,6 +182,8 @@ sequenceDiagram
 | 1 | Are staff roles, customer boundaries or account lifecycle decisions still unresolved? | No | Group B | Resolved in sections 1–6. |
 
 ## 11. Traceability to DBIZ2
+
+The repository DBIZ2 baseline is [`docs/spec/docs/function-list.md`](../docs/function-list.md), section III MFG-03. Each historical function ID below identifies a concrete source-table row and its linked use case/screen reference.
 
 | Spec section | DBIZ2 source | Location |
 | --- | --- | --- |

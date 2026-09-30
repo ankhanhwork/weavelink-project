@@ -4,7 +4,9 @@ Run from the repository root:
     python data/seed/generate_seed.py
 
 The generator uses only Python's standard library, a fixed UUID namespace and
-fixed timestamps. It never reads or emits real personal data.
+fixed timestamps. It never reads or emits real personal data. Every assertion
+runs before a CSV is written, so an invalid in-memory fixture cannot replace
+the reviewed seed package.
 """
 
 from __future__ import annotations
@@ -12,11 +14,13 @@ from __future__ import annotations
 import csv
 import json
 import uuid
+from datetime import datetime
 from pathlib import Path
 
 
 OUT = Path(__file__).resolve().parent
 NS = uuid.UUID("1ebc511e-1c37-4ca6-a15d-a644e9ee9cf0")
+ORDER_FILE = OUT / "seed-order.json"
 
 
 def uid(kind: str, number: int) -> str:
@@ -35,7 +39,13 @@ def write_table(name: str, rows: list[dict[str, object]]) -> None:
         if list(row) != columns:
             raise AssertionError(f"{name}: inconsistent column order")
     rows.sort(key=lambda row: str(row[columns[0]]))
-    with (OUT / f"{name}.csv").open("w", encoding="utf-8", newline="") as handle:
+    if not ORDER_FILE.exists():
+        raise AssertionError(f"missing deterministic seed order file: {ORDER_FILE}")
+    order = json.loads(ORDER_FILE.read_text(encoding="utf-8"))
+    if name not in order:
+        raise AssertionError(f"missing seed order for table: {name}")
+    filename = f"{int(order[name]):02d}_{name}.csv"
+    with (OUT / filename).open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=columns, lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
@@ -71,16 +81,16 @@ def generate() -> dict[str, list[dict[str, object]]]:
         for i, name in enumerate(user_names, 1)
     ]
 
-    roles = ["SalesAdmin", "Sales", "SystemAdmin", "Sales", "Sales"]
-    states = ["Active", "Active", "Active", "Suspended", "Invited"]
+    roles = ["SalesAdmin", "Sales", "SystemAdmin", "Sales", "Sales", "Sales"]
+    states = ["Active", "Active", "Active", "Suspended", "Invited", "Deleted"]
     tables["staff_accounts"] = [
         {
             "staff_account_id": uid("staff", i), "user_id": uid("user", i),
             "role": roles[i - 1], "status": states[i - 1],
             "invited_at": "2026-07-01T01:00:00Z", "activated_at": "" if i == 5 else "2026-07-02T01:00:00Z",
-            "deleted_at": "", "version": 1,
+         "deleted_at": "2026-09-20T03:00:00Z" if i == 6 else "", "version": 1,
         }
-        for i in range(1, 6)
+        for i in range(1, 7)
     ]
     tables["sessions"] = [
         {"session_id": uid("session", i), "user_id": uid("user", i), "token_hash": f"session-hash-{i}",
@@ -88,30 +98,49 @@ def generate() -> dict[str, list[dict[str, object]]]:
          "revoked_at": "2026-09-28T04:10:00Z" if i == 7 else "", "created_at": "2026-09-28T04:00:00Z"}
         for i in base_rows("session")
     ]
-    purposes = ["EmailVerification", "PasswordReset", "EmailChange", "PasswordReset", "StaffInvitation", "PasswordReset", "EmailVerification"]
+    token_specs = [
+        ("EmailVerification", "2026-09-29T03:30:00Z"),
+        ("PasswordReset", "2026-09-28T04:00:00Z"),
+        ("EmailChange", "2026-09-29T03:30:00Z"),
+        ("PasswordReset", "2026-09-28T04:00:00Z"),
+        ("StaffInvitation", "2026-09-30T03:30:00Z"),
+        ("PasswordReset", "2026-09-28T04:00:00Z"),
+        ("EmailVerification", "2026-09-29T03:30:00Z"),
+    ]
     tables["one_time_tokens"] = [
-        {"token_id": uid("token", i), "user_id": uid("user", (i % 10) + 1), "purpose": purposes[i - 1],
+        {"token_id": uid("token", i), "user_id": uid("user", (i % 10) + 1), "purpose": purpose,
          "portal": "Staff" if i == 5 else "Customer", "token_hash": f"token-hash-{i}",
-         "expires_at": "2026-09-29T04:00:00Z", "consumed_at": "2026-09-28T04:05:00Z" if i in (2, 5) else "",
+         "expires_at": expires_at, "consumed_at": "2026-09-28T04:05:00Z" if i in (2, 5) else "",
          "created_at": "2026-09-28T03:30:00Z"}
-        for i in base_rows("token")
+        for i, (purpose, expires_at) in enumerate(token_specs, 1)
+    ]
+    outbox_specs = [
+        ("MFG-01", "User", uid("user", 1), "VerificationQueued", uid("user", 1), ""),
+        ("MFG-01", "User", uid("user", 2), "PasswordResetQueued", uid("user", 2), ""),
+        ("MFG-06", "Order", uid("order", 1), "OrderCreated", uid("user", 5), "/orders/" + uid("order", 1)),
+        ("MFG-06", "Order", uid("order", 4), "SampleShipped", uid("user", 6), "/orders/" + uid("order", 4)),
+        ("MFG-09", "Contract", uid("contract", 1), "ContractReady", uid("user", 7), "/contracts/" + uid("contract", 1)),
+        ("MFG-06", "PaymentTransaction", uid("payment", 1), "DepositSucceeded", uid("user", 8), "/orders/" + uid("order", 5)),
+        ("MFG-07", "Order", uid("order", 7), "OrderCancelled", uid("user", 9), "/orders/" + uid("order", 7)),
+        ("MFG-12", "SystemConfig", uid("config", 1), "ConfigChanged", uid("user", 3), "/system/configuration"),
     ]
     tables["outbox_events"] = [
-        {"outbox_event_id": uid("outbox", i), "source_module": f"MFG-{((i-1)%12)+1:02d}",
-         "source_entity_type": "Order" if i > 2 else "User", "source_entity_id": uid("order", max(1, i - 2)) if i > 2 else uid("user", i),
-         "event_type": ["VerificationQueued", "PasswordResetQueued", "OrderCreated", "SampleShipped", "ContractReady", "DepositSucceeded", "OrderCancelled"][i-1],
-         "payload_json": js({"synthetic": True, "sequence": i}), "delivery_state": "Failed" if i == 7 else "Delivered",
-         "created_at": f"2026-09-{10+i:02d}T02:00:00Z", "delivered_at": "" if i == 7 else f"2026-09-{10+i:02d}T02:01:00Z"}
-        for i in base_rows("outbox")
+        {"outbox_event_id": uid("outbox", i), "source_module": source_module,
+         "source_entity_type": source_entity_type, "source_entity_id": source_entity_id,
+         "event_type": event_type,
+         "payload_json": js({"changed_keys": ["shipping_vnd"]} if event_type == "ConfigChanged" else {"synthetic": True, "sequence": i}),
+         "delivery_state": "Failed" if event_type == "OrderCancelled" else "Delivered",
+         "created_at": f"2026-09-{10+i:02d}T02:00:00Z", "delivered_at": "" if event_type == "OrderCancelled" else f"2026-09-{10+i:02d}T02:01:00Z"}
+        for i, (source_module, source_entity_type, source_entity_id, event_type, _recipient_user_id, _target_route) in enumerate(outbox_specs, 1)
     ]
     tables["notifications"] = [
-        {"notification_id": uid("notification", i), "recipient_user_id": uid("user", 4 + (i % 6)),
+        {"notification_id": uid("notification", i), "recipient_user_id": recipient_user_id,
          "source_event_id": uid("outbox", i), "type": tables["outbox_events"][i-1]["event_type"],
          "title": f"Thông báo quy trình {i}", "body": f"Cập nhật giả lập an toàn số {i}.",
-         "target_route": f"/orders/{uid('order', max(1, i-2))}" if i > 2 else "",
-         "email_delivery_state": "Failed" if i == 7 else "Delivered", "created_at": f"2026-09-{10+i:02d}T02:01:00Z",
+         "target_route": target_route,
+         "email_delivery_state": "Failed" if event_type == "OrderCancelled" else "Delivered", "created_at": f"2026-09-{10+i:02d}T02:01:00Z",
          "read_at": f"2026-09-{10+i:02d}T03:00:00Z" if i <= 3 else ""}
-        for i in base_rows("notification")
+        for i, (_source_module, _source_entity_type, _source_entity_id, event_type, recipient_user_id, target_route) in enumerate(outbox_specs, 1)
     ]
     tables["staff_invitations"] = [
         {"invitation_id": uid("invitation", i), "staff_account_id": uid("staff", ((i-1)%5)+1),
@@ -132,7 +161,7 @@ def generate() -> dict[str, list[dict[str, object]]]:
     product_names = ["Áo thun cổ tròn", "Áo polo doanh nghiệp", "Sơ mi công sở", "Áo khoác đồng phục", "Áo bảo hộ phản quang", "Quần bảo hộ lao động"]
     skus = ["DEMO-TEE-001", "DEMO-POLO-002", "DEMO-SHIRT-003", "DEMO-JACKET-004", "DEMO-WORK-005", "DEMO-PANTS-006"]
     branches = ["Đồng phục"] * 4 + ["Đồ bảo hộ lao động"] * 2
-    statuses = ["Published", "Published", "Published", "Published", "Hidden", "Draft"]
+    statuses = ["Published", "Published", "Published", "Hidden", "Draft", "Archived"]
     tables["products"] = [
         {"product_id": uid("product", i), "sku": skus[i-1], "status": statuses[i-1], "current_version": 1,
          "created_at": f"2026-06-{i:02d}T01:00:00Z", "updated_at": f"2026-09-{i:02d}T01:00:00Z"}
@@ -215,7 +244,7 @@ def generate() -> dict[str, list[dict[str, object]]]:
     tables["designs"] = [
         {"design_id": uid("design", i), "customer_id": uid("user", 4 + (i % 6)), "product_id": uid("product", ((i-1)%6)+1),
          "source_design_request_id": uid("design_request", i) if i in (3,4,6) else "", "status": design_statuses[i-1],
-         "current_version": 2 if i == 4 else 1, "created_at": f"2026-08-{i:02d}T03:00:00Z", "updated_at": f"2026-09-{i:02d}T03:00:00Z"}
+         "current_version": 3 if i == 4 else 1, "created_at": f"2026-08-{i:02d}T03:00:00Z", "updated_at": f"2026-09-{i:02d}T03:00:00Z"}
         for i in base_rows("design")
     ]
     design_versions = []
@@ -223,13 +252,17 @@ def generate() -> dict[str, list[dict[str, object]]]:
         design_versions.append({"design_version_id": uid("design_version", i*10+1), "design_id": uid("design", i), "version": 1,
             "product_version_id": uid("product_version", ((i-1)%6)+1),
             "source": "DonyDesign" if i in (3,4,6) else "CustomerUploaded",
-            "review_state": "SharedForReview" if i == 4 else "Approved", "uploader_user_id": uid("user", 2 if i in (3,4,6) else 4+(i%6)),
+            "review_state": "Superseded" if i == 4 else "Approved", "uploader_user_id": uid("user", 2 if i in (3,4,6) else 4+(i%6)),
             "original_channel": "Email" if i in (3,4,6) else "", "change_note": "Bản thiết kế giả lập đã kiểm tra.",
             "preview_asset_id": uid("asset", 12+i), "created_at": f"2026-08-{i:02d}T04:00:00Z"})
     design_versions.append({"design_version_id": uid("design_version", 42), "design_id": uid("design", 4), "version": 2,
         "product_version_id": uid("product_version", 4), "source": "DonyTechnicalAdjustment", "review_state": "Draft",
         "uploader_user_id": uid("user", 2), "original_channel": "Email", "change_note": "Bản hiệu chỉnh đang chờ chia sẻ.",
         "preview_asset_id": uid("asset", 20), "created_at": "2026-09-10T04:00:00Z"})
+    design_versions.append({"design_version_id": uid("design_version", 43), "design_id": uid("design", 4), "version": 3,
+        "product_version_id": uid("product_version", 4), "source": "DonyDesign", "review_state": "SharedForReview",
+        "uploader_user_id": uid("user", 2), "original_channel": "Email", "change_note": "Bản chia sẻ hiện tại đang chờ khách hàng duyệt.",
+        "preview_asset_id": uid("asset", 21), "created_at": "2026-09-11T04:00:00Z"})
     tables["design_versions"] = design_versions
     tables["design_placements"] = [
         {"placement_id": uid("placement", i), "design_version_id": uid("design_version", i*10+1), "asset_id": uid("asset", 12+i),
@@ -237,26 +270,26 @@ def generate() -> dict[str, list[dict[str, object]]]:
          "height_mm": "80.0", "processing_method": "Original"}
         for i in base_rows("placement")
     ]
-    request_states = ["Submitted", "UnderReview", "Delivered", "InProgress", "Cancelled", "FeeProposed", "Rejected"]
+    request_states = ["Submitted", "UnderReview", "Delivered", "InProgress", "Cancelled", "FeeProposed", "Rejected", "Approved", "Assigned"]
     tables["design_requests"] = [
         {"design_request_id": uid("design_request", i), "customer_id": uid("user", 4+(i%6)), "product_id": uid("product", ((i-1)%6)+1),
          "requirements": f"Yêu cầu thiết kế giả lập chi tiết cho mẫu số {i}, dùng nội dung tổng hợp.",
          "requested_deadline": "2026-10-15", "committed_due_at": "2026-10-12T10:00:00Z" if i in (3,4) else "",
-         "complexity": "Complex" if i in (3,4,6) else ("Simple" if i == 2 else ""),
-         "rationale": "Cần hiệu chỉnh kỹ thuật." if i in (3,4,6) else "", "rejection_reason": "Ngoài phạm vi mẫu." if i == 7 else "",
+         "complexity": "Complex" if i in (3,4,6) else ("Simple" if i in (2,8,9) else ""),
+         "rationale": "Cần hiệu chỉnh kỹ thuật." if i in (3,4,6) else ("Đủ điều kiện xử lý đơn giản." if i in (2,8,9) else ""), "rejection_reason": "Ngoài phạm vi mẫu." if i == 7 else "",
          "assessed_by_staff_id": uid("staff", 1) if i >= 2 else "", "assessed_at": "2026-09-05T03:00:00Z" if i >= 2 else "",
-         "fee_vnd": 200000 if i in (3,4,6) else (0 if i == 2 else ""), "proposal_version": 1 if i in (3,4,6) else "",
+         "fee_vnd": 200000 if i in (3,4,6) else (0 if i in (2,8,9) else ""), "proposal_version": 1 if i in (3,4,6) else "",
          "accepted_fee_version": 1 if i in (3,4) else "", "accepted_fee_vnd": 200000 if i in (3,4) else "",
          "accepted_by_user_id": uid("user", 4+(i%6)) if i in (3,4) else "", "accepted_at": "2026-09-06T03:00:00Z" if i in (3,4) else "",
          "fee_order_id": uid("order", 3) if i == 3 else "", "fee_allocation_version": 1 if i == 3 else "",
-         "state": request_states[i-1], "assignee_staff_id": uid("staff", 2) if i in (3,4) else "", "version": 2 if i >= 2 else 1,
+         "state": request_states[i-1], "assignee_staff_id": uid("staff", 2) if i in (3,4,9) else "", "version": 2 if i >= 2 else 1,
          "created_at": f"2026-09-{i:02d}T02:00:00Z"}
-        for i in base_rows("design_request")
+        for i in base_rows("design_request", 9)
     ]
     tables["design_request_assets"] = [
         {"design_request_asset_id": uid("request_asset", i), "design_request_id": uid("design_request", i),
          "asset_id": uid("asset", 12+i), "display_order": 1}
-        for i in base_rows("request_asset")
+        for i in base_rows("request_asset", 9)
     ]
     tables["design_feedback"] = [
         {"feedback_id": uid("feedback", i), "design_version_id": uid("design_version", ((i-1)%7+1)*10+1),
@@ -568,6 +601,18 @@ def generate() -> dict[str, list[dict[str, object]]]:
 def validate(tables: dict[str, list[dict[str, object]]]) -> list[str]:
     checks: list[str] = []
 
+    if not ORDER_FILE.exists():
+        raise AssertionError(f"missing deterministic seed order file: {ORDER_FILE}")
+    order = json.loads(ORDER_FILE.read_text(encoding="utf-8"))
+    assert set(order) == set(tables), "seed-order.json must cover every generated table exactly once"
+    assert len(set(order.values())) == len(order), "seed-order.json has duplicate numeric positions"
+    for table, rows in tables.items():
+        assert rows, f"{table}: table must have at least one supported row"
+        columns = list(rows[0])
+        assert columns, f"{table}: table must have a header"
+        assert all(list(row) == columns for row in rows), f"{table}: inconsistent column order"
+    checks.append("PASS generated table shapes and deterministic seed order")
+
     def values(table: str, column: str) -> set[str]:
         return {str(row[column]) for row in tables[table]}
 
@@ -668,7 +713,9 @@ def validate(tables: dict[str, list[dict[str, object]]]) -> list[str]:
 
     emails = [row["email"].lower() for row in tables["users"]]
     assert len(emails) == len(set(emails)), "users.email must be unique"
+    assert all(email.endswith("@example.invalid") for email in emails), "seed emails must use the reserved example.invalid domain"
     checks.append("PASS unique normalized users.email")
+    checks.append("PASS synthetic email domain")
     skus_seen = [row["sku"] for row in tables["products"]]
     assert len(skus_seen) == len(set(skus_seen)), "products.sku must be unique"
     checks.append("PASS unique products.sku")
@@ -712,14 +759,77 @@ def validate(tables: dict[str, list[dict[str, object]]]) -> list[str]:
                           values("design_requests","customer_id") | values("consultations","customer_id"))
     assert any(row["customer_capability"] == "true" and row["verified_at"] and row["user_id"] not in occupied_customers for row in tables["users"])
     checks.append("PASS verified Customer empty-state parent with no Design, DesignRequest, Consultation or Order")
+
+    enum_coverage = {
+        ("products", "status"): {"Draft", "Published", "Hidden", "Archived"},
+        ("staff_accounts", "status"): {"Invited", "Active", "Suspended", "Deleted"},
+        ("design_requests", "state"): {"Submitted", "UnderReview", "FeeProposed", "Approved", "Assigned", "InProgress", "Delivered", "Cancelled", "Rejected"},
+        ("design_versions", "review_state"): {"Draft", "SharedForReview", "Approved", "Superseded"},
+        ("contracts", "status"): {"Draft", "Ready", "Signed", "Superseded", "Voided"},
+        ("payment_transactions", "status"): {"Pending", "Succeeded", "Failed", "Expired"},
+        ("payment_transactions", "purpose"): {"DEPOSIT", "BALANCE"},
+    }
+    for (table, column), expected in enum_coverage.items():
+        actual = {str(row[column]) for row in tables[table]}
+        assert expected <= actual, f"{table}.{column} is missing fixture values: {sorted(expected - actual)}"
+    checks.append("PASS required lifecycle and payment enum fixtures")
+
+    token_durations_minutes = {
+        "EmailVerification": 24 * 60,
+        "PasswordReset": 30,
+        "EmailChange": 24 * 60,
+        "StaffInvitation": 48 * 60,
+    }
+    for row in tables["one_time_tokens"]:
+        created = datetime.fromisoformat(str(row["created_at"]).replace("Z", "+00:00"))
+        expires = datetime.fromisoformat(str(row["expires_at"]).replace("Z", "+00:00"))
+        assert (expires - created).total_seconds() == token_durations_minutes[str(row["purpose"])] * 60, (
+            f"one_time_tokens TTL mismatch for {row['purpose']}"
+        )
+    checks.append("PASS verification, reset, email-change and invitation token TTL fixtures")
+
+    expected_outbox_sources = {
+        "VerificationQueued": ("MFG-01", "User"),
+        "PasswordResetQueued": ("MFG-01", "User"),
+        "OrderCreated": ("MFG-06", "Order"),
+        "SampleShipped": ("MFG-06", "Order"),
+        "ContractReady": ("MFG-09", "Contract"),
+        "DepositSucceeded": ("MFG-06", "PaymentTransaction"),
+        "OrderCancelled": ("MFG-07", "Order"),
+        "ConfigChanged": ("MFG-12", "SystemConfig"),
+    }
+    actual_outbox_sources = {
+        str(row["event_type"]): (str(row["source_module"]), str(row["source_entity_type"]))
+        for row in tables["outbox_events"]
+    }
+    assert actual_outbox_sources == expected_outbox_sources, "outbox seed event ownership must match the owning business module"
+    config_event = next(row for row in tables["outbox_events"] if row["event_type"] == "ConfigChanged")
+    assert json.loads(str(config_event["payload_json"])) == {"changed_keys": ["shipping_vnd"]}, "config notice must expose only changed key names"
+    config_notice = next(row for row in tables["notifications"] if row["source_event_id"] == config_event["outbox_event_id"])
+    assert config_notice["recipient_user_id"] == uid("user", 3) and config_notice["target_route"] == "/system/configuration", (
+        "MFG-12 configuration notice must target the System Admin fixture"
+    )
+    checks.append("PASS notification/outbox fixture ownership and config-change privacy")
+
+    phones = [str(row["phone"]) for table in ("quotes", "orders") for row in tables[table]]
+    assert all(phone.startswith("0") and phone.isdigit() for phone in phones), "phone fixtures must retain a leading zero as text"
+    checks.append("PASS phone fixtures preserve leading zero text")
+
+    assert any(row["ownership"] == "Dony" and row["mime_type"] == "PNG" and row["scan_status"] == "Safe" for row in tables["assets"]), (
+        "synthetic Dony PNG asset fixture is required"
+    )
+    assert {row["view_id"] for row in tables["product_mockup_templates"]} >= {"Front", "Back"}, (
+        "try-on/mockup prerequisites require front and back synthetic templates"
+    )
+    checks.append("PASS synthetic design and try-on prerequisite fixtures")
     return checks
 
 
 def main() -> None:
     tables = generate()
+    checks = validate(tables)
     for name, rows in tables.items():
         write_table(name, rows)
-    checks = validate(tables)
     print(f"Generated {len(tables)} CSV files in data/seed")
     print(f"Generated {sum(len(rows) for rows in tables.values())} rows")
     for check in checks:
