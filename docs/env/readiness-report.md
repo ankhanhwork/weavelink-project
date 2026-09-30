@@ -2,6 +2,8 @@
 
 This report records the Session 6 environment checks required for the Session 7 midterm. Group B must add one completed row for every member before the submission tag is created.
 
+The detailed report and supporting evidence are available in [Group B - Readiness Report](https://drive.google.com/drive/folders/1xNjMAk5BGyC-Xxux3lbtNFrgo89TYezD?usp=sharing).
+
 | Member | Check date | Computer and OS | T1: `uv run tools/check_env.py --repo` | T2: `uv run data/seed/generate_seed.py`, then `git status` | T3: Session 6 repository read-back prompt and agent used | Result or disagreement found | Resolution or follow-up |
 |---|---|---|---|---|---|---|---|
 | Đinh An Khánh | 2026-09-30 | Windows | PASS | PASS | PASS | None | None required |
