@@ -29,7 +29,7 @@ The Customer may represent a Business Buyer ordering uniforms or garments for in
 
 **MVP boundary:** merge is not part of the MFG-06 MVP path. For every MVP quote/order, `merge_opt_in=false`, `merge_discount_vnd=0`, and no merge policy acceptance/version is requested or applied. FR-002 remains Must for the standard quote; its MFG-10 v4 final demo policy merge branch is dormant until MFG-10 is implemented after the MVP. Do not render merge choices or discounts in MVP checkout.
 
-**MVP release rules:** BR-019 simplifies cancellation, refund, receipt auto-confirmation and overdue handling for the MVP. Where BR-007, BR-013, BR-014 or the transition table describe the full behavior, BR-019 takes precedence for the MVP; the full behavior is MVP Could (see [MVP scope](../mvp-scope-proposal.md)).
+**MVP release rules:** BR-019 simplifies cancellation, refund, receipt auto-confirmation and overdue handling for the MVP. Where BR-007, BR-013, BR-014 or the transition table describe the full behavior, BR-019 takes precedence for the MVP; the full behavior is MVP Could (see [MVP scope](../../prd.md)).
 
 ## 2. Actors (mandatory)
 

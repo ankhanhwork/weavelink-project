@@ -15,7 +15,7 @@
 
 ## 1. Purpose and scope (mandatory)
 
-MVP priority: **Should** (see [MVP scope](../mvp-scope-proposal.md)). S11/S12 are built after the MVP Must path; until they are released, hide the profile/settings route and navigation link. Account recovery remains available through MFG-01.
+MVP priority: **Should** (see [MVP scope](../../prd.md)). S11/S12 are built after the MVP Must path; until they are released, hide the profile/settings route and navigation link. Account recovery remains available through MFG-01.
 
 Authenticated active members view and maintain their own identity details and change a known password. A Customer profile may identify the representative and optional Buyer Organization for a company buying uniforms or a Reseller Shop commissioning production from its own designs. The server derives identity from the session. This module cannot assign internal Dony roles or transfer ownership.
 

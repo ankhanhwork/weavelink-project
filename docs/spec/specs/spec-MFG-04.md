@@ -15,7 +15,7 @@
 
 ## 1. Purpose and scope (mandatory)
 
-Provide public discovery of Dony's Published configurable garment bases and Dony-scoped catalog/design-rule administration. Dony is a made-to-order garment factory: catalogue entries describe garment types, supported materials, colours, print or embroidery methods, price rules and production constraints. They are not finished garments held in stock or available for immediate delivery. MVP priority (see [MVP scope](../mvp-scope-proposal.md)): catalog browsing/detail is Must; keyword search, Product Finder, AI Compare, AI advisory and product administration (S16–S18) are Should; the design-rules editor (S19) is Could.
+Provide public discovery of Dony's Published configurable garment bases and Dony-scoped catalog/design-rule administration. Dony is a made-to-order garment factory: catalogue entries describe garment types, supported materials, colours, print or embroidery methods, price rules and production constraints. They are not finished garments held in stock or available for immediate delivery. MVP priority (see [MVP scope](../../prd.md)): catalog browsing/detail is Must; keyword search, Product Finder, AI Compare, AI advisory and product administration (S16–S18) are Should; the design-rules editor (S19) is Could.
 
 **In scope:** browse/search/detail; keyword search with a suggestion panel over Published products (Product Finder); AI Compare and product advisory over Published products; create/edit/archive; publish/hide; configure supported options, print areas and finite per-order capacity.
 

@@ -197,7 +197,7 @@ MFG-11 analytics events/results are not the general audit log. Its confirmed rol
 
 - System Admin identity and recent reauthentication are available from the shared identity service.
 - Scheduler, private asset storage and durable job queue are available in complete-system deployment.
-- MVP priority is Won't; role-specific Sales Admin, Sales, System Admin and verified Customer identities are pre-provisioned as listed in the [MVP scope](../mvp-scope-proposal.md). The System Admin identity is bootstrap/recovery-only; Sales Admin operates the MVP order path.
+- MVP priority is Won't; role-specific Sales Admin, Sales, System Admin and verified Customer identities are pre-provisioned as listed in the [MVP scope](../../prd.md). The System Admin identity is bootstrap/recovery-only; Sales Admin operates the MVP order path.
 
 ## 10. Open questions
 

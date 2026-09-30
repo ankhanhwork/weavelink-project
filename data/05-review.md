@@ -2,7 +2,7 @@
 artifact: Data Model Review
 step: S6
 generated: 2026-09-28
-sources: docs/spec/README.md; docs/spec/mvp-scope-proposal.md; docs/spec/specs/spec-MFG-01.md through spec-MFG-12.md; docs/spec/screens/S01 through S50; data/01-entity-dictionary.md; data/02-crud-matrix.md; data/03-erd.mmd; data/04-data-model.md; data/seed/*.csv
+sources: docs/prd.md; docs/spec/README.md; docs/spec/specs/spec-MFG-01.md through spec-MFG-12.md; docs/spec/screens/S01 through S50; data/01-entity-dictionary.md; data/02-crud-matrix.md; data/03-erd.mmd; data/04-data-model.md; data/seed/*.csv
 ---
 
 # WeaveLink Data Model Review
@@ -22,7 +22,7 @@ sources: docs/spec/README.md; docs/spec/mvp-scope-proposal.md; docs/spec/specs/s
 ## Seed scenario coverage
 
 Coverage means that the CSV package contains the persistent data prerequisites and representative states for the scenario. It does not claim that application code, external providers or deferred screens exist.
-`Must` is the approved MVP path; `Should`, `Could`, and `Won't` retain the meanings defined in `docs/spec/mvp-scope-proposal.md §1`. Release status is recorded here instead of inventing a priority column in product tables.
+`Must` is the approved MVP path; `Should`, `Could`, and `Won't` retain the meanings defined in `docs/prd.md §1`. Release status is recorded here instead of inventing a priority column in product tables.
 
 | Scenario ID | Rows that make it runnable | Covered? |
 |---|---|---|
@@ -100,7 +100,7 @@ These exceptions avoid inventing unsupported business data merely to reach five 
 ## Integrity-check results
 
 - Generator: `data/seed/generate_seed.py`
-- Regeneration command: `C:\Users\ADMIN\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe data/seed/generate_seed.py`
+- Regeneration command: `uv run data/seed/generate_seed.py`
 - Output: 66 CSV files, 589 rows, UTF-8, LF, header row, deterministic UUIDs and sorted primary keys.
 - Passed: all checked foreign keys; unique normalized email; unique SKU; unique immutable order number; unique active production type/material profile; one design-fee-bearing first Order; every Order total formula; Cancelled/Completed coverage; verified Customer empty state.
 
@@ -112,8 +112,11 @@ These exceptions avoid inventing unsupported business data merely to reach five 
 | `data/02-crud-matrix.md` | S2 | Complete |
 | `data/03-erd.mmd` | S3 | Complete; Mermaid only |
 | `data/04-data-model.md` | S4 | Complete; conceptual ERD embedded unchanged |
-| `data/seed/generate_seed.py` | S5 | Complete; retained locally and ignored by Git |
-| `data/seed/*.csv` (66 files) | S5 | Complete; generated and eligible for tracking |
+| `data/data-model-MFG-01.md` through `data/data-model-MFG-12.md` | S7 | Module ownership indexes generated from the canonical whole-system model |
+| `data/schema/schema-MFG-01.sql` through `data/schema/schema-MFG-12.sql` | S7 | SQLite validation schema; all foreign keys are deferrable and validated at seed-load commit |
+| `data/schema/load_seed.py` | S7 | Creates the schema and imports numerically ordered CSV files in filename order |
+| `data/seed/generate_seed.py` | S5 | Complete; version-controlled deterministic generator |
+| `data/seed/*.csv` (66 files) | S5/S7 | Complete; generated, version-controlled, and numerically ordered for deterministic SQLite loading |
 | `data/05-review.md` | S6 | Complete |
 | `.gitignore` | S5 | Generator-only ignore rule added |
 

@@ -2,7 +2,7 @@
 artifact: Entity Dictionary
 step: S1
 generated: 2026-09-28
-sources: docs/spec/README.md; docs/spec/mvp-scope-proposal.md; docs/spec/specs/spec-MFG-01.md through spec-MFG-12.md; docs/spec/screens/S01 through S50
+sources: docs/prd.md; docs/spec/README.md; docs/spec/specs/spec-MFG-01.md through spec-MFG-12.md; docs/spec/screens/S01 through S50
 ---
 
 # WeaveLink Entity Dictionary

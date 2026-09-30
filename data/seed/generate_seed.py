@@ -17,6 +17,7 @@ from pathlib import Path
 
 OUT = Path(__file__).resolve().parent
 NS = uuid.UUID("1ebc511e-1c37-4ca6-a15d-a644e9ee9cf0")
+ORDER_FILE = OUT / "seed-order.json"
 
 
 def uid(kind: str, number: int) -> str:
@@ -35,7 +36,13 @@ def write_table(name: str, rows: list[dict[str, object]]) -> None:
         if list(row) != columns:
             raise AssertionError(f"{name}: inconsistent column order")
     rows.sort(key=lambda row: str(row[columns[0]]))
-    with (OUT / f"{name}.csv").open("w", encoding="utf-8", newline="") as handle:
+    if not ORDER_FILE.exists():
+        raise AssertionError(f"missing deterministic seed order file: {ORDER_FILE}")
+    order = json.loads(ORDER_FILE.read_text(encoding="utf-8"))
+    if name not in order:
+        raise AssertionError(f"missing seed order for table: {name}")
+    filename = f"{int(order[name]):02d}_{name}.csv"
+    with (OUT / filename).open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=columns, lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)

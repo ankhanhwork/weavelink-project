@@ -1,4 +1,4 @@
-MVP is the release-scope label defined by [MVP scope](../mvp-scope-proposal.md): `Must` is required for the end-to-end order path, `Should` follows immediately after Must, `Could` is built only if time allows, and `Won't` is excluded from this release. Each screen has exactly one label; module FR priorities use the same labels.
+MVP is the release-scope label defined by [MVP scope](../../prd.md): `Must` is required for the end-to-end order path, `Should` follows immediately after Must, `Could` is built only if time allows, and `Won't` is excluded from this release. Each screen has exactly one label; module FR priorities use the same labels.
 
 | ID | Screen name | Screen Overview | MVP |
 | --- | --- | --- | --- |

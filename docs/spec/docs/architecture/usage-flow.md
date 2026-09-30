@@ -58,7 +58,7 @@ flowchart TD
 
 
 
-The first diagram shows the complete-system business paths; [MVP scope](../../mvp-scope-proposal.md) owns the MVP slice; in the MVP, receipt is confirmed by the Customer or by Sales Admin on the Customer's behalf (MFG-06 BR-019). Service design and merge remain deferred until their modules are active. Returning to an existing design does not imply a new editor/save step. The sample-revision arrow includes the new bound design/quote approval cycle defined by MFG-06.
+The first diagram shows the complete-system business paths; [MVP scope](../../../prd.md) owns the MVP slice; in the MVP, receipt is confirmed by the Customer or by Sales Admin on the Customer's behalf (MFG-06 BR-019). Service design and merge remain deferred until their modules are active. Returning to an existing design does not imply a new editor/save step. The sample-revision arrow includes the new bound design/quote approval cycle defined by MFG-06.
 
 ## Analytics usage (Should extension)
 

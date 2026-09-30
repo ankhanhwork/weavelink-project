@@ -15,7 +15,7 @@
 
 ## 1. Purpose and scope (mandatory)
 
-Customers configure, preview and save versioned made-to-order garment designs and may request Dony design assistance with assessment-based pricing. For a Business Buyer, the design commonly represents uniforms or garments for internal use. For a Reseller Shop, it represents the shop's own artwork, branding or specifications that Dony will manufacture for the shop to sell to its customers. Dony does not supply ready-made resale inventory. MVP priority (see [MVP scope](../mvp-scope-proposal.md)): self-design/upload/preview/save is Must; background removal, multi-angle mockups and AI virtual try-on are Should; assessed design service and staff design collaboration are Could.
+Customers configure, preview and save versioned made-to-order garment designs and may request Dony design assistance with assessment-based pricing. For a Business Buyer, the design commonly represents uniforms or garments for internal use. For a Reseller Shop, it represents the shop's own artwork, branding or specifications that Dony will manufacture for the shop to sell to its customers. Dony does not supply ready-made resale inventory. MVP priority (see [MVP scope](../../prd.md)): self-design/upload/preview/save is Must; background removal, multi-angle mockups and AI virtual try-on are Should; assessed design service and staff design collaboration are Could.
 
 **In scope:** background removal with reversible review; deterministic multi-angle 2D mockups; session-only AI virtual try-on; validate product options/assets; save immutable design versions; list owned designs; create/cancel requests; assess complexity and accept deferred fees; assign via MFG-08; share consultant versions, record customer feedback/approval and staff replies, import unchanged customer sources, and notify authorized participants.
 
@@ -372,7 +372,7 @@ Historical IDs are retained; external DBIZ2 comparison is not required.
 
 ## 12. Design add-on implementation handoff
 
-The user validated the AI try-on demo as feasible on 2026-09-27. This is feasibility acceptance, not a client signature or a guarantee of exact identity/logo preservation. Polo is the first demo product; it does not amend MFG-04 catalogue/seed data. Self-design saving/order rules remain unchanged. S21, S22 and S23 are Should items under the [MVP scope](../mvp-scope-proposal.md); the S20 preview remains Must. No local try-on fallback is required.
+The user validated the AI try-on demo as feasible on 2026-09-27. This is feasibility acceptance, not a client signature or a guarantee of exact identity/logo preservation. Polo is the first demo product; it does not amend MFG-04 catalogue/seed data. Self-design saving/order rules remain unchanged. S21, S22 and S23 are Should items under the [MVP scope](../../prd.md); the S20 preview remains Must. No local try-on fallback is required.
 
 Production source of truth is this module and S20/S21/S22/S23. A throwaway prototype validated the approach: calibrated angle grids and wearer chest geometry, single-assignment alpha-safe print rasterization with fabric light, revision/session invalidation, server-side validation, connected background removal, and a multipart image edit that sends the person photo first and the polo second with high input fidelity, medium quality and no retries. The AI provider and model are chosen at Plan and configured in the backend. Try-on is not a sizing engine.
 

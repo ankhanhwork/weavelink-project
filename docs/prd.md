@@ -1,4 +1,4 @@
-# MVP Scope — WeaveLink
+# MVP Scope v3: WeaveLink
 
 | Field | Value |
 |---|---|

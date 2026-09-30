@@ -1,6 +1,6 @@
 # Function List
 
-The Priority column ranks importance within each module; it is not a release decision. MVP release scope is defined only by the [MVP scope](../mvp-scope-proposal.md).
+The Priority column ranks importance within each module; it is not a release decision. MVP release scope is defined only by the [MVP scope](../../prd.md).
 
 ## I. MFG-01: Identity & Access
 
@@ -171,7 +171,7 @@ The Priority column ranks importance within each module; it is not a release dec
 | 4 | UC-C21 | View dashboard and journey conversion | F-DA-004 | End-to-End Funnel & Drop-off Analytics | Return authenticated product-entry, explicit-intent and independent order cohorts with verified correlation, cycle-aware duration, separate waiting/terminal outcomes, coverage and source snapshot; no guest tracking or time-based abandonment. | Process | Sales Admin / System | Typed range, unit, template, product/buyer filters, observation cutoff, selected step; validated interaction/committed business evidence (MFG-11 5.3/5.4; no client-asserted settlement) | Counts, eligible/immature denominators, observation mode, conversion, transition medians/sample size, waiting ages, coverage and result ID; unknown is not zero and no invented abandonment window | Medium |
 | 5 | UC-C20 | Data Analytics and prompt-based explanation | F-DA-006 | Grounded prompt analysis | Validate an allowlisted query plan and explain shared aggregate results with exact evidence and original context; no business writes or arbitrary SQL. | Process | Sales Admin | Prompt, authorized result ID, selected stage and explicitly applied context changes (MFG-11 5.5; sanitized input, current role) | Page-memory-only answer/clarification/insufficient-data/unsupported/unavailable state, validated metric fields, expiring source IDs, definitions, snapshot and limitations; no persistent chat history | Medium |
 
-MFG-11/F-DA-001–003 also use the shared result context defined by MFG-11: definition version, filters, source watermark and coverage. F-DA-002 filters both Overview and funnel queries with explicit unit/cohort semantics. F-DA-003 additionally supports the allowlisted aggregate `funnel` dataset and must reproduce the selected result. MVP priority for MFG-11 is Should for the S47 Overview (F-DA-001, F-DA-002 Overview) and Could for the funnel, export and prompt analysis (F-DA-003, F-DA-004, F-DA-006) per [MVP scope](../mvp-scope-proposal.md); the High/Medium/Low column in this table is not a release decision. F-DA-005 is intentionally not allocated to the separate feature-evaluation proposal.
+MFG-11/F-DA-001–003 also use the shared result context defined by MFG-11: definition version, filters, source watermark and coverage. F-DA-002 filters both Overview and funnel queries with explicit unit/cohort semantics. F-DA-003 additionally supports the allowlisted aggregate `funnel` dataset and must reproduce the selected result. MVP priority for MFG-11 is Should for the S47 Overview (F-DA-001, F-DA-002 Overview) and Could for the funnel, export and prompt analysis (F-DA-003, F-DA-004, F-DA-006) per [MVP scope](../../prd.md); the High/Medium/Low column in this table is not a release decision. F-DA-005 is intentionally not allocated to the separate feature-evaluation proposal.
 
 ## XII. MFG-12: System Operations
 

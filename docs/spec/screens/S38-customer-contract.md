@@ -16,7 +16,7 @@
 
 **Shown when:** The customer reviews the generated contract only after approving the received physical sample. The screen shows bound design/sample evidence, buyer organization snapshot when present, contract total, deposit percentage/amount and remaining-balance formula. MVP acknowledgement requires explicit consent and typed full-name match in the active authenticated session; stronger reauthentication/challenge is full-system only.
 
-**MVP authentication level:** Follow the [MVP scope](../mvp-scope-proposal.md): the already-authenticated Customer gives explicit consent and types their matching full name; the active Customer session is the authentication evidence. MVP does not require password re-entry or a one-time signing challenge. The stronger reauthentication/challenge flow below is post-MVP and must not block MVP contract acknowledgement.
+**MVP authentication level:** Follow the [MVP scope](../../prd.md): the already-authenticated Customer gives explicit consent and types their matching full name; the active Customer session is the authentication evidence. MVP does not require password re-entry or a one-time signing challenge. The stronger reauthentication/challenge flow below is post-MVP and must not block MVP contract acknowledgement.
 
 **The user leaves this screen when:** An authorized action in section 5 succeeds, the user follows a role-allowed global route, or they return to the validated originating route.
 
