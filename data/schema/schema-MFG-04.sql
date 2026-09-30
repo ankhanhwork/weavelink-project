@@ -1,11 +1,11 @@
 -- SQLite validation schema for MFG-04.
 CREATE TABLE IF NOT EXISTS "products" (
     "product_id" UUID PRIMARY KEY,
-    "sku" TEXT,
-    "status" TEXT,
-    "current_version" BIGINT,
-    "created_at" TIMESTAMPTZ,
-    "updated_at" TIMESTAMPTZ
+    "sku" TEXT NOT NULL UNIQUE,
+    "status" TEXT NOT NULL,
+    "current_version" BIGINT NOT NULL,
+    "created_at" TIMESTAMPTZ NOT NULL,
+    "updated_at" TIMESTAMPTZ NOT NULL
 );
 CREATE TABLE IF NOT EXISTS "product_versions" (
     "product_version_id" UUID PRIMARY KEY,

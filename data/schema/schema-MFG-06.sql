@@ -1,16 +1,16 @@
 -- SQLite validation schema for MFG-06.
 CREATE TABLE IF NOT EXISTS "quotes" (
     "quote_id" UUID PRIMARY KEY,
-    "customer_id" UUID REFERENCES "users" ("user_id") DEFERRABLE INITIALLY DEFERRED,
+    "customer_id" UUID NOT NULL REFERENCES "users" ("user_id") DEFERRABLE INITIALLY DEFERRED,
     "journey_intent_id" UUID REFERENCES "journey_intents" ("journey_intent_id") DEFERRABLE INITIALLY DEFERRED,
     "buyer_type" TEXT,
     "buyer_legal_name" TEXT,
     "buyer_tax_id" TEXT,
     "billing_address" TEXT,
-    "product_version_id" UUID REFERENCES "product_versions" ("product_version_id") DEFERRABLE INITIALLY DEFERRED,
-    "design_version_id" UUID REFERENCES "design_versions" ("design_version_id") DEFERRABLE INITIALLY DEFERRED,
+    "product_version_id" UUID NOT NULL REFERENCES "product_versions" ("product_version_id") DEFERRABLE INITIALLY DEFERRED,
+    "design_version_id" UUID NOT NULL REFERENCES "design_versions" ("design_version_id") DEFERRABLE INITIALLY DEFERRED,
     "recipient_name" TEXT,
-    "phone" BIGINT,
+    "phone" TEXT NOT NULL,
     "address_line" TEXT,
     "ward" TEXT,
     "province" TEXT,
@@ -20,13 +20,13 @@ CREATE TABLE IF NOT EXISTS "quotes" (
     "shipping_vnd" BIGINT,
     "tax_vnd" BIGINT,
     "design_fee_vnd" BIGINT,
-    "total_vnd" BIGINT,
+    "total_vnd" BIGINT NOT NULL,
     "deposit_preview_vnd" BIGINT,
     "merge_opt_in" BOOLEAN,
     "policy_version" TEXT,
     "expires_at" TIMESTAMPTZ,
     "version" BIGINT,
-    "created_at" TIMESTAMPTZ
+    "created_at" TIMESTAMPTZ NOT NULL
 );
 CREATE TABLE IF NOT EXISTS "quote_size_quantities" (
     "quote_size_quantity_id" UUID PRIMARY KEY,
@@ -36,8 +36,8 @@ CREATE TABLE IF NOT EXISTS "quote_size_quantities" (
 );
 CREATE TABLE IF NOT EXISTS "orders" (
     "order_id" UUID PRIMARY KEY,
-    "order_number" TEXT,
-    "customer_id" UUID REFERENCES "users" ("user_id") DEFERRABLE INITIALLY DEFERRED,
+    "order_number" TEXT NOT NULL UNIQUE,
+    "customer_id" UUID NOT NULL REFERENCES "users" ("user_id") DEFERRABLE INITIALLY DEFERRED,
     "journey_intent_id" UUID REFERENCES "journey_intents" ("journey_intent_id") DEFERRABLE INITIALLY DEFERRED,
     "buyer_type" TEXT,
     "buyer_legal_name" TEXT,
@@ -47,10 +47,10 @@ CREATE TABLE IF NOT EXISTS "orders" (
     "sku_snapshot" TEXT,
     "material_snapshot" TEXT,
     "options_snapshot_json" JSONB,
-    "product_version_id" UUID REFERENCES "product_versions" ("product_version_id") DEFERRABLE INITIALLY DEFERRED,
-    "design_version_id" UUID REFERENCES "design_versions" ("design_version_id") DEFERRABLE INITIALLY DEFERRED,
+    "product_version_id" UUID NOT NULL REFERENCES "product_versions" ("product_version_id") DEFERRABLE INITIALLY DEFERRED,
+    "design_version_id" UUID NOT NULL REFERENCES "design_versions" ("design_version_id") DEFERRABLE INITIALLY DEFERRED,
     "recipient_name" TEXT,
-    "phone" BIGINT,
+    "phone" TEXT NOT NULL,
     "address_line" TEXT,
     "ward" TEXT,
     "province" TEXT,
@@ -60,8 +60,8 @@ CREATE TABLE IF NOT EXISTS "orders" (
     "shipping_vnd" BIGINT,
     "tax_vnd" BIGINT,
     "design_fee_vnd" BIGINT,
-    "total_vnd" BIGINT,
-    "status" TEXT,
+    "total_vnd" BIGINT NOT NULL,
+    "status" TEXT NOT NULL,
     "current_quote_cycle" BIGINT,
     "approved_sample_id" UUID REFERENCES "production_samples" ("sample_id") DEFERRABLE INITIALLY DEFERRED,
     "contract_id" UUID REFERENCES "contracts" ("contract_id") DEFERRABLE INITIALLY DEFERRED,
@@ -83,8 +83,8 @@ CREATE TABLE IF NOT EXISTS "orders" (
     "delivery_evidence_verified_at" TIMESTAMPTZ,
     "manual_refund_required" BOOLEAN,
     "version" BIGINT,
-    "created_at" TIMESTAMPTZ,
-    "updated_at" TIMESTAMPTZ
+    "created_at" TIMESTAMPTZ NOT NULL,
+    "updated_at" TIMESTAMPTZ NOT NULL
 );
 CREATE TABLE IF NOT EXISTS "order_size_quantities" (
     "order_size_quantity_id" UUID PRIMARY KEY,
@@ -119,12 +119,12 @@ CREATE TABLE IF NOT EXISTS "production_samples" (
 );
 CREATE TABLE IF NOT EXISTS "payment_transactions" (
     "payment_transaction_id" UUID PRIMARY KEY,
-    "order_id" UUID REFERENCES "orders" ("order_id") DEFERRABLE INITIALLY DEFERRED,
-    "customer_id" UUID REFERENCES "users" ("user_id") DEFERRABLE INITIALLY DEFERRED,
-    "purpose" TEXT,
-    "amount_vnd" BIGINT,
-    "currency" TEXT,
-    "status" TEXT,
+    "order_id" UUID NOT NULL REFERENCES "orders" ("order_id") DEFERRABLE INITIALLY DEFERRED,
+    "customer_id" UUID NOT NULL REFERENCES "users" ("user_id") DEFERRABLE INITIALLY DEFERRED,
+    "purpose" TEXT NOT NULL,
+    "amount_vnd" BIGINT NOT NULL,
+    "currency" TEXT NOT NULL,
+    "status" TEXT NOT NULL,
     "provider_reference" TEXT,
     "provider_event_id" TEXT,
     "paid_at" TIMESTAMPTZ,
@@ -132,7 +132,7 @@ CREATE TABLE IF NOT EXISTS "payment_transactions" (
     "expires_at" TIMESTAMPTZ,
     "version" BIGINT,
     "idempotency_key" TEXT,
-    "created_at" TIMESTAMPTZ
+    "created_at" TIMESTAMPTZ NOT NULL
 );
 CREATE TABLE IF NOT EXISTS "refund_records" (
     "refund_id" UUID PRIMARY KEY,

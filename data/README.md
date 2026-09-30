@@ -13,9 +13,13 @@ This folder contains the approved Session 5 data-model package for WeaveLink. It
 | [`03-erd.mmd`](03-erd.mmd) | Conceptual Mermaid ERD containing entities, cited relationships, cardinality, and optionality only. |
 | [`04-data-model.md`](04-data-model.md) | Logical tables, attributes, keys, constraints, citations, and the conceptual ERD embedded unchanged. |
 | [`05-review.md`](05-review.md) | Quality rubric, scenario and release-priority coverage, seed exceptions, and integrity-check results. |
-| [`data-model-MFG-01.md` ... `data-model-MFG-12.md`](.) | Module ownership indexes; each persisted entity has exactly one owner module. |
+| [`06-edge-case-register.md`](06-edge-case-register.md) | Enumerated lifecycle, boundary, privacy, and data-rule fixture coverage. |
+| [`07-end-to-end-traceability.md`](07-end-to-end-traceability.md) | PRD-to-FR-to-field-to-seed-to-screen index and three reviewer-ready trace examples. |
+| [`data-model-MFG-01.md` ... `data-model-MFG-12.md`](.) | Per-module data-model views; each persisted entity has exactly one schema owner module. |
 | [`schema/`](schema/) | SQLite validation schema, deterministic filename-order loader, and execution instructions. |
 | [`seed/`](seed/) | One generated, numerically ordered CSV per logical table and the deterministic generator. |
+| [`tools/check_data_package.py`](tools/check_data_package.py) | Checks catalogue, ERD, schema, seed, ownership, phone-type, and unique-constraint consistency. |
+| [`tools/check_end_to_end_traceability.py`](tools/check_end_to_end_traceability.py) | Checks FR coverage and the three exact trace fixtures. |
 
 ## Traceability and scope
 
@@ -45,7 +49,7 @@ The retained generator is `data/seed/generate_seed.py`. Run it from the reposito
 uv run data/seed/generate_seed.py
 ```
 
-The script regenerates the CSV files and runs their integrity assertions. A successful run reports every check as `PASS`.
+The script validates the complete in-memory package before writing any CSV file, then regenerates the files. A successful run reports every check as `PASS`.
 
 CSV files have a two-digit filename prefix. The prefixes are the approved deterministic load order for the SQLite validation schema; do not rename an individual seed file manually.
 

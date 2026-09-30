@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS "consultations" (
     "customer_model" TEXT,
     "owner_sales_user_id" UUID REFERENCES "users" ("user_id") DEFERRABLE INITIALLY DEFERRED,
     "contact_name" TEXT,
-    "phone" BIGINT,
+    "phone" TEXT,
     "email" TEXT,
     "requirement_summary" TEXT,
     "product_interest" TEXT,

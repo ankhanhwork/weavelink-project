@@ -22,7 +22,25 @@ This module index assigns data ownership for MFG-05. The canonical full attribut
 | `customer_provided_confirmations` | Owned by MFG-05; no other module owns this entity. | [`data/04-data-model.md`](04-data-model.md) |
 | `product_mockup_templates` | Owned by MFG-05; no other module owns this entity. | [`data/04-data-model.md`](04-data-model.md) |
 
-## 3. Relationships and cross-module references
+## 3. Attribute traceability
+
+| Table | Persisted attributes | Trace source |
+|---|---|---|
+| `assets` | `asset_id`, `owner_user_id`, `ownership`, `mime_type`, `scan_status`, `storage_key`, `size_bytes`, `created_at` | Canonical table row in `data/04-data-model.md`; owning `MFG-05` specification §5.1 input/output contract, §6 key entities, keys, or deliberate audit columns. |
+| `designs` | `design_id`, `customer_id`, `product_id`, `source_design_request_id`, `status`, `current_version`, `created_at`, `updated_at` | Canonical table row in `data/04-data-model.md`; owning `MFG-05` specification §5.1 input/output contract, §6 key entities, keys, or deliberate audit columns. |
+| `design_versions` | `design_version_id`, `design_id`, `version`, `product_version_id`, `source`, `review_state`, `uploader_user_id`, `original_channel`, `change_note`, `preview_asset_id`, `created_at` | Canonical table row in `data/04-data-model.md`; owning `MFG-05` specification §5.1 input/output contract, §6 key entities, keys, or deliberate audit columns. |
+| `design_placements` | `placement_id`, `design_version_id`, `asset_id`, `side`, `x_mm`, `y_mm`, `width_mm`, `height_mm`, `processing_method` | Canonical table row in `data/04-data-model.md`; owning `MFG-05` specification §5.1 input/output contract, §6 key entities, keys, or deliberate audit columns. |
+| `design_requests` | `design_request_id`, `customer_id`, `product_id`, `requirements`, `requested_deadline`, `committed_due_at`, `complexity`, `rationale`, `rejection_reason`, `assessed_by_staff_id`, `assessed_at`, `fee_vnd`, `proposal_version`, `accepted_fee_version`, `accepted_fee_vnd`, `accepted_by_user_id`, `accepted_at`, `fee_order_id`, `fee_allocation_version`, `state`, `assignee_staff_id`, `version`, `created_at` | Canonical table row in `data/04-data-model.md`; owning `MFG-05` specification §5.1 input/output contract, §6 key entities, keys, or deliberate audit columns. |
+| `design_request_assets` | `design_request_asset_id`, `design_request_id`, `asset_id`, `display_order` | Canonical table row in `data/04-data-model.md`; owning `MFG-05` specification §5.1 input/output contract, §6 key entities, keys, or deliberate audit columns. |
+| `design_feedback` | `feedback_id`, `design_version_id`, `author_user_id`, `decision`, `change_request_text`, `preferred_colour`, `additional_notes`, `created_at`, `idempotency_key` | Canonical table row in `data/04-data-model.md`; owning `MFG-05` specification §5.1 input/output contract, §6 key entities, keys, or deliberate audit columns. |
+| `design_feedback_assets` | `design_feedback_asset_id`, `feedback_id`, `asset_id`, `display_order` | Canonical table row in `data/04-data-model.md`; owning `MFG-05` specification §5.1 input/output contract, §6 key entities, keys, or deliberate audit columns. |
+| `staff_replies` | `staff_reply_id`, `feedback_id`, `author_staff_id`, `reply_text`, `created_at`, `idempotency_key` | Canonical table row in `data/04-data-model.md`; owning `MFG-05` specification §5.1 input/output contract, §6 key entities, keys, or deliberate audit columns. |
+| `staff_reply_assets` | `staff_reply_asset_id`, `staff_reply_id`, `asset_id`, `display_order` | Canonical table row in `data/04-data-model.md`; owning `MFG-05` specification §5.1 input/output contract, §6 key entities, keys, or deliberate audit columns. |
+| `customer_approvals` | `approval_id`, `design_version_id`, `customer_id`, `approved_at`, `request_version`, `idempotency_key` | Canonical table row in `data/04-data-model.md`; owning `MFG-05` specification §5.1 input/output contract, §6 key entities, keys, or deliberate audit columns. |
+| `customer_provided_confirmations` | `confirmation_id`, `design_version_id`, `confirmer_user_id`, `recorded_by_staff_id`, `original_channel`, `source_evidence`, `confirmed_at`, `idempotency_key` | Canonical table row in `data/04-data-model.md`; owning `MFG-05` specification §5.1 input/output contract, §6 key entities, keys, or deliberate audit columns. |
+| `product_mockup_templates` | `mockup_template_id`, `product_version_id`, `view_id`, `base_asset_id`, `surface_grid_json`, `masks_json`, `material_color_support_json` | Canonical table row in `data/04-data-model.md`; owning `MFG-05` specification §5.1 input/output contract, §6 key entities, keys, or deliberate audit columns. |
+
+## 4. Relationships and cross-module references
 
 | Referencing table and field | Referenced table and field | Check |
 |---|---|---|
@@ -74,10 +92,34 @@ This module index assigns data ownership for MFG-05. The canonical full attribut
 | `analytics_events.request_id` | `design_requests.design_request_id` | Foreign key in `data/schema/`; validate after every seed regeneration. |
 | `export_requests.private_asset_id` | `assets.asset_id` | Foreign key in `data/schema/`; validate after every seed regeneration. |
 
-## 4. Schema and seed evidence
+## 5. Diagram check
 
-The SQLite tables owned by this module are created in [`data/schema/schema-MFG-05.sql`](schema/schema-MFG-05.sql). Generated seed rows are loaded in filename order using `data/schema/load_seed.py` and checked with SQLite foreign keys.
+The canonical Mermaid ERD is `data/03-erd.mmd`; the verbatim copy in `data/04-data-model.md` is the reviewable diagram. This module owns only the tables listed in section 2. Every relationship in section 4 has a matching declared foreign key in `data/schema/`, and the seed loader validates it at commit. The package-level counts and ERD/schema comparison are recorded in `data/04-data-model.md` section **Diagram and schema check**.
 
-## 5. Traceability and review
+## 6. Normalization and rule enforcement
 
-Each table and attribute traces to the cited module specifications in `data/04-data-model.md`. Any future entity, attribute, relationship, normalization exception, or business-rule enforcement decision must be recorded in both the canonical model and this module index.
+The canonical model records deliberate snapshots and JSON/document exceptions in `data/04-data-model.md` section **Normalization check and deliberate exceptions**. The named enforcement point for every owning specification business rule is in its **Business-rule enforcement map**. This module adds no second owner, duplicate business fact, or unstated persistence requirement.
+
+## 7. Schema and seed evidence
+
+The SQLite tables owned by this module are created in [`data/schema/schema-MFG-05.sql`](schema/schema-MFG-05.sql). Generated seed rows are loaded in filename order using `data/schema/load_seed.py` and checked with SQLite foreign keys. The generator validates fixtures before writing CSV files.
+
+## 8. End-to-end traceability
+
+`data/07-end-to-end-traceability.md` links the approved PRD item, module/function requirement, input/output contract, table/attribute, representative seed row and screen. It records when an output is deliberately session-only or derived rather than persisted.
+
+## 9. Validation record
+
+Before the submission tag, run `uv run data/seed/generate_seed.py`, then `uv run data/schema/load_seed.py --database data/schema/weavelink-midterm.db`; both must pass and `git status --short` must remain empty after removing the ignored validation database.
+
+## 10. Source and scope control
+
+This is a derived data document. `docs/prd.md` and `docs/spec/` remain the approved source of requirements; a new persisted entity, field, relationship, normalization exception or enforcement decision requires a cited source and Group B review.
+
+## 11. Privacy declaration
+
+- [x] Every seed row is synthetic and is generated from fixed repository literals; no value is copied from a real person, organization, payment, order or product.
+- [x] Email fixtures use the reserved `example.invalid` domain; assets use synthetic storage keys.
+- [x] Passwords, tokens and provider credentials are synthetic hashes or secret references, never live values.
+- [x] Personal try-on photos and generated results are session-only and never appear in seed, schema or order payloads.
+- [x] The generator, schema loader and traceability review are run before the submission tag to detect invalid references, drift or accidental data changes.

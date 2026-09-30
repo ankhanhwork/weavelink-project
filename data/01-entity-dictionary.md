@@ -16,7 +16,7 @@ sources: docs/prd.md; docs/spec/README.md; docs/spec/specs/spec-MFG-01.md throug
 | Session | Revocable authenticated server session for one User. | THING | MFG-01 | — | `spec-MFG-01.md §6 Session`; `spec-MFG-01.md §5.2 BR-004` |
 | OneTimeToken | Hashed, purpose-bound, expiring verification, recovery or email-change token. | THING | MFG-01 | Verification token, reset token | `spec-MFG-01.md §6 OneTimeToken`; `spec-MFG-02.md §6 OneTimeToken` |
 | Notification | Persisted in-app inbox item for one recipient. | EVENT | MFG-01 | Inbox notification | `spec-MFG-01.md §6 Notification`; `S13-notifications.md §3` |
-| OutboxEvent | Durable post-commit delivery event used to create notifications or email work. | EVENT | Owning module | Notification/outbox event | `spec-MFG-07.md §6 Notification/outbox event`; `spec-MFG-01.md §5 FR-003/009` |
+| OutboxEvent | Durable post-commit delivery event used to create notifications or email work. | EVENT | MFG-01 | Notification/outbox event | `spec-MFG-07.md §6 Notification/outbox event`; `spec-MFG-01.md §5 FR-003/009`; source modules emit their own events through this MFG-01-owned delivery record |
 | StaffInvitation | Single-use employee activation invitation. | EVENT | MFG-03 | Invitation | `spec-MFG-03.md §6 StaffInvitation` |
 | SystemCapability | Read projection of active staff role capabilities, not a separately persisted table. | THING | MFG-01 | Capabilities | `spec-MFG-01.md §6 SystemCapability`; `spec-MFG-01.md §5.2 BR-002`; approved D1/D3 |
 | StaffWorkSummary | Derived open-work counts used to decide whether staff removal is safe. | THING | MFG-03 | Open work counts | `spec-MFG-03.md §6 StaffWorkSummary`; `S48-staff-accounts.md §3 open_work_counts`; approved D1 |
@@ -29,7 +29,7 @@ sources: docs/prd.md; docs/spec/README.md; docs/spec/specs/spec-MFG-01.md throug
 | ProductOption | Per-garment configurable option and surcharge for a ProductVersion. | THING | MFG-04 | options, print option | `spec-MFG-04.md §6 Product.options`; `S19-product-design-rules.md §3`; approved D2 |
 | PrintArea | Bounded side-specific two-dimensional printable geometry for a ProductVersion and size. | THING | MFG-04 | design rule, printable area | `S19-product-design-rules.md §3 print_area`; `S20-design-tool.md §3`; approved D2 |
 | ProductImage | Ordered relationship between a ProductVersion and an Asset. | THING | MFG-04 | images, image_asset_ids | `spec-MFG-04.md §6 Product.images`; `S17-product-create.md §3 image_asset_ids`; approved D2/D8 |
-| Asset | Private scanned file metadata and storage reference owned by a User or Dony. | THING | Shared/MFG-04/05/09 | Design asset, PDF asset, delivery evidence | `spec-MFG-04.md §6 Asset`; `spec-MFG-05.md §5.3 BR-005`; approved D8 |
+| Asset | Private scanned file metadata and storage reference owned by a User or Dony. | THING | MFG-05 | Design asset, PDF asset, delivery evidence | `spec-MFG-04.md §6 Asset`; `spec-MFG-05.md §5.3 BR-005`; approved D8; MFG-04 and MFG-09 reference the MFG-05-owned record |
 | ProductSearchIndex | Derived Published-product search projection; physical persistence is a Plan decision. | THING | MFG-04 | Search index | `spec-MFG-04.md §6 ProductSearchIndex`; `spec-MFG-04.md §10 Q2`; approved D1 |
 | SearchSynonymSet | Versioned server-owned synonym mapping used by catalogue search. | THING | MFG-04 | Synonym set | `spec-MFG-04.md §6 SearchSynonymSet`; `spec-MFG-04.md §5.2 BR-011` |
 | PrintMethod | Print capability and material-compatibility reference. | THING | MFG-04 | — | `spec-MFG-04.md §6 PrintMethod` |
@@ -57,7 +57,7 @@ sources: docs/prd.md; docs/spec/README.md; docs/spec/specs/spec-MFG-01.md throug
 | ProductionSample | Versioned physical-sample cycle for an Order. | THING | MFG-06 | Sample | `spec-MFG-06.md §6 ProductionSample`; `spec-MFG-06.md §5.2 BR-015` |
 | PaymentTransaction | Immutable DEPOSIT or BALANCE payment attempt and accepted provider outcome. | EVENT | MFG-06 | Payment attempt | `spec-MFG-06.md §6 PaymentTransaction`; `spec-MFG-06.md §5.2 BR-005` |
 | RefundRecord | Provider refund record only where full-system refund rules require it. | EVENT | MFG-06 | Refund workflow reference | `spec-MFG-06.md §5.1 FR-005`; `spec-MFG-06.md §5.2 BR-013`; approved interrogation: Cancellation |
-| OrderTimelineEvent | Append-only evidence of an Order transition, actor/source and bound versions. | EVENT | MFG-06/07 | Order timeline event | `spec-MFG-06.md §6 OrderTimelineEvent`; `spec-MFG-07.md §6 Order timeline event`; approved interrogation: Cancellation |
+| OrderTimelineEvent | Append-only evidence of an Order transition, actor/source and bound versions. | EVENT | MFG-06 | Order timeline event | `spec-MFG-06.md §6 OrderTimelineEvent`; `spec-MFG-07.md §6 Order timeline event`; approved interrogation: Cancellation; MFG-07 reads and causes transitions on the MFG-06-owned record |
 | CustomerAssignment | Current Sales ownership plus retained assignment history for a Customer/open lead. | EVENT | MFG-08 | Sales assignment | `spec-MFG-08.md §6 CustomerAssignment`; `spec-MFG-08.md §5.2 BR-001` |
 | Consultation | One open classified or unclassified Sales lead for a Customer. | THING | MFG-08 | Consultation (Lead) | `spec-MFG-08.md §6 Consultation (Lead)` |
 | LeadDesignLink | Lead-specific commercial scope link to an authoritative Design. | THING | MFG-08 | — | `spec-MFG-08.md §6 LeadDesignLink`; `spec-MFG-08.md §5.2 BR-008` |
@@ -116,4 +116,3 @@ sources: docs/prd.md; docs/spec/README.md; docs/spec/specs/spec-MFG-01.md throug
 | collision | ProductEntry / Journey attribution | `spec-MFG-11.md §6`; `spec-MFG-11.md §5.3` | Entry versus intent | Separate ProductEntry and JourneyIntent (approved D4). |
 | shared ownership | BuyerOrganization snapshot | `spec-MFG-06.md §6`; `README.md §Dony business model` | Master organization or transaction value object | No master table; embed immutable buyer snapshot fields in Quote, Order and Contract (approved D7). |
 | deletion behavior | Customer account and commercial history | approved interrogation: Account deletion; `spec-MFG-03.md §5.2 BR-006` | Cascade delete versus retained history | Revoke access; retain justified commercial evidence, then delete/anonymize personal data when retention no longer applies. |
-

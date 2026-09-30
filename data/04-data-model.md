@@ -362,3 +362,85 @@ For the remaining 58 tables, the cited entity/field material does not declare an
 | CRM and production planning | `customer_assignments`, `consultations`, `lead_design_links`, `stage_histories`, `interaction_logs`, `internal_notes`, `admin_reviews`, `flexible_preferences`, `production_readiness`, `individual_production_plans`, `production_batches`, `batch_memberships` | `spec-MFG-08.md §5/§6`; `spec-MFG-10.md §5/§6` | No additional natural key asserted. Active-record exclusivity is conditional cardinality, not permanent identity. |
 | Analytics and system operations | `product_entries`, `journey_intents`, `analytics_events`, `analytics_results`, `export_requests`, `audit_events`, `backups`, `system_configs`, `restore_journals` | `spec-MFG-11.md §5/§6`; `spec-MFG-12.md §5/§6` | No additional natural key asserted. Source-event deduplication and configuration version uniqueness remain operational constraints. |
 
+## Ownership and attribute traceability
+
+Every persisted table has exactly one schema owner. An owner maintains the table definition and its integrity constraints; another module may reference the table through a documented foreign key, but that reference does not make it a second owner.
+
+| Owner module | Persisted tables owned exactly once |
+|---|---|
+| MFG-01 | `users`, `sessions`, `one_time_tokens`, `notifications`, `outbox_events` |
+| MFG-02 | None; profile changes use MFG-01 identity tables. |
+| MFG-03 | `staff_accounts`, `staff_invitations` |
+| MFG-04 | `products`, `product_versions`, `product_sizes`, `product_colors`, `material_profiles`, `product_materials`, `print_methods`, `volume_pricing_tiers`, `product_options`, `print_areas`, `product_images`, `search_synonym_sets` |
+| MFG-05 | `assets`, `designs`, `design_versions`, `design_placements`, `design_requests`, `design_request_assets`, `design_feedback`, `design_feedback_assets`, `staff_replies`, `staff_reply_assets`, `customer_approvals`, `customer_provided_confirmations`, `product_mockup_templates` |
+| MFG-06 | `quotes`, `quote_size_quantities`, `orders`, `order_size_quantities`, `order_quote_cycles`, `production_samples`, `payment_transactions`, `refund_records`, `order_timeline_events` |
+| MFG-07 | None; it applies fulfilment transitions to MFG-06 Orders and emits MFG-01-owned outbox records. |
+| MFG-08 | `customer_assignments`, `consultations`, `lead_design_links`, `stage_histories`, `interaction_logs`, `internal_notes`, `admin_reviews` |
+| MFG-09 | `contract_templates`, `contracts`, `signature_evidence` |
+| MFG-10 | `flexible_preferences`, `production_readiness`, `individual_production_plans`, `production_capacity_profiles`, `production_batches`, `batch_memberships` |
+| MFG-11 | `product_entries`, `journey_intents`, `analytics_events`, `analytics_results`, `export_requests` |
+| MFG-12 | `audit_events`, `backups`, `system_configs`, `restore_journals` |
+
+The three previous ambiguous references are resolved consistently with the generated ownership map: `assets` is owned by MFG-05 and referenced by MFG-04/MFG-06/MFG-09; `outbox_events` is owned by MFG-01 while source modules produce events; `order_timeline_events` is owned by MFG-06 while MFG-07 writes authorised fulfilment transitions. These decisions do not change the business-rule owner named in the specifications.
+
+Each attribute listed in the Tables catalogue traces to one of three sources: a named field in the owning module's §5.1 I/O contract, a §6 key entity attribute, or a deliberate key/audit field (`*_id`, `version`, `created_at`, `updated_at`, or event timestamp). The per-module `data-model-MFG-xx.md` indexes list the persisted attributes and point back to this catalogue. The validation schema adopts a physical type only to test the seed; it does not choose an application database or change a spec-declared type.
+
+## Diagram and schema check
+
+| Check | Canonical result | How it is kept aligned |
+|---|---:|---|
+| Logical catalogue tables | 66 | The `## Tables` catalogue is the canonical list. |
+| Mermaid ERD entities | 66 | `data/03-erd.mmd` is the canonical diagram; the Mermaid block above is a verbatim copy. |
+| Mermaid ERD relationships | 86 | Every relationship is cited in the ERD; unresolved many-to-many links are represented by a link/entity table. |
+| Seed CSV tables | 66 | `data/seed/seed-order.json` covers every table once and fixes filename order. |
+| SQLite validation tables | 66 | `data/tools/generate_sqlite_artifacts.py` generates one schema table per CSV table and checks ownership coverage. |
+
+Run `uv run data/tools/check_data_package.py` after generating schema artifacts and seed data. It verifies the catalogue, ERD, schema and seed counts, checks that the embedded ERD is unchanged, and confirms declared seed foreign keys are present in the schema. The final seed-load check remains `uv run data/schema/load_seed.py --database data/schema/weavelink-midterm.db`.
+
+## Normalization check and deliberate exceptions
+
+| Deliberate exception or structure | Why it remains | Upkeep rule |
+|---|---|---|
+| Quote, Order and Contract buyer/address/product/design/price snapshots | Commercial records must retain what the Customer approved even after a catalogue or profile update. | Create immutable snapshots; never rewrite a submitted order or signed contract from current tables. |
+| `OrderQuoteCycle` and versioned design/sample/contract records | One order may enter another approval cycle after a revision. | Append a new cycle/version and retain earlier evidence; a stale version cannot approve a later one. |
+| `outbox_events.payload_json`, analytics JSON fields and mockup-template JSON fields | These fields carry bounded event payloads, result context or calibrated rendering data rather than repeating an unbounded relational business aggregate. | Validate allowed shape at the owning module boundary; keep source IDs/versions, omit secrets and do not use JSON as a second authority for a relational fact. |
+| `material_label_snapshot`, `email_snapshot`, `role_snapshot`, batch daily-capacity and order item snapshots | The original value is legally, operationally or historically meaningful after its source record changes. | Treat snapshot value as immutable; retain the source FK/version when declared and display the snapshot for historical records. |
+| `AuditEvent.redacted_details_json` | A redacted diagnostic payload is needed without persisting credentials, tokens or card data. | Allow only safe diagnostic keys; redact before persistence and never use it as an authorization source. |
+| Session-only TryOn and AI-analysis values | The specifications prohibit personal try-on photos/results and page-memory AI conversation from becoming persistent business records. | Keep them outside seed/schema/order payloads; a synthetic persisted Asset is only a design/mockup prerequisite, never a person photo. |
+
+## Business-rule enforcement map
+
+The places below are logical enforcement boundaries, independent of the future technology stack. Rule IDs in a range are enforced by the named boundary; every mutation also performs the shared authorization, version and idempotency checks required by its owning module.
+
+| Source rules | Named enforcement point | Persisted evidence / validation |
+|---|---|---|
+| MFG-01 BR-001 | Identity write transaction and `users.email` unique constraint | Normalized email and User row. |
+| MFG-01 BR-002, BR-008 | Server-side authentication and authorization guard | Session and active StaffAccount capability. |
+| MFG-01 BR-003–BR-005, BR-007 | Credential/session/token service | Hashes, expiry, consumed/revoked timestamps; no raw secret field. |
+| MFG-01 BR-006 | Shared mutation/idempotency boundary | UUID, version and durable outbox evidence. |
+| MFG-02 BR-001–BR-006 | Profile mutation transaction | User version, pending token and revoked-session/outbox evidence. |
+| MFG-03 BR-001–BR-007 | Staff-administration transaction | StaffAccount/StaffInvitation lifecycle, audit and session evidence. |
+| MFG-04 BR-001–BR-008 | Catalogue write and quote-calculation service | Product/version children, validated prices and immutable quote/order snapshot. |
+| MFG-04 BR-009–BR-013 | Catalogue read/search boundary | Current visibility/version and server-owned synonym set. |
+| MFG-04 BR-014–BR-017 | Compare/advisory boundary | Published-only catalogue projection and bounded transient context. |
+| MFG-05 BR-001–BR-007 | Design/request lifecycle transaction | Immutable versions, request state, approval/fee evidence and idempotency fields. |
+| MFG-05 BR-008–BR-009 | Design compatibility and placement validator | Product rule/version, asset and placement records. |
+| MFG-05 BR-010–BR-012 | Asset/session and provider boundary | Scanned Asset metadata; session-only try-on state; no credential/photo persistence. |
+| MFG-06 BR-001–BR-005, BR-008–BR-012, BR-015–BR-019 | Order/payment transactional state machine | Order, OrderQuoteCycle, sample, contract/payment references, timeline and outbox records. |
+| MFG-06 BR-006, BR-013 | Verified provider IPN/reconciliation and refund boundary | Immutable PaymentTransaction/RefundRecord provider identifiers. |
+| MFG-06 BR-007, BR-014 | Delivery-evidence and scheduled/MVP receipt boundary | Verified evidence, `received_at`, `balance_due_at` and notification evidence. |
+| MFG-07 BR-001–BR-005 | Fulfilment transition and access-control boundary | Authorised Order timeline entry, production evidence and release/revalidation evidence. |
+| MFG-08 BR-001–BR-011 | CRM assignment and pipeline transaction | Assignment/history, consultation, scoped design links, notes and AdminReview evidence. |
+| MFG-09 BR-001–BR-005 | Contract-generation and acknowledgement transaction | Immutable template/contract version, signature evidence and order-state transition. |
+| MFG-10 BR-001–BR-010 | Production-planning calculation and human-approval boundary | FlexiblePreference, readiness, capacity, batch/plan, membership and audit/outbox evidence. |
+| MFG-11 BR-001–BR-011 | Authorised metrics/result/export boundary | Immutable AnalyticsResult metadata, validated event links and ExportRequest snapshot. |
+| MFG-12 BR-001–BR-006 | Operations/audit/configuration transaction and job boundary | Redacted AuditEvent, Backup, RestoreJournal, versioned SystemConfig and MFG-01 outbox notice. |
+
+## 11. Privacy declaration
+
+- [x] Seed rows are generated solely from fixed synthetic literals; they do not copy a real person, organisation, payment, order or product.
+- [x] Email fixtures use `example.invalid`; asset locations use the `synthetic/` namespace; provider identifiers are synthetic labels.
+- [x] Passwords, tokens and provider credentials are represented only by synthetic hashes or non-secret references.
+- [x] No personal try-on image, generated try-on result, AI conversation, secret value or raw payment-card value is stored in seed data.
+- [x] `generate_seed.py` validates synthetic fixtures before it writes them; the SQLite loader verifies all seed foreign keys at transaction commit.
+- [x] The final reviewer runs the documented generator, schema loader and end-to-end traceability check before the submission tag.
