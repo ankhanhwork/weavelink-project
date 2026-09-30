@@ -299,6 +299,8 @@ Project committed digital/sample approval, cycle revision, accepted deposit/bala
 
 ## 11. Traceability to DBIZ2
 
+The repository DBIZ2 baseline is [`docs/spec/docs/function-list.md`](../docs/function-list.md), section VI MFG-06. Each historical function ID below identifies a concrete source-table row and its linked use case/screen reference.
+
 | Spec section | DBIZ2 source | Location |
 | --- | --- | --- |
 | Scope and actors | MFG-06 Function List MFG-06 | `F-PAY-001`–`F-PAY-006`; expanded with the confirmed sample/deposit/balance flow. |

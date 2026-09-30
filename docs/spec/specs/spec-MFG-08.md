@@ -252,6 +252,8 @@ The user resolved the consolidated Sales-domain questions as follows.
 
 ## 11. Traceability to DBIZ2
 
+The repository DBIZ2 baseline is [`docs/spec/docs/function-list.md`](../docs/function-list.md), section VIII MFG-08. Each historical function ID below identifies a concrete source-table row and its linked use case/screen reference.
+
 | Spec section | DBIZ2 source | Location |
 | --- | --- | --- |
 | 1–2 Scope and actors | MFG-08 Function List MFG-08 | `F-SALES-001`–`F-SALES-008`; module-qualified namespace |

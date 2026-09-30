@@ -152,12 +152,28 @@ For unchanged context, analysis reuses the source result or a reproducible query
 
 ### 5.1 Input / Output contract
 
-| FR | Inputs | Outputs and validation |
-| --- | --- | --- |
-| FR-001/002 | `start_date`, `end_date`, optional `product_id`, buyer segment/organization, metric, paging | `result_id`, `expires_at`, `available_start`, `available_end_exclusive`, normalized filters, `timezone`, `metric_definition_version`, `refreshed_at`, `source_watermark`, coverage, metric values/units/series; behavior scope is authenticated customers; default 30 days within the rolling last 12 calendar months, max span 366 days; bounds from 5.7; malformed/unsupported query rejected |
-| FR-003 | dataset `revenue`, `orders`, `customers`, `funnel`; CSV/XLSX; authorized `result_id`; Idempotency-Key; export ID for polling | job ID/status; on success private link, row count, definitions and snapshot metadata; 100,000-row cap; link expires within 10 minutes and no later than the file expiry |
-| FR-004 | range; `unit=product_entry`, `journey` or `order`; template when unit is product_entry or journey; product/known buyer filters; `observed_until`; `observation_mode=as_of/fixed_follow_up`, optional `follow_up_days`; selected stage; bounded paging | stage counts; previous-stage and entry-cohort conversion; numerator/denominator; eligible and immature cohort counts; nonprogression; status breakdown; median completed-transition duration and sample size; open waiting ages; linkage/coverage; same result metadata |
-| FR-005 | prompt; authorized context result ID; selected stage; explicit applied context if changed | `answer_status=answered/needs_clarification/insufficient_data/unsupported/unavailable`; structured findings, evidence result IDs, validated metric fields, hypotheses, original context, definitions, as-of and caveats |
+| FR | Input field | Type | Required | Output field | Type | Validation / expected result |
+| --- | --- | --- | --- | --- | --- |
+| FR-001/002 | `start_date`, `end_date` | Local date, exclusive end date | Yes | `available_start`, `available_end_exclusive` | Local dates | Must be within the rolling 12-month window and span no more than 366 days; invalid range is rejected. |
+| FR-001/002 | `product_id` | UUID | Optional | normalized product filter | UUID / null | Must be an authorized historical product reference; archived products remain reportable. |
+| FR-001/002 | buyer segment / organization filter | Allowlisted enum / UUID | Optional | normalized buyer filter | Enum / UUID / null | Organization is descriptive, never a tenancy boundary. |
+| FR-001/002 | `metric` | Allowlisted enum | Yes | metric values, units and series | Typed object / array | Revenue, cash, orders, cancellations, new customers and design fees preserve their documented definitions. |
+| FR-001/002 | `page`, `page_size` | Positive integers | Optional | result page | Paginated object | Bounded paging; omitted values use the documented default. |
+| FR-001/002 | session | Authenticated Sales Admin session | Yes | `result_id`, `expires_at`, filters, timezone, definition version, refreshed time, watermark and coverage | Result metadata object | Other roles cannot access the result; unknown coverage is not returned as zero. |
+| FR-003 | `dataset` | Enum: `revenue`, `orders`, `customers`, `funnel` | Yes | export job ID and status | UUID / enum | Dataset is allowlisted and compatible with the referenced result. |
+| FR-003 | `format` | Enum: `CSV`, `XLSX` | Yes | private download URL | URL / null | URL appears only on success and expires within 10 minutes and no later than the file. |
+| FR-003 | `result_id` | UUID | Yes | row count, definitions and snapshot metadata | Integer / object | Caller must be authorized for an unexpired reproducible result. |
+| FR-003 | `Idempotency-Key` | UUID | Yes | replayed or committed export job | Object | Same key and payload replay; changed payload conflicts. |
+| FR-003 | `export_id` | UUID | Required only when polling | current job state | Enum / object | Unknown or unauthorized job is not disclosed. |
+| FR-004 | `unit` | Enum: `product_entry`, `journey`, `order` | Yes | counts and denominators | Integer fields | Template is required for `product_entry` and `journey`; order uses the documented order chain. |
+| FR-004 | `template` | Allowlisted enum | Conditional | conversion and waiting results | Typed result object | Required for entry/journey units; unsupported combination is rejected. |
+| FR-004 | `observed_until` | Timestamp | Yes | observation cutoff and eligible interval | Timestamp / date interval | Cannot precede cohort start or exceed the available source snapshot. |
+| FR-004 | `observation_mode` | Enum: `as_of`, `fixed_follow_up` | Yes | eligible and immature counts | Integer fields | `fixed_follow_up` requires `follow_up_days` from 1 through 366. |
+| FR-004 | `follow_up_days` | Integer | Conditional | conversion denominator | Integer / N/A | Required only for `fixed_follow_up`; zero eligible denominator returns N/A. |
+| FR-004 | selected stage, filters, `page`, `page_size` | Allowlisted enum/object/integers | Optional | stage counts, status breakdown, duration and coverage | Typed result object | Selected stage and filters are validated before computation. |
+| FR-005 | prompt | Text | Yes | `answer_status` | Enum | Sanitized prompt is evaluated only through an allowlisted query plan; it cannot cause a business write. |
+| FR-005 | `result_id` | UUID | Yes | findings, evidence result IDs, metric fields, definitions and caveats | Structured object | Caller must be authorized for an unexpired result. |
+| FR-005 | selected stage and applied context | Allowlisted stage / object | Optional | original and applied context | Object | Changed context is explicit; unsupported or insufficient data returns the matching safe status. |
 
 `observed_until` is an explicit outcome cutoff no earlier than the cohort start and no later than the server's available snapshot time. Include entrants only through that cutoff; when it precedes the requested cohort end (for example, today is still in progress), label the cohort as incomplete and show its effective entry interval. Event inclusion additionally uses the source watermark, so later-arriving data does not silently alter an existing result. Live views use the available current cutoff. The default `observation_mode=as_of` measures outcomes through this cutoff and labels unequal follow-up when comparing cohorts. For a comparable conversion report use `observation_mode=fixed_follow_up` with an explicitly selected integer `follow_up_days` from 1 to 366, common to both cohorts. For each unit, define `unit_cutoff = entry_at + follow_up_days` local calendar days in Asia/Ho_Chi_Minh. Only units whose unit_cutoff is no later than observed_until and whose required source coverage is complete are mature enough for the conversion denominator. Include events from entry_at through unit_cutoff; do not include later successes. Return full entry count, eligible mature count, immature count and coverage limitations separately. If none are eligible, conversion is N/A. Report the eligible entry-time interval so comparing unequal mature subsets cannot be mistaken for comparing the entire selected cohorts. Unknown coverage is not an immature unit or a zero conversion. Do not rank as_of cohorts as performance improvement when follow-up differs. This duration is an analytical observation horizon selected by the user, not an inactivity threshold or an abandonment policy.
 
@@ -323,7 +339,7 @@ Use at least ten synthetic authenticated customer journeys, plus deterministic o
 - Implement common definitions and source validation first, then aggregation/dashboard/export, then AI. Service/merge branches follow their own activation; analytics is not a dependency of checkout/payment success.
 - Data package remains unimplemented. Conceptual entities here are requirements for a later explicit data-model/seed task, not claims that tables or seed records already exist.
 
-## 10. Confirmed decisions and implementation handoff
+## 10. Open questions and confirmed decisions
 
 The following product decisions define this release. Guest tracking and guest-to-login journey linking are outside its scope.
 
@@ -337,14 +353,19 @@ The following product decisions define this release. Guest tracking and guest-to
 
 Business decisions D-01–D-04 are closed. Provider compatibility and implementation acceptance remain technical release checks; this does not claim application code, seed data or a working model integration already exists. The Should release priority and all other modules' release boundaries remain unchanged.
 
+| # | Question | Blocking? | Owner | Status |
+| --- | --- | --- | --- | --- |
+| 1 | [NEEDS CLARIFICATION: Which provider/model, budget, timeout, concurrency limit, result-size limit and runtime evaluation threshold will be used for F-DA-006?] | Yes, before activating the AI analysis feature | Group B (Plan step) | Open — this is I-01 above; it does not change the completed product rules. |
+| 2 | Are any business definitions, identity boundaries, observation rules or retention rules unresolved for the specified release? | No | Group B | Resolved — decisions D-01 through D-04 and sections 5.2–5.7 define them. |
+
 ## 11. Traceability
 
-| Section | Source / function | Related documents |
+| Section | Repository DBIZ2 source / function | Related documents |
 | --- | --- | --- |
-| Overview and business metrics | Existing F-DA-001/002; UC-C21 | MFG-06/07 payment/order facts |
-| Matching export | Existing F-DA-003; UC-C22 | S47 and export allowlist |
-| Funnel, evidence and waiting | Requested F-DA-004; UC-C21 within UC-C20 | MFG-04/05/06/07/09; optional MFG-10; S47 |
-| Prompt analysis | Requested extension F-DA-006; UC-C20 | Shared metric layer, S47 AI panel, operational privacy boundary |
+| Overview and business metrics | [`function-list.md` §XI MFG-11](../docs/function-list.md), rows `F-DA-001`/`F-DA-002`, `UC-C21` | MFG-06/07 payment/order facts |
+| Matching export | `function-list.md` §XI row `F-DA-003`, `UC-C22` | S47 and export allowlist |
+| Funnel, evidence and waiting | `function-list.md` §XI row `F-DA-004`, `UC-C21` within `UC-C20`; DBIZ3 extension detail is marked in the row/this spec | MFG-04/05/06/07/09; optional MFG-10; S47 |
+| Prompt analysis | `function-list.md` §XI row `F-DA-006`, `UC-C20`; DBIZ3 extension detail is marked in the row/this spec | Shared metric layer, S47 AI panel, operational privacy boundary |
 
 ## Completion checklist
 

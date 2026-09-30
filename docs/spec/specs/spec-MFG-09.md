@@ -168,6 +168,8 @@ For MFG-11/F-DA-004, expose committed `contract_ready` and `contract_signed` evi
 
 ## 11. Traceability to DBIZ2
 
+The repository DBIZ2 baseline is [`docs/spec/docs/function-list.md`](../docs/function-list.md), section IX MFG-09. Each historical function ID below identifies a concrete source-table row and its linked use case/screen reference.
+
 | Spec section | DBIZ2 source | Location |
 | --- | --- | --- |
 | 1–2 Scope and actors | MFG-09 Function List MFG-09 | `F-CONTR-001`–`F-CONTR-009` |

@@ -9,7 +9,7 @@
 | Date | 2026-09-27 |
 | Status | Final Group B demo specification; client operating approval not claimed |
 | Approved by (Client role) | Client approved, 2026-09-30 |
-| DBIZ2 source | Historical IDs retained: Function List MFG-04; `F-PROD-001` .. `F-PROD-011`; `UC-G01`, `UC-G02`, `UC-C24` .. `UC-C27`; S01, S14, S15, S16, S17, S18, S20, S19. External DBIZ2 comparison is not required. |
+| DBIZ2 source | Repository baseline [`function-list.md` §IV MFG-04](../docs/function-list.md): `F-PROD-001` .. `F-PROD-011`; `UC-G01`, `UC-G02`, `UC-C24` .. `UC-C27`; S01, S14, S15, S16, S17, S18, S20, S19. |
 
 ---
 
@@ -202,7 +202,7 @@ sequenceDiagram
 
 ## 5. Functional requirements (mandatory)
 
-### 5.1 Functional requirement I/O contract
+### 5.1 Functional requirements
 
 | FR ID | DBIZ2 Subfunction ID | Requirement (system MUST ...) | Actor | Priority |
 | --- | --- | --- | --- | --- |
@@ -232,7 +232,9 @@ sequenceDiagram
 | FR-024 | F-PROD-013 / F-PROD-014 | Reuse the existing `capacity` / MOQ fields from `Product` to answer feasibility questions about quantities and timing without introducing a new factory-capacity-by-month concept. | Guest/Member | Should |
 | FR-025 | F-PROD-013 / F-PROD-014 | Ground every AI conclusion (price, material, durability, printing, etc.) in `MaterialProfile`, `PrintMethod`, and `Product` data; if required data is missing, return the fixed fallback: "Chưa đủ dữ liệu, Dony sẽ liên hệ trực tiếp." | System | Should |
 
-### 5.2 Input / Output contract
+### 5.1.1 Field-level input / output contract
+
+Each comma-separated item below is a named field. `Optional` means the field may be omitted; any condition that changes requiredness is stated in the validation column. This table is the authoritative contract used by the acceptance scenarios and screen specifications.
 
 | FR ID | Input field | Type | Required | Output field | Type | Notes / validation |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -418,14 +420,14 @@ For the Should analytics extension, S15 contributes a validated `product_viewed`
 | # | Question | Blocking? | Owner | Status |
 | --- | --- | --- | --- | --- |
 | 1 | Are any product lifecycle, visibility, image, capacity or quote-invalidation decisions still undecided? | No | Group B | Resolved for the original catalogue lifecycle; search-specific implementation questions are listed below. |
-| 2 | Where does keyword matching run: database full-text search with an unaccent extension, or an in-application index? | No | Group B (Plan step) | Open — both satisfy sections 5.3–5.4; the choice must preserve visibility/version guarantees and meet the agreed scale and latency targets. |
-| 3 | Who owns the synonym set and where is it stored: repository file or an administered table with a screen? | No | Group B | Open — section 5.3 rule 3 requires versioning either way. |
-| 4 | What popularity metric, score contribution, debounce interval and latency measurement load will be used? | Yes, before implementing F-PROD-012 | Group B (Plan step) | Open — the supplied proposal gives no reproducible popularity formula or measurement load; settle these before ranking/performance verification. |
-| 5 | What webhook contract, catalogue handoff, configuration, timeout/error behavior and conversation storage will the integration use? | Yes, before implementing F-PROD-013/014 | Group B (Plan step) / workflow owner | Open — runtime contract remains to be defined at Plan. |
+| 2 | [NEEDS CLARIFICATION: Where does keyword matching run: database full-text search with an unaccent extension, or an in-application index?] | No | Group B (Plan step) | Open — both satisfy sections 5.3–5.4; the choice must preserve visibility/version guarantees and meet the agreed scale and latency targets. |
+| 3 | [NEEDS CLARIFICATION: Who owns the synonym set and where is it stored: repository file or an administered table with a screen?] | No | Group B | Open — section 5.3 rule 3 requires versioning either way. |
+| 4 | [NEEDS CLARIFICATION: What popularity metric, score contribution, debounce interval and latency measurement load will be used?] | Yes, before implementing F-PROD-012 | Group B (Plan step) | Open — the supplied proposal gives no reproducible popularity formula or measurement load; settle these before ranking/performance verification. |
+| 5 | [NEEDS CLARIFICATION: What webhook contract, catalogue handoff, configuration, timeout/error behavior and conversation storage will the integration use?] | Yes, before implementing F-PROD-013/014 | Group B (Plan step) | Open — runtime contract remains to be defined at Plan. |
 
 ## 11. Traceability to DBIZ2
 
-Historical IDs are retained; external DBIZ2 comparison is not required.
+The repository DBIZ2 baseline is [`docs/spec/docs/function-list.md`](../docs/function-list.md), section IV MFG-04. Each historical function ID below identifies a concrete source-table row; the linked use case and screen references identify the corresponding repository figures/specifications. DBIZ3 additions explicitly state that they have no DBIZ2 predecessor.
 
 | Spec section | DBIZ2 source | Location |
 | --- | --- | --- |

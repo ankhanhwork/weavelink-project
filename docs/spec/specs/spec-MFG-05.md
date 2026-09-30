@@ -9,7 +9,7 @@
 | Date | 2026-09-27 |
 | Status | Final Group B demo specification; client operating approval not claimed |
 | Approved by (Client role) | Client approved, 2026-09-30 |
-| DBIZ2 source | Historical IDs retained: Function List MFG-05; `F-DES-001` .. `F-DES-011`; `UC-C02` .. `UC-C04`, `UC-S03`; S15, S20, S24, S25, S27, S28, S29, S30, S13; DBIZ3 collaboration extension S26. External DBIZ2 comparison is not required. |
+| DBIZ2 source | Repository baseline [`function-list.md` §V MFG-05](../docs/function-list.md): `F-DES-001` .. `F-DES-011`; `UC-C02` .. `UC-C04`, `UC-S03`; S15, S20, S24, S25, S27, S28, S29, S30, S13; DBIZ3 collaboration extension S26. |
 
 ---
 
@@ -203,7 +203,7 @@ sequenceDiagram
 
 ## 5. Functional requirements (mandatory)
 
-### 5.1 Functional requirement I/O contract
+### 5.1 Functional requirements
 
 | FR ID | DBIZ2 Subfunction ID | Requirement (system MUST ...) | Actor | Priority |
 | --- | --- | --- | --- | --- |
@@ -229,7 +229,9 @@ sequenceDiagram
 | FR-020 | F-DES-020 | Record customer-source confirmation for an unchanged import in S29 or S26, separate from approval of Dony changes. | Assigned Sales / Sales Admin / Customer owner | Could |
 | FR-021 | F-DES-021 | Append an authorized customer-visible staff reply to a shared version's feedback without changing approval, fee or request state. | Assigned Sales / Sales Admin | Could |
 
-### 5.2 Input / Output contract
+### 5.1.1 Field-level input / output contract
+
+Each comma-separated item below is a named field. `Optional` means the field may be omitted; any condition that changes requiredness is stated in the validation column. This table is the authoritative contract used by the acceptance scenarios and screen specifications.
 
 | FR ID | Input field | Type | Required | Output field | Type | Notes / validation |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -351,7 +353,7 @@ Eligible Approved requests follow the classified lead's current Sales owner atom
 
 ## 11. Traceability to DBIZ2
 
-Historical IDs are retained; external DBIZ2 comparison is not required.
+The repository DBIZ2 baseline is [`docs/spec/docs/function-list.md`](../docs/function-list.md), section V MFG-05. Each historical function ID below identifies a concrete source-table row; the linked use case and screen references identify the corresponding repository figures/specifications. DBIZ3 additions explicitly state that they have no DBIZ2 predecessor.
 
 | Spec section | DBIZ2 source | Location |
 | --- | --- | --- |

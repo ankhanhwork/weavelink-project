@@ -183,6 +183,8 @@ sequenceDiagram
 
 ## 11. Traceability to DBIZ2
 
+The repository DBIZ2 baseline is [`docs/spec/docs/function-list.md`](../docs/function-list.md), section III MFG-03. Each historical function ID below identifies a concrete source-table row and its linked use case/screen reference.
+
 | Spec section | DBIZ2 source | Location |
 | --- | --- | --- |
 | Scope and actors | Function List MFG-03 | Function entries; reinterpreted as Dony employee accounts using the confirmed business model. |

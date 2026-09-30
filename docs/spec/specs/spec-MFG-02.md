@@ -9,7 +9,7 @@
 | Date | 2026-09-19 |
 | Status | Final Group B demo specification; client operating approval not claimed |
 | Approved by (Client role) | Client approved, 2026-09-30 |
-| DBIZ2 source | Historical IDs retained: Function List MFG-02; `F-PROF-001` .. `F-PROF-005`; `UC-M05`, `UC-M07`, `UC-M08`; S11, S12. External DBIZ2 comparison is not required. |
+| DBIZ2 source | Repository baseline [`function-list.md` §II MFG-02](../docs/function-list.md): `F-PROF-001` .. `F-PROF-005`; `UC-M05`, `UC-M07`, `UC-M08`; S11, S12. |
 
 ---
 
@@ -167,7 +167,7 @@ sequenceDiagram
 
 ## 11. Traceability to DBIZ2
 
-Historical IDs are retained; external DBIZ2 comparison is not required.
+The repository DBIZ2 baseline is [`docs/spec/docs/function-list.md`](../docs/function-list.md), section II MFG-02. Each historical function ID below identifies a concrete source-table row and its linked use case/screen reference.
 
 | Spec section | DBIZ2 source | Location |
 | --- | --- | --- |

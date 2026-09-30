@@ -209,6 +209,8 @@ MFG-11 consumes the append-only order timeline and committed cancellation/fulfil
 
 ## 11. Traceability to DBIZ2
 
+The repository DBIZ2 baseline is [`docs/spec/docs/function-list.md`](../docs/function-list.md), section VII MFG-07. Each historical function ID below identifies a concrete source-table row and its linked use case/screen reference.
+
 | Spec section | DBIZ2 source | Location |
 | --- | --- | --- |
 | 1–2 Scope and actors | Function List MFG-07 | Function entries; source identifiers retained in each FR |

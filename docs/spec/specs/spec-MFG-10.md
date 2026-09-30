@@ -132,14 +132,26 @@ sequenceDiagram
 
 ### 5.1 Input / Output contract
 
-| FR | Inputs | Outputs / validation |
-| --- | --- | --- |
-| FR-001/002 | Owned design/quote, policy version | Eligibility, standard/flexible comparison and readable final demo terms; operational assumptions labeled; no batch created at checkout |
-| FR-003 | quote_id, merge_opt_in, accepted policy_version when flexible, expected quote version | Replacement quote; `merge_opt_in` means acceptance of flexible terms, not permission for internal standard batching. `merge_discount_vnd` is the promised flexible incentive. Stale 409; ineligible 422. |
-| FR-004 | Authorized Sales Admin, filters, saved daily-output profile/version, ready candidate quantities and approved allocations | Ordered existing-run/new-group recommendations with quantity sums, ceil-based workdays, remaining daily slots, planned dates, sewing-versus-decoration evidence, every member due date and exclusions |
-| FR-005 | Target run if any, proposed member IDs, versioned cost/workload assumptions | Avoided setup count and labor hours, gross avoided cost, one run-level coordination cost, committed member incentives, modeled net benefit; programme totals with fallback and assumption/measurement provenance |
-| FR-006 | Explicit Admin schedule/add/lock/approve_individual/start action; expected order/batch versions; Idempotency-Key | Audited plan and separate approval/start evidence. Scheduler notices/recommendations never constitute approval, individual conversion or a fulfillment transition. Revalidate readiness, shared sewing, capacity and all deadlines atomically. |
-| FR-007 | Committed schedule/membership/start/fallback/completion event | Customer/planning outbox IDs; persisted recipients; no cross-customer information |
+| FR | Input field | Type | Required | Output field | Type | Validation / expected result |
+| --- | --- | --- | --- | --- | --- |
+| FR-001 | `quote_id` | UUID | Yes | eligibility | Object | Quote belongs to the Customer and has an eligible saved design; result distinguishes standard and flexible availability. |
+| FR-001 | session | Authenticated session | Yes | standard terms | View model | Standard terms never add a flexible discount or batch at checkout. |
+| FR-002 | `policy_version` | Version string | Yes | policy text | Text / view model | Read-only final demo terms; opening terms does not record consent. |
+| FR-003 | `quote_id` | UUID | Yes | replacement quote | Immutable quote object | Customer owns quote; prior quote is not mutated. |
+| FR-003 | `merge_opt_in` | Boolean | Yes | `merge_discount_vnd` | Integer VND | `true` requires the accepted policy version and creates the promised incentive; `false` sets no flexible incentive. |
+| FR-003 | `accepted_policy_version` | Version string | Conditional: required when `merge_opt_in=true` | `policy_version` | Version string / null | Must equal a currently eligible policy version when consent is given; omitted for standard choice. |
+| FR-003 | `expected_version` | Integer | Yes | quote version | Integer | Stale quote returns 409; ineligible choice returns 422. |
+| FR-004 | session | Authenticated Sales Admin session | Yes | recommendations | Array | Other roles cannot receive planning recommendations. |
+| FR-004 | filters | Allowlisted object | Optional | candidate quantities and exclusions | Array / object | Unknown filter values are rejected. |
+| FR-004 | capacity profile ID and version | UUID / integer | Yes | workday and residual-slot estimates | Integer / allocation object | Uses saved positive capacity and approved allocations; estimate beyond 14 workdays is excluded. |
+| FR-005 | target batch ID | UUID | Optional | avoided setup count and labor hours | Integer / decimal hours | Omitted only for a new-group estimate. |
+| FR-005 | proposed order IDs | Array of UUID | Yes | gross, coordination, incentives, modeled net | Integer VND fields | Orders are authorized and eligible; coordination is counted once per run. |
+| FR-005 | cost/workload assumption version | Version string | Yes | assumption provenance | Object | Output labels modeled values separately from measured values. |
+| FR-006 | `action` | Enum: schedule, add, lock, approve_individual, start | Yes | plan or membership history | Object / array | Only Sales Admin may act; action is explicit and auditable. |
+| FR-006 | order ID / batch ID | UUID | Required by action | approval or start evidence | Object | The action determines which identifier is required. |
+| FR-006 | expected order / batch version | Integer | Required by action | committed version | Integer | Concurrent or stale human action returns 409. |
+| FR-006 | `Idempotency-Key` | UUID | Yes | replayed or committed result | Object | Same key and payload replay; changed payload conflicts. |
+| FR-007 | committed event | Internal event | Yes | outbox notification IDs | Array of UUID | Events are schedule, membership, start, fallback or completion only; recipients receive only their own authorized order context. |
 
 ### 5.2 Business rules
 
@@ -231,11 +243,11 @@ Keep commercial choice (standard/flexible), actual routing (base-run addition/ne
 
 | SC ID | Criterion | Measurement |
 | --- | --- | --- |
-| SC-001 | Every standard/flexible outcome retains committed price and deadline | Compare immediate assignment, later group and fallback against commercial snapshots |
-| SC-002 | Every assignment/start satisfies readiness, saved daily-output allocation and full sewing-plus-decoration promises | Exercise disabled/threshold products, zero capacity, shared-profile overbooking, >14-workday estimates, early/late approvals, different decoration methods and concurrent assignment/start |
-| SC-003 | Scheduled/locked membership is never mistaken for production start | Audit Admin actions and Confirmed → InProduction boundary |
-| SC-004 | Programme reports include fallback cost and distinguish modeled from observed benefit | Reconcile A/B/C and the 100-order illustration; count coordination once per run |
-| SC-005 | Trial evidence supports parameter selection | Collect sewing setup labor, coordination cost, flexible uptake, Admin approval response time, batching outcomes and on-time production; validate the appeal of 5% capped at 250000 and value of avoided sewing setup. |
+| SC-001 | Every standard/flexible outcome retains committed price and deadline | For immediate assignment, later shared grouping and approved individual fallback, compare the stored quote/order snapshots with the result; all three must match exactly. |
+| SC-002 | Every assignment/start satisfies readiness, saved daily-output allocation and full sewing-plus-decoration promises | Test disabled/threshold products, zero capacity, shared-profile overbooking, >14-workday estimates, early/late approvals, different decoration methods and concurrent assignment/start; each invalid case returns 422 or 409 and commits no allocation. |
+| SC-003 | Scheduled/locked membership is never mistaken for production start | Verify that schedule, add, lock and approval leave the Order outside `InProduction`; only an explicit audited start can perform that transition. |
+| SC-004 | Programme reports include fallback cost and distinguish modeled from observed benefit | Recompute scenarios A, B, C and the 100-order illustration from the stated inputs; every displayed gross, coordination, incentive and net value must equal the formula. |
+| SC-005 | Trial evidence supports parameter selection | Record setup labor, coordination cost, flexible uptake, Admin approval response time, batching outcomes and on-time production with date, source and sample count before changing a policy parameter. |
 
 ## 9. Assumptions
 
@@ -244,13 +256,20 @@ Keep commercial choice (standard/flexible), actual routing (base-run addition/ne
 - Dietl, Voigt and Kuhn (2024), [From rush to responsibility: Evaluating incentives on online fashion customers willingness to wait](https://edoc.ku.de/id/eprint/34085/1/1-s2.0-S1361920924002372-main.pdf), Transportation Research Part D 133, 104280, examines incentives for German-speaking online retail customers. It supports testing incentives for waiting; it does not establish that 5%/250000 VND or the proposed schedule is optimal for Dony business buyers/resellers. The earlier Bowers & Agarwal (2007) and Textile and Apparel (2018) references remain contextual leads pending full verification; no case-study percentage is asserted as Dony savings.
 - Existing signed policy snapshots are preserved; v4 adoption requires review rather than retroactive rewriting.
 
-## 10. Traceability to DBIZ2
+## 10. Open questions
 
-| Section | Source |
+| # | Question | Blocking? | Owner | Status |
+| --- | --- | --- | --- | --- |
+| 1 | [NEEDS CLARIFICATION: What measured factory throughput, setup cost and coordination cost support changing the classroom trial assumptions?] | Yes, before operational use or any policy-parameter change | Group B | Open — the current values remain explicitly labeled classroom trial assumptions. |
+| 2 | Is any product behavior, lifecycle, approval boundary or data field unresolved for this classroom specification? | No | Group B | Resolved — sections 1–9 define the current classroom scope. |
+
+## 11. Traceability to DBIZ2
+
+| Section | Repository DBIZ2 source / location |
 | --- | --- |
-| 1–3 | MFG-10 function entries; UC-C06, UC-C17, UC-C18, UC-C16; supplied production-priority proposal |
-| 4–6 | F-MER-001–F-MER-007 revised contracts for standard routing, flexibility and scheduled-run lifecycle |
-| 7 | S31, S32, S33, S37, S13, S46 |
+| 1–3 | [`function-list.md` §X MFG-10](../docs/function-list.md): rows `F-MER-001`–`F-MER-007`, `UC-C06`, `UC-C17`, `UC-C18`; supplied production-priority proposal is a DBIZ3 extension input. |
+| 4–6 | `F-MER-001`–`F-MER-007` rows above; revised contracts preserve the historical function IDs while defining the approved standard/flexible lifecycle. |
+| 7 | Screen specifications S31, S32, S33, S37, S13 and S46, linked in section 7. |
 
 ## Completion checklist
 
