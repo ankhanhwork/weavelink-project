@@ -153,7 +153,7 @@ For unchanged context, analysis reuses the source result or a reproducible query
 ### 5.1 Input / Output contract
 
 | FR | Input field | Type | Required | Output field | Type | Validation / expected result |
-| --- | --- | --- | --- | --- | --- |
+| --- | --- | --- | --- | --- | --- | --- |
 | FR-001/002 | `start_date`, `end_date` | Local date, exclusive end date | Yes | `available_start`, `available_end_exclusive` | Local dates | Must be within the rolling 12-month window and span no more than 366 days; invalid range is rejected. |
 | FR-001/002 | `product_id` | UUID | Optional | normalized product filter | UUID / null | Must be an authorized historical product reference; archived products remain reportable. |
 | FR-001/002 | buyer segment / organization filter | Allowlisted enum / UUID | Optional | normalized buyer filter | Enum / UUID / null | Organization is descriptive, never a tenancy boundary. |
